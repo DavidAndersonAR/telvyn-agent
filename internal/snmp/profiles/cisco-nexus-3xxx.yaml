@@ -1,0 +1,22 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.9
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.117.1.4.1
+    name: net_snmp_cefcfantrayoperstatus
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.117.1.4.1.1.1
+    name: community.cisco_nexus_3xxx.cefcfantrayoperstatus
+  metric_tags:
+  - tag: template_table
+    value: net-snmp-cefcfantrayoperstatus
+metric_tags:
+- tag: vendor
+  value: cisco
+- tag: template
+  value: nexus-3xxx
+- tag: template_version
+  value: 6-0

@@ -1,0 +1,28 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.40418
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.40418.7.100.30.1
+    name: ddmstat_sys
+  symbols:
+  - oid: 1.3.6.1.4.1.40418.7.100.30.1.1.17
+    name: community.snr_snr_ddm_statistic.ddmstatrx
+  - oid: 1.3.6.1.4.1.40418.7.100.30.1.1.22
+    name: community.snr_snr_ddm_statistic.ddmstattx
+  metric_tags:
+  - tag: template_table
+    value: ddmstat-sys
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.40418.7.100.30.1.1.1
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: snr
+- tag: template
+  value: snr-ddm-statistic
+- tag: template_version
+  value: 6-0

@@ -1,0 +1,45 @@
+# IspWatch SNMP profile — cisco-ios. Schema reference: RESEARCH.md Pattern 1.
+#
+# Cobre Cisco IOS / IOS XE classico — sysObjectID prefix 1.3.6.1.4.1.9.1.*
+# (catalogo enterprise Cisco). Para NX-OS use cisco-nx-os.yaml (prefix
+# 1.3.6.1.4.1.9.12.3.1.3.* — mais especifico vence o match).
+#
+# Stack OID: CISCO-PROCESS-MIB (cpu), IF-MIB (interfaces), BGP4-MIB (peers).
+
+sysobjectid:
+  - 1.3.6.1.4.1.9.1
+
+metrics:
+  # CPU 5-min average — CISCO-PROCESS-MIB::cpmCPUTotal5min
+  - mib: CISCO-PROCESS-MIB
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.5
+      name: cisco.cpu.5min
+
+  # IF-MIB ifTable
+  - mib: IF-MIB
+    table:
+      oid: 1.3.6.1.2.1.2.2
+      name: ifTable
+    symbols:
+      - { oid: 1.3.6.1.2.1.2.2.1.10, name: snmp.if.in_octets }
+      - { oid: 1.3.6.1.2.1.2.2.1.16, name: snmp.if.out_octets }
+      - { oid: 1.3.6.1.2.1.2.2.1.14, name: snmp.if.in_errors }
+      - { oid: 1.3.6.1.2.1.2.2.1.20, name: snmp.if.out_errors }
+      - { oid: 1.3.6.1.2.1.2.2.1.8,  name: snmp.if.oper_status }
+    metric_tags:
+      - { tag: interface_name, symbol: { oid: 1.3.6.1.2.1.2.2.1.2, name: ifDescr } }
+
+  # BGP4-MIB::bgpPeerTable — peer state numerico (1=idle..6=established).
+  - mib: BGP4-MIB
+    table:
+      oid: 1.3.6.1.2.1.15.3
+      name: bgpPeerTable
+    symbols:
+      - { oid: 1.3.6.1.2.1.15.3.1.2, name: snmp.bgp.peer_state }
+    metric_tags:
+      - { tag: bgp_peer, symbol: { oid: 1.3.6.1.2.1.15.3.1.7, name: bgpPeerRemoteAddr } }
+
+metric_tags:
+  - { tag: vendor, value: cisco-ios }
+  - { tag: device_role, value: router }

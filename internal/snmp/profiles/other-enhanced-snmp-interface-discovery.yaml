@@ -1,0 +1,106 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.0
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: net_if_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: community.other_enhanced_snmp_interface_discovery.net_if_status
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: community.other_enhanced_snmp_interface_discovery.net_if_status
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.other_enhanced_snmp_interface_discovery.net_if_status
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.other_enhanced_snmp_interface_discovery.net_if_status
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.other_enhanced_snmp_interface_discovery.net_if_status
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: community.other_enhanced_snmp_interface_discovery.net_if_status
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.other_enhanced_snmp_interface_discovery.net_if_status
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.other_enhanced_snmp_interface_discovery.net_if_status
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: community.other_enhanced_snmp_interface_discovery.net_if_status
+  metric_tags:
+  - tag: template_table
+    value: net-if-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.8
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: net_if_down_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: community.other_enhanced_snmp_interface_discovery.net_if_down_status
+  metric_tags:
+  - tag: template_table
+    value: net-if-down-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.8
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: net_if_prio_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: community.other_enhanced_snmp_interface_discovery.net_if_prio_status
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: community.other_enhanced_snmp_interface_discovery.net_if_prio_status
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.other_enhanced_snmp_interface_discovery.net_if_prio_status
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.other_enhanced_snmp_interface_discovery.net_if_prio_status
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.other_enhanced_snmp_interface_discovery.net_if_prio_status
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: community.other_enhanced_snmp_interface_discovery.net_if_prio_status
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.other_enhanced_snmp_interface_discovery.net_if_prio_status
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.other_enhanced_snmp_interface_discovery.net_if_prio_status
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: community.other_enhanced_snmp_interface_discovery.net_if_prio_status
+  metric_tags:
+  - tag: template_table
+    value: net-if-prio-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.8
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: net_if_virt_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: community.other_enhanced_snmp_interface_discovery.net_if_virt_status
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.other_enhanced_snmp_interface_discovery.net_if_virt_status
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.other_enhanced_snmp_interface_discovery.net_if_virt_status
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.other_enhanced_snmp_interface_discovery.net_if_virt_status
+  metric_tags:
+  - tag: template_table
+    value: net-if-virt-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.8
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: other
+- tag: template
+  value: enhanced-snmp-interface-discovery
+- tag: template_version
+  value: 6-0

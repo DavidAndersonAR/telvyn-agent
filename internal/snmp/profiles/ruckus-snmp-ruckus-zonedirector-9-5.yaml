@@ -1,0 +1,56 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.25053
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.25053.1.2.2.1.1.2.1
+    name: aprz_snmpvalue
+  symbols:
+  - oid: 1.3.6.1.4.1.25053.1.2.2.1.1.2.1.1.15
+    name: community.ruckus_snmp_ruckus_zonedirector_9_5.ruckuszdwlanapnumsta
+  metric_tags:
+  - tag: template_table
+    value: aprz-snmpvalue
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.25053.1.2.2.1.1.2.1.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.25053.1.2.2.1.1.1.1
+    name: ssidrz_snmpvalue
+  symbols:
+  - oid: 1.3.6.1.4.1.25053.1.2.2.1.1.1.1.1.14
+    name: community.ruckus_snmp_ruckus_zonedirector_9_5.ruckuszdwlanrxbytes
+  - oid: 1.3.6.1.4.1.25053.1.2.2.1.1.1.1.1.16
+    name: community.ruckus_snmp_ruckus_zonedirector_9_5.ruckuszdwlantxbytes
+  metric_tags:
+  - tag: template_table
+    value: ssidrz-snmpvalue
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.25053.1.2.2.1.1.1.1.1.200
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.25053.1.2.1.1.1.18.2
+    name: zdethname_snmpvalue
+  symbols:
+  - oid: 1.3.6.1.4.1.25053.1.2.1.1.1.18.2.1.5
+    name: community.ruckus_snmp_ruckus_zonedirector_9_5.ruckuszdethstatus
+  metric_tags:
+  - tag: template_table
+    value: zdethname-snmpvalue
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.25053.1.2.1.1.1.18.2.1.2
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: ruckus
+- tag: template
+  value: snmp-ruckus-zonedirector-9-5
+- tag: template_version
+  value: 6-0

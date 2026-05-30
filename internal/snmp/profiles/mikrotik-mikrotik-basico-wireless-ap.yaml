@@ -1,0 +1,38 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.14988
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.14988.1.1.1.3
+    name: wireless_aps
+  symbols:
+  - oid: 1.3.6.1.4.1.14988.1.1.1.3.1.6
+    name: community.mikrotik_mikrotik_basico_wireless_ap.wireless_ap_clientcount
+  - oid: 1.3.6.1.4.1.14988.1.1.1.3.1.11
+    name: community.mikrotik_mikrotik_basico_wireless_ap.wireless_ap_clientcountauth
+  - oid: 1.3.6.1.4.1.14988.1.1.1.3.1.7
+    name: community.mikrotik_mikrotik_basico_wireless_ap.wireless_ap_freuencia
+  - oid: 1.3.6.1.4.1.14988.1.1.1.3.1.9
+    name: community.mikrotik_mikrotik_basico_wireless_ap.wireless_ap_noisefloor
+  - oid: 1.3.6.1.4.1.14988.1.1.1.3.1.3
+    name: community.mikrotik_mikrotik_basico_wireless_ap.wireless_ap_rxrate
+  - oid: 1.3.6.1.4.1.14988.1.1.1.3.1.10
+    name: community.mikrotik_mikrotik_basico_wireless_ap.wireless_ap_txccq
+  - oid: 1.3.6.1.4.1.14988.1.1.1.3.1.2
+    name: community.mikrotik_mikrotik_basico_wireless_ap.wireless_ap_txrate
+  metric_tags:
+  - tag: template_table
+    value: wireless-aps
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.14988.1.1.1.3.1.4
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: mikrotik
+- tag: template
+  value: mikrotik-basico-wireless-ap
+- tag: template_version
+  value: 6-0

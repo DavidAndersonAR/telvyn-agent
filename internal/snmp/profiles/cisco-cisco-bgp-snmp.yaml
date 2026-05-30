@@ -1,0 +1,68 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.9
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.187.1.2.1
+    name: cbgppeer2remoteas_bgpv4
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.187.1.2.1.1.1
+    name: community.cisco_cisco_bgp_snmp.cbgppeerprefixaccepted
+  - oid: 1.3.6.1.4.1.9.9.187.1.2.1.1.3
+    name: community.cisco_cisco_bgp_snmp.cbgppeerprefixlimit
+  metric_tags:
+  - tag: template_table
+    value: cbgppeer2remoteas-bgpv4
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.187.1.2.5.1.11
+    name: cbgppeer2remoteas_bgpv4
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.187.1.2.5.1.11.1.4
+    name: community.cisco_cisco_bgp_snmp.cbgppeer2remoteas
+  metric_tags:
+  - tag: template_table
+    value: cbgppeer2remoteas-bgpv4
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.187.1.2.5.1.11.1.4
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.187.1.2.5.1.19
+    name: cbgppeer2remoteas_bgpv4
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.187.1.2.5.1.19.1.4
+    name: community.cisco_cisco_bgp_snmp.cbgppeer2fsmestablishedtime
+  metric_tags:
+  - tag: template_table
+    value: cbgppeer2remoteas-bgpv4
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.187.1.2.5.1.3
+    name: cbgppeer2remoteas_bgpv4
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.187.1.2.5.1.3.1.4
+    name: community.cisco_cisco_bgp_snmp.cbgppeer2state
+  metric_tags:
+  - tag: template_table
+    value: cbgppeer2remoteas-bgpv4
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.187.1.2.5.1.4
+    name: cbgppeer2remoteas_bgpv4
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.187.1.2.5.1.4.1.4
+    name: community.cisco_cisco_bgp_snmp.cbgppeer2adminstatus
+  metric_tags:
+  - tag: template_table
+    value: cbgppeer2remoteas-bgpv4
+metric_tags:
+- tag: vendor
+  value: cisco
+- tag: template
+  value: cisco-bgp-snmp
+- tag: template_version
+  value: 6-0

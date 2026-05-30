@@ -1,0 +1,116 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.0
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.99.1.1
+    name: entphysensortype_fan
+  symbols:
+  - oid: 1.3.6.1.2.1.99.1.1.1.5
+    name: community.palo_alto_palo_alto_pa200.entphysensoroperstatus
+  - oid: 1.3.6.1.2.1.99.1.1.1.4
+    name: community.palo_alto_palo_alto_pa200.entphysensorvalue
+  metric_tags:
+  - tag: template_table
+    value: entphysensortype-fan
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.25.2.3
+    name: hrstoragedescr
+  symbols:
+  - oid: 1.3.6.1.2.1.25.2.3.1.5
+    name: community.palo_alto_palo_alto_pa200.hrstoragesize
+  - oid: 1.3.6.1.2.1.25.2.3.1.6
+    name: community.palo_alto_palo_alto_pa200.hrstorageused
+  metric_tags:
+  - tag: template_table
+    value: hrstoragedescr
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.25.2.3.1.3
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: snmp_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: community.palo_alto_palo_alto_pa200.ifadminstatus
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: community.palo_alto_palo_alto_pa200.ifindiscards
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.palo_alto_palo_alto_pa200.ifinerrors
+  - oid: 1.3.6.1.2.1.2.2.1.12
+    name: community.palo_alto_palo_alto_pa200.ifinnucastpkts
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.palo_alto_palo_alto_pa200.ifinoctets
+  - oid: 1.3.6.1.2.1.2.2.1.11
+    name: community.palo_alto_palo_alto_pa200.ifinucastpkts
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.palo_alto_palo_alto_pa200.ifoperstatus
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: community.palo_alto_palo_alto_pa200.ifoutdiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.palo_alto_palo_alto_pa200.ifouterrors
+  - oid: 1.3.6.1.2.1.2.2.1.18
+    name: community.palo_alto_palo_alto_pa200.ifoutnucastpkts
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.palo_alto_palo_alto_pa200.ifoutoctets
+  - oid: 1.3.6.1.2.1.2.2.1.17
+    name: community.palo_alto_palo_alto_pa200.ifoutucastpkts
+  metric_tags:
+  - tag: template_table
+    value: snmp-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: snmp_discoverytotal
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: community.palo_alto_palo_alto_pa200.ifhcinbroadcastpkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: community.palo_alto_palo_alto_pa200.ifhcinmulticastpkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: community.palo_alto_palo_alto_pa200.ifhcinoctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: community.palo_alto_palo_alto_pa200.ifhcinucastpkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: community.palo_alto_palo_alto_pa200.ifhcoutbroadcastpkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: community.palo_alto_palo_alto_pa200.ifhcoutmulticastpkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: community.palo_alto_palo_alto_pa200.ifhcoutoctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: community.palo_alto_palo_alto_pa200.ifhcoutucastpkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.3
+    name: community.palo_alto_palo_alto_pa200.ifinbroadcastpkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.2
+    name: community.palo_alto_palo_alto_pa200.ifinmulticastpkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.5
+    name: community.palo_alto_palo_alto_pa200.ifoutbroadcastpkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.4
+    name: community.palo_alto_palo_alto_pa200.ifoutmulticastpkts
+  metric_tags:
+  - tag: template_table
+    value: snmp-discoverytotal
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: palo-alto
+- tag: template
+  value: palo-alto-pa200
+- tag: template_version
+  value: 6-0

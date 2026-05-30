@@ -1,0 +1,60 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.1916
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.1916.1.32.1.4
+    name: extremecpumonitorsystemslotid
+  symbols:
+  - oid: 1.3.6.1.4.1.1916.1.32.1.4.1.9
+    name: community.extreme_extreme_x450a.extremecpumonitorsystemutilization5mins
+  metric_tags:
+  - tag: template_table
+    value: extremecpumonitorsystemslotid
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.1916.1.32.1.4.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.1916.1.1.1.9
+    name: extremefanentphysicalindex
+  symbols:
+  - oid: 1.3.6.1.4.1.1916.1.1.1.9.1.2
+    name: community.extreme_extreme_x450a.extremefanoperational
+  metric_tags:
+  - tag: template_table
+    value: extremefanentphysicalindex
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.1916.1.1.1.9.1.3
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.1916.1.32.2.2
+    name: extremememorymonitorsystemslotid
+  symbols:
+  - oid: 1.3.6.1.4.1.1916.1.32.2.2.1.3
+    name: community.extreme_extreme_x450a.extremememorymonitorsystemfree
+  - oid: 1.3.6.1.4.1.1916.1.32.2.2.1.2
+    name: community.extreme_extreme_x450a.extremememorymonitorsystemtotal
+  - oid: 1.3.6.1.4.1.1916.1.32.2.2.1.4
+    name: community.extreme_extreme_x450a.extremememorymonitorsystemusage
+  - oid: 1.3.6.1.4.1.1916.1.32.2.2.1.5
+    name: community.extreme_extreme_x450a.extremememorymonitoruserusage
+  metric_tags:
+  - tag: template_table
+    value: extremememorymonitorsystemslotid
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.1916.1.32.2.2.1.1
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: extreme
+- tag: template
+  value: extreme-x450a
+- tag: template_version
+  value: 6-0

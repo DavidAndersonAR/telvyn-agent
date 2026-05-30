@@ -1,0 +1,26 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.6771
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.6771.10.1.5
+    name: onualias
+  symbols:
+  - oid: 1.3.6.1.4.1.6771.10.1.5.1.15
+    name: community.zte_snmp_device_gpon_parks.onudwrx
+  metric_tags:
+  - tag: template_table
+    value: onualias
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.6771.10.1.5.1.62
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: zte
+- tag: template
+  value: snmp-device-gpon-parks
+- tag: template_version
+  value: 6-0

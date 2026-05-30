@@ -1,0 +1,172 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.44433
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.2.2.0
+    name: community.environment_bard_mc4000_series_hvac.bard_alarm_controllerfailure
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.2.1.0
+    name: community.environment_bard_mc4000_series_hvac.bard_alarm_firesmoke
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.2.5.0
+    name: community.environment_bard_mc4000_series_hvac.bard_alarm_hightemp1
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.2.6.0
+    name: community.environment_bard_mc4000_series_hvac.bard_alarm_hightemp2
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.2.4.0
+    name: community.environment_bard_mc4000_series_hvac.bard_alarm_lowtemp
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.2.7.0
+    name: community.environment_bard_mc4000_series_hvac.bard_alarm_powerlossunit1
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.2.8.0
+    name: community.environment_bard_mc4000_series_hvac.bard_alarm_powerlossunit2
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.2.3.0
+    name: community.environment_bard_mc4000_series_hvac.bard_alarm_secondstagecooling
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.2.9.0
+    name: community.environment_bard_mc4000_series_hvac.bard_alarm_status9
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.2.12.0
+    name: community.environment_bard_mc4000_series_hvac.bard_alarm_status12
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.2.10.0
+    name: community.environment_bard_mc4000_series_hvac.bard_alarm_unit1lockout
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.2.11.0
+    name: community.environment_bard_mc4000_series_hvac.bard_alarm_unit2lockout
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.7.1.0
+    name: community.environment_bard_mc4000_series_hvac.bard_cooling_stage1
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.7.2.0
+    name: community.environment_bard_mc4000_series_hvac.bard_cooling_stage2
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.7.3.0
+    name: community.environment_bard_mc4000_series_hvac.bard_cooling_stage3
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.7.4.0
+    name: community.environment_bard_mc4000_series_hvac.bard_cooling_stage4
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.7.7.0
+    name: community.environment_bard_mc4000_series_hvac.bard_heating_stage1
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.7.8.0
+    name: community.environment_bard_mc4000_series_hvac.bard_heating_stage2
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.7.9.0
+    name: community.environment_bard_mc4000_series_hvac.bard_heating_stage3
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.7.10.0
+    name: community.environment_bard_mc4000_series_hvac.bard_heating_stage4
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.7.12.0
+    name: community.environment_bard_mc4000_series_hvac.bard_operation_dehumidification
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.4.1.0
+    name: community.environment_bard_mc4000_series_hvac.bard_setpoint_cooling
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.4.2.0
+    name: community.environment_bard_mc4000_series_hvac.bard_setpoint_heating
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.4.3.0
+    name: community.environment_bard_mc4000_series_hvac.bard_setpoint_hightempalarm1
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.4.4.0
+    name: community.environment_bard_mc4000_series_hvac.bard_setpoint_hightempalarm2
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.4.5.0
+    name: community.environment_bard_mc4000_series_hvac.bard_setpoint_lowtempalarm
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.5.2.0
+    name: community.environment_bard_mc4000_series_hvac.bard_status_alarmboardconnected
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.5.3.0
+    name: community.environment_bard_mc4000_series_hvac.bard_status_comfortmode
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.5.4.0
+    name: community.environment_bard_mc4000_series_hvac.bard_status_controllerlocked
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.5.5.0
+    name: community.environment_bard_mc4000_series_hvac.bard_status_general
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.5.1.0
+    name: community.environment_bard_mc4000_series_hvac.bard_status_generatorrunning
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.6.1.0
+    name: community.environment_bard_mc4000_series_hvac.bard_system_leadunithvac1
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.6.2.0
+    name: community.environment_bard_mc4000_series_hvac.bard_system_leadunithvac2
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.6.5.0
+    name: community.environment_bard_mc4000_series_hvac.bard_system_status
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.6.3.0
+    name: community.environment_bard_mc4000_series_hvac.bard_system_unit1fan
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.6.4.0
+    name: community.environment_bard_mc4000_series_hvac.bard_system_unit2fan
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.3.1.0
+    name: community.environment_bard_mc4000_series_hvac.bard_temp_localroom
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.3.2.0
+    name: community.environment_bard_mc4000_series_hvac.bard_temp_remotesensor1
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.3.3.0
+    name: community.environment_bard_mc4000_series_hvac.bard_temp_remotesensor2
+- mib: COMMUNITY-TEMPLATE
+  symbol:
+    oid: 1.3.6.1.4.1.44433.1.1.3.4.0
+    name: community.environment_bard_mc4000_series_hvac.temperatures_4
+metric_tags:
+- tag: vendor
+  value: environment
+- tag: template
+  value: bard-mc4000-series-hvac
+- tag: template_version
+  value: 7-2

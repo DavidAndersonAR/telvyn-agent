@@ -1,0 +1,42 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.0
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: net_if_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.snr_snr_interfaces_statistic_2.net_if_status
+  - oid: 1.3.6.1.2.1.2.2.1.3
+    name: community.snr_snr_interfaces_statistic_2.net_if_type
+  metric_tags:
+  - tag: template_table
+    value: net-if-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.8
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: net_if_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: community.snr_snr_interfaces_statistic_2.net_if_in
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: community.snr_snr_interfaces_statistic_2.net_if_out
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: community.snr_snr_interfaces_statistic_2.net_if_speed
+  metric_tags:
+  - tag: template_table
+    value: net-if-discovery
+metric_tags:
+- tag: vendor
+  value: snr
+- tag: template
+  value: snr-interfaces-statistic
+- tag: template_version
+  value: 6-0

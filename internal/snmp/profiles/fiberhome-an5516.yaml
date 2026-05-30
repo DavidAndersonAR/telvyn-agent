@@ -1,0 +1,93 @@
+# IspWatch SNMP profile — fiberhome-an5516
+#
+# OLT Fiberhome AN5516-04B (e família AN5516). Enterprise 5875
+# (sysObjectID 1.3.6.1.4.1.5875.800.1001.11).
+#
+# O OLT responde a IF-MIB padrão: ifXTable (contadores HC de 64 bits) nas
+# portas SFP de uplink (ex.: "SFP 9/1") e nas portas PON (ex.: "PON 1/1").
+# Emite os MESMOS nomes canônicos `snmp.if.*` que os perfis de roteador, pra
+# alimentar o pipeline netif/Sentinela sem introduzir métricas novas.
+#
+# Particularidades confirmadas por SNMP no equipamento real:
+#   - ifAlias (1.3.6.1.2.1.31.1.1.1.18) NÃO é suportado → usar ifName como rótulo.
+#   - ifIndex não-monotônico (walk pode reclamar de "OID not increasing");
+#     o walker tolera com a opção de não exigir ordem crescente.
+
+auto_detect: true
+sysobjectid:
+  - 1.3.6.1.4.1.5875        # Fiberhome enterprise — casa toda a família AN5516
+
+metrics:
+  # System uptime — SNMPv2-MIB::sysUpTime
+  - mib: SNMPv2-MIB
+    symbol:
+      oid: 1.3.6.1.2.1.1.3.0
+      name: snmp.sys.uptime
+
+  # Interfaces — tráfego via ifXTable (64-bit HC counters). Uplinks SFP e PONs.
+  - mib: IF-MIB
+    table:
+      oid: 1.3.6.1.2.1.31.1.1
+      name: ifXTable
+    symbols:
+      - { oid: 1.3.6.1.2.1.31.1.1.1.6,  name: snmp.if.in_octets }    # ifHCInOctets
+      - { oid: 1.3.6.1.2.1.31.1.1.1.10, name: snmp.if.out_octets }   # ifHCOutOctets
+      - { oid: 1.3.6.1.2.1.31.1.1.1.15, name: snmp.if.high_speed }   # ifHighSpeed (Mbps)
+    metric_tags:
+      - { tag: interface_name, symbol: { oid: 1.3.6.1.2.1.31.1.1.1.1, name: ifName } }
+    # Enxuga a coleta: só uplinks SFP + portas PON do slot 1 (físicas "PON 1/x"
+    # e ONUs "PON 1/x/y"). Descarta as ~534 portas LAN de assinante (FE *) e o
+    # slot 2 vazio (PON 2/x). Os ONUs ficam (pra correlação de queda em massa).
+    filter:
+      tag: interface_name
+      include: ["^SFP ", "^PON 1/"]
+
+  # ifTable (1.3.6.1.2.1.2.2) — status operacional, tipo e errors.
+  # Mesmo ifIndex da ifXTable → join por row_index com as métricas de octets.
+  - mib: IF-MIB
+    table:
+      oid: 1.3.6.1.2.1.2.2
+      name: ifTable
+    symbols:
+      - { oid: 1.3.6.1.2.1.2.2.1.8,  name: snmp.if.oper_status }   # ifOperStatus (1=up,2=down)
+      - { oid: 1.3.6.1.2.1.2.2.1.7,  name: snmp.if.admin_status }  # ifAdminStatus
+      - { oid: 1.3.6.1.2.1.2.2.1.3,  name: snmp.if.type }          # ifType (IANAifType)
+      - { oid: 1.3.6.1.2.1.2.2.1.14, name: snmp.if.in_errors }     # ifInErrors
+      - { oid: 1.3.6.1.2.1.2.2.1.20, name: snmp.if.out_errors }    # ifOutErrors
+    metric_tags:
+      - { tag: interface_name, symbol: { oid: 1.3.6.1.2.1.2.2.1.2, name: ifDescr } }
+    # Mesmo filtro da ifXTable (ifDescr usa a mesma nomenclatura que ifName).
+    filter:
+      tag: interface_name
+      include: ["^SFP ", "^PON 1/"]
+
+  # Card de gerência (GEPON-OLT-COMMON-MIB) — CPU/mem em centi-% (×0.01) + status.
+  # Índice = slot; slot 2 vazio reporta 0 (inofensivo, são 2 linhas). Segue o
+  # template community do Fiberhome.
+  - mib: GEPON-OLT-COMMON-MIB
+    table:
+      # Raiz = tabela (sem o ".1" de entry); WalkTable monta entryPrefix=root+".1."
+      # → casa as colunas ...2.1.1.<col>.<slot>.
+      oid: 1.3.6.1.4.1.5875.800.3.9.2.1
+      name: oltCardTable
+    symbols:
+      - { oid: 1.3.6.1.4.1.5875.800.3.9.2.1.1.8, name: snmp.olt.card_cpu, scale: 0.01 }  # CPU %
+      - { oid: 1.3.6.1.4.1.5875.800.3.9.2.1.1.9, name: snmp.olt.card_mem, scale: 0.01 }  # mem %
+      - { oid: 1.3.6.1.4.1.5875.800.3.9.2.1.1.5, name: snmp.olt.card_status }            # 1=normal, 0=interrupt
+    metric_tags:
+      - { tag: card_type, symbol: { oid: 1.3.6.1.4.1.5875.800.3.9.2.1.1.2, name: cardType } }
+
+metric_tags:
+  - { tag: vendor, value: fiberhome }
+
+discovery_rules:
+  # Potência óptica por ONU (GEPON-OLT-COMMON-MIB) — centi-dBm no firmware,
+  # ×0.01 → dBm (confirmado no device: -2031 = -20,31 dBm). interface_name =
+  # "PON x/y/z" (o MESMO nome da interface → correlaciona com a queda da ONU).
+  # Métrica-chave do FTTH: prevê fibra ruim antes do cliente cair.
+  - name: onu_optical
+    keys:
+      - { label: interface_name, oid: 1.3.6.1.4.1.5875.800.3.9.3.3.1.2 }
+    items:
+      - { name: snmp.onu.rx_power, oid: 1.3.6.1.4.1.5875.800.3.9.3.3.1.6, scale: 0.01 }  # RX dBm
+      - { name: snmp.onu.tx_power, oid: 1.3.6.1.4.1.5875.800.3.9.3.3.1.7, scale: 0.01 }  # TX dBm

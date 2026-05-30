@@ -1,0 +1,20 @@
+ISPWatch Agent installed as DaemonSet in namespace {{ .Release.Namespace }}.
+
+1. Confirm the agent is running on every node:
+   kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/name={{ include "ispwatch-agent.name" . }} -o wide
+
+2. Check agent logs (enrollment + register):
+   kubectl -n {{ .Release.Namespace }} logs -l app.kubernetes.io/name={{ include "ispwatch-agent.name" . }} --tail=50
+
+3. Each pod runs `--enroll-only` on first boot, swaps the bootstrap token for
+   a unique client cert (1 cert per node) and saves it to the WAL emptyDir.
+   Subsequent pod restarts skip enrollment until the cert expires.
+
+4. Os nodes aparecem no /aplicações UI ~30s depois com badge "Kubernetes".
+   Click numa row pra drill-down de pods.
+
+Troubleshooting:
+  - Secret "{{ .Values.bootstrap.tokenSecretName }}" precisa existir com key 'token'.
+  - enrollUrl "{{ .Values.bootstrap.enrollUrl }}" precisa ser alcançável do pod.
+    Test: kubectl run curl --rm -i --tty --image=curlimages/curl
+          -- curl -v {{ .Values.bootstrap.enrollUrl }}

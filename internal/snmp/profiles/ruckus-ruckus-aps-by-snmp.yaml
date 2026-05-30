@@ -1,0 +1,24 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.25053
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.25053.1.1.6.1.1.1.4
+    name: ssid_snmpvalue
+  symbols:
+  - oid: 1.3.6.1.4.1.25053.1.1.6.1.1.1.4.1.24
+    name: community.ruckus_ruckus_aps_by_snmp.ruckuswlanstatsrxbytes
+  - oid: 1.3.6.1.4.1.25053.1.1.6.1.1.1.4.1.39
+    name: community.ruckus_ruckus_aps_by_snmp.ruckuswlanstatstxbytes
+  metric_tags:
+  - tag: template_table
+    value: ssid-snmpvalue
+metric_tags:
+- tag: vendor
+  value: ruckus
+- tag: template
+  value: ruckus-aps-by-snmp
+- tag: template_version
+  value: 7-4

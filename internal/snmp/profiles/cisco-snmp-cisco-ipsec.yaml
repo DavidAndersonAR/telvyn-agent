@@ -1,0 +1,48 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.9
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.171.1.2.3
+    name: ciketunindex
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.171.1.2.3.1.16
+    name: community.cisco_snmp_cisco_ipsec.ciketunactivetime
+  - oid: 1.3.6.1.4.1.9.9.171.1.2.3.1.19
+    name: community.cisco_snmp_cisco_ipsec.ciketuninoctets
+  - oid: 1.3.6.1.4.1.9.9.171.1.2.3.1.27
+    name: community.cisco_snmp_cisco_ipsec.ciketunoutoctets
+  metric_tags:
+  - tag: template_table
+    value: ciketunindex
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.171.1.2.3.1.7
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.171.1.3.2
+    name: cipsectunindex
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.171.1.3.2.1.10
+    name: community.cisco_snmp_cisco_ipsec.cipsectunactivetime
+  - oid: 1.3.6.1.4.1.9.9.171.1.3.2.1.26
+    name: community.cisco_snmp_cisco_ipsec.cipsectuninoctets
+  - oid: 1.3.6.1.4.1.9.9.171.1.3.2.1.39
+    name: community.cisco_snmp_cisco_ipsec.cipsectunoutoctets
+  metric_tags:
+  - tag: template_table
+    value: cipsectunindex
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.171.1.3.2.1.5
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: cisco
+- tag: template
+  value: snmp-cisco-ipsec
+- tag: template_version
+  value: 6-0

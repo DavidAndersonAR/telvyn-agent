@@ -1,0 +1,91 @@
+# Bootstrap enrollment — Helm install distribui 1 token; cada pod
+# troca por seu cert único no boot via /api/agents/enroll (modelo
+# "1 agent = 1 host").
+#
+# Cria o Secret antes do helm install:
+#   kubectl create secret generic ispwatch-agent-bootstrap \
+#     --from-literal=token=<token-do-painel-admin>
+bootstrap:
+  # Secret com 1 chave "token" — output do POST /api/admin/bootstrap-tokens
+  tokenSecretName: ispwatch-agent-bootstrap
+  # URL pública do Quarkus (HTTP plano :8080 ou HTTPS :8444). Path completo
+  # do endpoint de enrollment — http://server:8080/api/agents/enroll.
+  enrollUrl: ""
+  # Pra dev/lab onde o cert do servidor é self-signed e o agent não tem
+  # trust bundle ainda. Default false em produção.
+  insecureTls: false
+  # Identifica que tipo de agent é (afeta defaults no servidor). 'k8s.node'
+  # vira tag, k8s.kubelet check é auto-criado.
+  agentKind: "k8s.node"
+
+# Cluster name — vira tag em todas as métricas emitidas + hostname do
+# noc_host (cluster/node). Customize por instalação.
+clusterName: "default"
+
+image:
+  repository: ghcr.io/davidandersonar/telvyn-agent
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+# hostNetwork=true permite que o agent leia localhost:10250 (kubelet) do
+# próprio nó. Alternativa: hostNetwork=false + downward API HOST_IP env.
+hostNetwork: true
+
+logLevel: "info"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+# Tolerations + nodeSelector defaults: 1 pod em cada nó (incluindo control-
+# plane). Kubelet metrics são per-node.
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
+  - effect: NoExecute
+    operator: Exists
+nodeSelector: {}
+priorityClassName: ""
+
+podAnnotations: {}
+
+# eBPF L7 tracing (Phase 2). Quando habilitado, o agent carrega
+# programas BPF que escutam tcp_sendmsg/recvmsg + uprobes TLS, decodifica
+# wire protocols (Postgres, Redis, HTTP, MySQL, Mongo, Kafka, etc.) e gera
+# spans OTLP automaticamente — sem cooperação do app. Zero-code tracing.
+#
+# Exige: kernel >= 5.10 com BTF, privileged container, hostNetwork +
+# hostPID. Trade-off: footprint maior (~50-100MB RSS) e privilégios
+# elevados. Desligado por default — operador habilita explicitamente
+# quando quer cobertura "Coroot-style".
+ebpfTracing:
+  enabled: false
+  # URL do kubelet local (mesmo nó do DaemonSet, hostNetwork=true).
+  # Usado pra resolver pid → container → pod e popular service.name dos
+  # spans com o pod K8s correto.
+  kubeletURL: "https://localhost:10250"
+  # Em k3d/lab o cert do kubelet é self-signed. Em prod com CA mounted
+  # via serviceaccount: "0" e seta kubeletCAFile no token mount.
+  kubeletInsecure: "1"
+
+# Mutating Webhook que injeta -javaagent OTel em pods marcados pela UI
+# (mode=java_javaagent). Desligado por default — operador habilita
+# explicitamente. Usa a MESMA imagem do agent rodando com --webhook flag.
+webhook:
+  enabled: false
+  # Imagem referenciada nos initContainers injetados pelos pods alvo
+  # (precisa estar disponível em todos os nós onde os pods alvo rodam).
+  # Default usa a mesma do DaemonSet.
+  agentImageRef: ""
+  # OTLP endpoint que o javaagent injetado vai usar. $(NODE_IP) é
+  # expandido pelo K8s downward API no pod alvo.
+  otlpEndpoint: "http://$(NODE_IP):4317"
+  # Pra dev/lab — pula nameSelector e instrumenta qualquer namespace.
+  # Em prod, defina namespaces explícitos via webhookNamespaceSelector.
+  namespaceSelector: {}
+  service:
+    port: 443

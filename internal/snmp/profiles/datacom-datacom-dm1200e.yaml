@@ -1,0 +1,72 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.0
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: if_mib_iftable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.1
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_1
+  - oid: 1.3.6.1.2.1.2.2.1.3
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_3
+  - oid: 1.3.6.1.2.1.2.2.1.4
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_4
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_5
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_7
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_8
+  - oid: 1.3.6.1.2.1.2.2.1.9
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_9
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_10
+  - oid: 1.3.6.1.2.1.2.2.1.11
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_11
+  - oid: 1.3.6.1.2.1.2.2.1.12
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_12
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_13
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_14
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_16
+  - oid: 1.3.6.1.2.1.2.2.1.17
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_17
+  - oid: 1.3.6.1.2.1.2.2.1.18
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_18
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_19
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_2_2_1_20
+  metric_tags:
+  - tag: template_table
+    value: if-mib-iftable
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.1.9
+    name: snmpv2_mib_sysortable
+  symbols:
+  - oid: 1.3.6.1.2.1.1.9.1.4
+    name: community.datacom_datacom_dm1200e.1_3_6_1_2_1_1_9_1_4
+  metric_tags:
+  - tag: template_table
+    value: snmpv2-mib-sysortable
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.1.9.1.2
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: datacom
+- tag: template
+  value: datacom-dm1200e
+- tag: template_version
+  value: 7-4

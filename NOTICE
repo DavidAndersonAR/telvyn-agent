@@ -1,0 +1,26 @@
+ISPWatch Collector Agent
+Copyright (C) ISPWatch
+
+This product includes software derived from the coroot-node-agent project
+(https://github.com/coroot/coroot-node-agent), Copyright (C) Coroot Labs,
+licensed under the Apache License, Version 2.0.
+
+The derived code lives under internal/ebpf/ and includes:
+
+  - eBPF programs (C) for TCP tracing, L7 protocol detection, and TLS
+    plaintext extraction (internal/ebpf/ebpf/)
+  - L7 wire-protocol decoders in Go for HTTP/1.1, HTTP/2, Postgres, Redis,
+    Memcached, MySQL, MongoDB, Cassandra, Kafka, NATS, RabbitMQ, DNS,
+    ClickHouse, ZooKeeper, FoundationDB, Dubbo (internal/ebpf/l7/)
+  - The ringbuf-based event loop and TCP reassembly (internal/ebpf/tracer.go)
+  - Userspace TLS uprobe binding (internal/ebpf/tls.go)
+  - Process / cgroup / network helpers required by the tracer
+    (internal/ebpf/common/, internal/ebpf/proc/, internal/ebpf/cgroup/,
+    internal/ebpf/flags/)
+
+Modifications made by ISPWatch to the upstream code include (but are not
+limited to): import path rewrites, package renames, integration with the
+ISPWatch agent transport (gRPC StreamSpans) and metrics pipeline.
+
+Apache License, Version 2.0 — see LICENSE-APACHE-2.0 in this directory for
+the full license text.

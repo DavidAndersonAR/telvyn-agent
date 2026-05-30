@@ -1,0 +1,100 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.5951
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.5951.4.1.1.54
+    name: snmp_interfaces_discovery
+  symbols:
+  - oid: 1.3.6.1.4.1.5951.4.1.1.54.1.3
+    name: community.citrix_netscaler_netscaler.r_bytes
+  - oid: 1.3.6.1.4.1.5951.4.1.1.54.1.5
+    name: community.citrix_netscaler_netscaler.r_pks
+  - oid: 1.3.6.1.4.1.5951.4.1.1.54.1.7
+    name: community.citrix_netscaler_netscaler.t_bytes
+  - oid: 1.3.6.1.4.1.5951.4.1.1.54.1.9
+    name: community.citrix_netscaler_netscaler.t_pks
+  metric_tags:
+  - tag: template_table
+    value: snmp-interfaces-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.5951.4.1.1.54.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.5951.4.1.2.1
+    name: snmp_services_discovery
+  symbols:
+  - oid: 1.3.6.1.4.1.5951.4.1.2.1.1.9
+    name: community.citrix_netscaler_netscaler.service_actconn
+  - oid: 1.3.6.1.4.1.5951.4.1.2.1.1.8
+    name: community.citrix_netscaler_netscaler.service_estconn
+  - oid: 1.3.6.1.4.1.5951.4.1.2.1.1.3
+    name: community.citrix_netscaler_netscaler.service_port
+  - oid: 1.3.6.1.4.1.5951.4.1.2.1.1.30
+    name: community.citrix_netscaler_netscaler.service_totreq
+  - oid: 1.3.6.1.4.1.5951.4.1.2.1.1.31
+    name: community.citrix_netscaler_netscaler.service_totreqb
+  - oid: 1.3.6.1.4.1.5951.4.1.2.1.1.32
+    name: community.citrix_netscaler_netscaler.service_totresp
+  - oid: 1.3.6.1.4.1.5951.4.1.2.1.1.33
+    name: community.citrix_netscaler_netscaler.service_totrespb
+  - oid: 1.3.6.1.4.1.5951.4.1.2.1.1.34
+    name: community.citrix_netscaler_netscaler.service_totresvdpkts
+  - oid: 1.3.6.1.4.1.5951.4.1.2.1.1.35
+    name: community.citrix_netscaler_netscaler.service_totrsentpkts
+  metric_tags:
+  - tag: template_table
+    value: snmp-services-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.5951.4.1.2.1.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.5951.4.1.3.1
+    name: snmp_vservers_discovery
+  symbols:
+  - oid: 1.3.6.1.4.1.5951.4.1.3.1.1.7
+    name: community.citrix_netscaler_netscaler.vsvr_cl_conn
+  - oid: 1.3.6.1.4.1.5951.4.1.3.1.1.62
+    name: community.citrix_netscaler_netscaler.vsvr_health
+  - oid: 1.3.6.1.4.1.5951.4.1.3.1.1.8
+    name: community.citrix_netscaler_netscaler.vsvr_sr_conn
+  - oid: 1.3.6.1.4.1.5951.4.1.3.1.1.5
+    name: community.citrix_netscaler_netscaler.vsvr_state
+  - oid: 1.3.6.1.4.1.5951.4.1.3.1.1.56
+    name: community.citrix_netscaler_netscaler.vsvr_totalclients
+  - oid: 1.3.6.1.4.1.5951.4.1.3.1.1.65
+    name: community.citrix_netscaler_netscaler.vsvr_totalservers
+  - oid: 1.3.6.1.4.1.5951.4.1.3.1.1.37
+    name: community.citrix_netscaler_netscaler.vsvr_vsvrcurservicesdown
+  - oid: 1.3.6.1.4.1.5951.4.1.3.1.1.39
+    name: community.citrix_netscaler_netscaler.vsvr_vsvrcurservicesoutofsvc
+  - oid: 1.3.6.1.4.1.5951.4.1.3.1.1.40
+    name: community.citrix_netscaler_netscaler.vsvr_vsvrcurservicestranstooutofsvc
+  - oid: 1.3.6.1.4.1.5951.4.1.3.1.1.38
+    name: community.citrix_netscaler_netscaler.vsvr_vsvrcurservicesunknown
+  - oid: 1.3.6.1.4.1.5951.4.1.3.1.1.41
+    name: community.citrix_netscaler_netscaler.vsvr_vsvrcurservicesup
+  - oid: 1.3.6.1.4.1.5951.4.1.3.1.1.44
+    name: community.citrix_netscaler_netscaler.vsvr_vsvrrxbytesrate
+  - oid: 1.3.6.1.4.1.5951.4.1.3.1.1.45
+    name: community.citrix_netscaler_netscaler.vsvr_vsvrtxbytesrate
+  metric_tags:
+  - tag: template_table
+    value: snmp-vservers-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.5951.4.1.3.1.1.59
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: citrix-netscaler
+- tag: template
+  value: netscaler
+- tag: template_version
+  value: 6-0

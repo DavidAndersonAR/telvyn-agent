@@ -1,0 +1,11 @@
+FROM rockylinux:9
+
+# epel-release pra pacote ShellCheck na Rocky 9.
+RUN dnf -y install epel-release \
+ && dnf -y install bash ca-certificates curl ShellCheck \
+ && dnf clean all
+
+WORKDIR /test
+COPY install.sh /test/install.sh
+
+CMD ["bash", "-c", "set -e && bash -n /test/install.sh && shellcheck -S warning /test/install.sh && echo 'rocky-9 OK'"]

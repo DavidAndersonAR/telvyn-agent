@@ -1,0 +1,214 @@
+{{- if .Values.webhook.enabled }}
+{{- /*
+  Mutating Webhook stack:
+   - cert-init Job: gera CA self-signed, cria Secret com tls.crt/tls.key,
+     patcha caBundle no MutatingWebhookConfiguration.
+   - Deployment: 1 réplica do agent rodando --webhook.
+   - Service: ClusterIP, porta 443 → 8443.
+   - MutatingWebhookConfiguration: rota Pod CREATE pra nosso /mutate.
+   - ServiceAccount + Role pro cert-init (patch caBundle + criar Secret).
+*/}}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "ispwatch-agent.fullname" . }}-webhook-init
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "ispwatch-agent.fullname" . }}-webhook-init
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "get", "patch", "update"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["mutatingwebhookconfigurations"]
+    verbs: ["get", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "ispwatch-agent.fullname" . }}-webhook-init
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "ispwatch-agent.fullname" . }}-webhook-init
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "ispwatch-agent.fullname" . }}-webhook-init
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ispwatch-agent.fullname" . }}-webhook-cert-init
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      serviceAccountName: {{ include "ispwatch-agent.fullname" . }}-webhook-init
+      restartPolicy: OnFailure
+      containers:
+        - name: cert-init
+          image: alpine/k8s:1.30.7
+          command: ["sh", "-c"]
+          env:
+            - { name: NAMESPACE, value: {{ .Release.Namespace | quote }} }
+            - { name: SERVICE,   value: "{{ include "ispwatch-agent.fullname" . }}-webhook" }
+            - { name: SECRET,    value: "{{ include "ispwatch-agent.fullname" . }}-webhook-tls" }
+            - { name: WEBHOOK,   value: "{{ include "ispwatch-agent.fullname" . }}-webhook" }
+          args:
+            - |
+              set -eu
+              cd /tmp
+              # CA
+              openssl genrsa -out ca.key 2048
+              openssl req -x509 -new -nodes -key ca.key -subj "/CN=ispwatch-webhook-ca" -days 3650 -out ca.crt
+              # cert pro webhook service
+              openssl genrsa -out tls.key 2048
+              cat > csr.conf <<EOF
+              [req]
+              distinguished_name = req_distinguished_name
+              req_extensions = v3_req
+              prompt = no
+              [req_distinguished_name]
+              CN = ${SERVICE}.${NAMESPACE}.svc
+              [v3_req]
+              keyUsage = critical, digitalSignature, keyEncipherment
+              extendedKeyUsage = serverAuth
+              subjectAltName = @alt_names
+              [alt_names]
+              DNS.1 = ${SERVICE}
+              DNS.2 = ${SERVICE}.${NAMESPACE}
+              DNS.3 = ${SERVICE}.${NAMESPACE}.svc
+              DNS.4 = ${SERVICE}.${NAMESPACE}.svc.cluster.local
+              EOF
+              openssl req -new -key tls.key -out tls.csr -config csr.conf
+              openssl x509 -req -in tls.csr -CA ca.crt -CAkey ca.key -CAcreateserial \
+                  -out tls.crt -days 365 -extensions v3_req -extfile csr.conf
+              CA_B64=$(base64 -w0 ca.crt)
+              # Cria Secret (ou update)
+              kubectl -n "$NAMESPACE" delete secret "$SECRET" --ignore-not-found
+              kubectl -n "$NAMESPACE" create secret tls "$SECRET" --cert=tls.crt --key=tls.key
+              # Patch caBundle
+              kubectl patch mutatingwebhookconfiguration "$WEBHOOK" \
+                --type=json \
+                -p='[{"op":"replace","path":"/webhooks/0/clientConfig/caBundle","value":"'"$CA_B64"'"}]'
+              echo "webhook cert init done"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ispwatch-agent.fullname" . }}-webhook
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: ispwatch-agent
+    app.kubernetes.io/component: webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ispwatch-agent
+      app.kubernetes.io/component: webhook
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ispwatch-agent
+        app.kubernetes.io/component: webhook
+    spec:
+      serviceAccountName: {{ include "ispwatch-agent.fullname" . }}
+      containers:
+        - name: webhook
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["--webhook"]
+          ports:
+            - { name: https, containerPort: 8443 }
+          env:
+            - name: ISPWATCH_BACKEND_URL
+              value: {{ printf "https://%s" (.Values.bootstrap.enrollUrl | replace "/api/agents/enroll" "" | replace "http://" "" | replace ":8080" ":8444") | quote }}
+            - name: ISPWATCH_TENANT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "ispwatch-agent.fullname" . }}-webhook-config
+                  key: tenant_id
+            - name: ISPWATCH_CLIENT_CERT
+              value: /etc/ispwatch/mtls/client.cert.pem
+            - name: ISPWATCH_CLIENT_KEY
+              value: /etc/ispwatch/mtls/client.key.pem
+            - name: ISPWATCH_TRUST_BUNDLE
+              value: /etc/ispwatch/mtls/ca.crt
+            - name: ISPWATCH_AGENT_IMAGE
+              value: {{ default (printf "%s:%s" .Values.image.repository .Values.image.tag) .Values.webhook.agentImageRef | quote }}
+            - name: ISPWATCH_OTLP_ENDPOINT
+              value: {{ .Values.webhook.otlpEndpoint | quote }}
+          volumeMounts:
+            - { name: tls, mountPath: /etc/ispwatch/webhook, readOnly: true }
+            - { name: mtls, mountPath: /etc/ispwatch/mtls, readOnly: true }
+          readinessProbe:
+            httpGet: { path: /healthz, port: https, scheme: HTTPS }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests: { cpu: 25m, memory: 32Mi }
+            limits:   { cpu: 200m, memory: 128Mi }
+      volumes:
+        - name: tls
+          secret:
+            secretName: {{ include "ispwatch-agent.fullname" . }}-webhook-tls
+        - name: mtls
+          secret:
+            secretName: {{ include "ispwatch-agent.fullname" . }}-webhook-mtls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ispwatch-agent.fullname" . }}-webhook
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app.kubernetes.io/name: ispwatch-agent
+    app.kubernetes.io/component: webhook
+  ports:
+    - port: {{ .Values.webhook.service.port }}
+      targetPort: https
+      name: https
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ include "ispwatch-agent.fullname" . }}-webhook
+webhooks:
+  - name: javaagent.ispwatch.io
+    clientConfig:
+      service:
+        name: {{ include "ispwatch-agent.fullname" . }}-webhook
+        namespace: {{ .Release.Namespace }}
+        path: /mutate
+        port: {{ .Values.webhook.service.port }}
+      # caBundle preenchido pelo Job cert-init via kubectl patch.
+      caBundle: ""
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+        scope: "Namespaced"
+    {{- if .Values.webhook.namespaceSelector }}
+    namespaceSelector:
+{{ toYaml .Values.webhook.namespaceSelector | indent 6 }}
+    {{- end }}
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    timeoutSeconds: 5
+    # Failure policy Ignore — se webhook offline/lento, pod sobe normal.
+    # Tracing é nice-to-have, não pode bloquear deploy do cliente.
+    failurePolicy: Ignore
+{{- end }}

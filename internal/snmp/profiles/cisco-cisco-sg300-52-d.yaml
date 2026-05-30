@@ -1,0 +1,122 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.9
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.6.1.101.83.1.1
+    name: fan_discovery
+  symbols:
+  - oid: 1.3.6.1.4.1.9.6.1.101.83.1.1.1.3
+    name: community.cisco_cisco_sg300_52_d.system_fan
+  metric_tags:
+  - tag: template_table
+    value: fan-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.6.1.101.83.1.1.1.3
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.10.7.2
+    name: net_if_disco
+  symbols:
+  - oid: 1.3.6.1.2.1.10.7.2.1.19
+    name: community.cisco_cisco_sg300_52_d.net_if
+  metric_tags:
+  - tag: template_table
+    value: net-if-disco
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: net_if_disco
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.cisco_cisco_sg300_52_d.net_if
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.cisco_cisco_sg300_52_d.net_if
+  - oid: 1.3.6.1.2.1.2.2.1.11
+    name: community.cisco_cisco_sg300_52_d.net_if
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.cisco_cisco_sg300_52_d.net_if
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.cisco_cisco_sg300_52_d.net_if
+  - oid: 1.3.6.1.2.1.2.2.1.17
+    name: community.cisco_cisco_sg300_52_d.net_if
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: community.cisco_cisco_sg300_52_d.net_if
+  - oid: 1.3.6.1.2.1.2.2.1.3
+    name: community.cisco_cisco_sg300_52_d.net_if
+  metric_tags:
+  - tag: template_table
+    value: net-if-disco
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: net_if_disco
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.3
+    name: community.cisco_cisco_sg300_52_d.net_if
+  - oid: 1.3.6.1.2.1.31.1.1.1.2
+    name: community.cisco_cisco_sg300_52_d.net_if
+  - oid: 1.3.6.1.2.1.31.1.1.1.5
+    name: community.cisco_cisco_sg300_52_d.net_if
+  - oid: 1.3.6.1.2.1.31.1.1.1.4
+    name: community.cisco_cisco_sg300_52_d.net_if
+  metric_tags:
+  - tag: template_table
+    value: net-if-disco
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: net_vlan_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.cisco_cisco_sg300_52_d.net_vlan
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.cisco_cisco_sg300_52_d.net_vlan
+  - oid: 1.3.6.1.2.1.2.2.1.11
+    name: community.cisco_cisco_sg300_52_d.net_vlan
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.cisco_cisco_sg300_52_d.net_vlan
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.cisco_cisco_sg300_52_d.net_vlan
+  - oid: 1.3.6.1.2.1.2.2.1.17
+    name: community.cisco_cisco_sg300_52_d.net_vlan
+  - oid: 1.3.6.1.2.1.2.2.1.3
+    name: community.cisco_cisco_sg300_52_d.net_vlan
+  metric_tags:
+  - tag: template_table
+    value: net-vlan-discovery
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: net_vlan_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.3
+    name: community.cisco_cisco_sg300_52_d.net_vlan
+  - oid: 1.3.6.1.2.1.31.1.1.1.2
+    name: community.cisco_cisco_sg300_52_d.net_vlan
+  - oid: 1.3.6.1.2.1.31.1.1.1.5
+    name: community.cisco_cisco_sg300_52_d.net_vlan
+  - oid: 1.3.6.1.2.1.31.1.1.1.4
+    name: community.cisco_cisco_sg300_52_d.net_vlan
+  metric_tags:
+  - tag: template_table
+    value: net-vlan-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: cisco
+- tag: template
+  value: cisco-sg300-52-d
+- tag: template_version
+  value: 6-0

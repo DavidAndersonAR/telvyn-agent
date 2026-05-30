@@ -1,0 +1,132 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.5597
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.5597.30.0.6.2
+    name: mbgltngclusterindex
+  symbols:
+  - oid: 1.3.6.1.4.1.5597.30.0.6.2.1.7
+    name: community.meinberg_device_meinberg_lantime.mbgltngclusterclockclass
+  - oid: 1.3.6.1.4.1.5597.30.0.6.2.1.8
+    name: community.meinberg_device_meinberg_lantime.mbgltngclusterclockstatus
+  - oid: 1.3.6.1.4.1.5597.30.0.6.2.1.10
+    name: community.meinberg_device_meinberg_lantime.mbgltngclusterisfalseticker
+  - oid: 1.3.6.1.4.1.5597.30.0.6.2.1.6
+    name: community.meinberg_device_meinberg_lantime.mbgltngclustermasterpriority
+  - oid: 1.3.6.1.4.1.5597.30.0.6.2.1.3
+    name: community.meinberg_device_meinberg_lantime.mbgltngclusterportstate
+  - oid: 1.3.6.1.4.1.5597.30.0.6.2.1.9
+    name: community.meinberg_device_meinberg_lantime.mbgltngclusterreconfigurationstate
+  metric_tags:
+  - tag: template_table
+    value: mbgltngclusterindex
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.5597.30.0.6.2.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.5597.30.0.3.2
+    name: mbgltngptpindex
+  symbols:
+  - oid: 1.3.6.1.4.1.5597.30.0.3.2.1.20
+    name: community.meinberg_device_meinberg_lantime.mbgltngptpavail
+  - oid: 1.3.6.1.4.1.5597.30.0.3.2.1.5
+    name: community.meinberg_device_meinberg_lantime.mbgltngptpclockaccuracy
+  - oid: 1.3.6.1.4.1.5597.30.0.3.2.1.6
+    name: community.meinberg_device_meinberg_lantime.mbgltngptpclockclass
+  - oid: 1.3.6.1.4.1.5597.30.0.3.2.1.19
+    name: community.meinberg_device_meinberg_lantime.mbgltngptpdelayasymmetry
+  - oid: 1.3.6.1.4.1.5597.30.0.3.2.1.15
+    name: community.meinberg_device_meinberg_lantime.mbgltngptpdelaymec
+  - oid: 1.3.6.1.4.1.5597.30.0.3.2.1.8
+    name: community.meinberg_device_meinberg_lantime.mbgltngptpoffsetfromgm
+  - oid: 1.3.6.1.4.1.5597.30.0.3.2.1.14
+    name: community.meinberg_device_meinberg_lantime.mbgltngptppathdelay
+  - oid: 1.3.6.1.4.1.5597.30.0.3.2.1.12
+    name: community.meinberg_device_meinberg_lantime.mbgltngptpportlinkup
+  - oid: 1.3.6.1.4.1.5597.30.0.3.2.1.3
+    name: community.meinberg_device_meinberg_lantime.mbgltngptpportstate
+  - oid: 1.3.6.1.4.1.5597.30.0.3.2.1.9
+    name: community.meinberg_device_meinberg_lantime.mbgltngptptimeseconds
+  - oid: 1.3.6.1.4.1.5597.30.0.3.2.1.7
+    name: community.meinberg_device_meinberg_lantime.mbgltngptptimesource
+  - oid: 1.3.6.1.4.1.5597.30.0.3.2.1.8
+    name: community.meinberg_device_meinberg_lantime.mbgltngptputcoffset
+  metric_tags:
+  - tag: template_table
+    value: mbgltngptpindex
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.5597.30.0.3.2.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.5597.30.0.1.2
+    name: mbgltngrefclocktable
+  symbols:
+  - oid: 1.3.6.1.4.1.5597.30.0.1.2.1.10
+    name: community.meinberg_device_meinberg_lantime.mbgltngrefclockadditionalinfo
+  - oid: 1.3.6.1.4.1.5597.30.0.1.2.1.7
+    name: community.meinberg_device_meinberg_lantime.mbgltngrefclockmaxstatusa
+  - oid: 1.3.6.1.4.1.5597.30.0.1.2.1.9
+    name: community.meinberg_device_meinberg_lantime.mbgltngrefclockmaxstatusb
+  - oid: 1.3.6.1.4.1.5597.30.0.1.2.1.4
+    name: community.meinberg_device_meinberg_lantime.mbgltngrefclockstate
+  - oid: 1.3.6.1.4.1.5597.30.0.1.2.1.6
+    name: community.meinberg_device_meinberg_lantime.mbgltngrefclockstatusa
+  - oid: 1.3.6.1.4.1.5597.30.0.1.2.1.8
+    name: community.meinberg_device_meinberg_lantime.mbgltngrefclockstatusb
+  - oid: 1.3.6.1.4.1.5597.30.0.1.2.1.5
+    name: community.meinberg_device_meinberg_lantime.mbgltngrefclocksubstate
+  - oid: 1.3.6.1.4.1.5597.30.0.1.2.1.2
+    name: community.meinberg_device_meinberg_lantime.mbgltngrefclocktype
+  - oid: 1.3.6.1.4.1.5597.30.0.1.2.1.3
+    name: community.meinberg_device_meinberg_lantime.mbgltngrefclockusage
+  metric_tags:
+  - tag: template_table
+    value: mbgltngrefclocktable
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.5597.30.0.1.2.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.5597.30.0.5.1.2
+    name: mbgltngsysfanindex
+  symbols:
+  - oid: 1.3.6.1.4.1.5597.30.0.5.1.2.1.3
+    name: community.meinberg_device_meinberg_lantime.mbgltngsysfanerror
+  - oid: 1.3.6.1.4.1.5597.30.0.5.1.2.1.2
+    name: community.meinberg_device_meinberg_lantime.mbgltngsysfanstatus
+  metric_tags:
+  - tag: template_table
+    value: mbgltngsysfanindex
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.5597.30.0.5.1.2.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.5597.30.0.5.0.2
+    name: mbgltngsyspstable
+  symbols:
+  - oid: 1.3.6.1.4.1.5597.30.0.5.0.2.1.2
+    name: community.meinberg_device_meinberg_lantime.mbgltngsyspsstatus
+  metric_tags:
+  - tag: template_table
+    value: mbgltngsyspstable
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.5597.30.0.5.0.2.1.1
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: meinberg
+- tag: template
+  value: device-meinberg-lantime
+- tag: template_version
+  value: 6-0
