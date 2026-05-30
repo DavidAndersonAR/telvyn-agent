@@ -23,7 +23,7 @@ import (
 	"time"
 
 	collectorv1 "github.com/ispwatch/collector/proto/v1"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	metricscolpb "go.opentelemetry.io/proto/otlp/collector/metrics/v1"
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
@@ -142,11 +142,12 @@ func (e *IngestExporter) PostMetrics(ctx context.Context, metrics []*collectorv1
 			ScopeMetrics: []*metricspb.ScopeMetrics{{Metrics: dps}},
 		}},
 	}
-	body, err := proto.Marshal(reqMsg)
+	// Gateway OTLP do Telvyn é JSON-only (igual /traces) — manda protojson.
+	body, err := protojson.Marshal(reqMsg)
 	if err != nil {
 		return err
 	}
-	return e.PostRaw(ctx, "metrics", "application/x-protobuf", body)
+	return e.PostRaw(ctx, "metrics", "application/json", body)
 }
 
 func kv(k, v string) *commonpb.KeyValue {
