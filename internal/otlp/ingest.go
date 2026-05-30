@@ -16,6 +16,7 @@ package otlp
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -148,6 +149,37 @@ func (e *IngestExporter) PostMetrics(ctx context.Context, metrics []*collectorv1
 		return err
 	}
 	return e.PostRaw(ctx, "metrics", "application/json", body)
+}
+
+// RegisterK8sNode registra o nó no backend (POST /k8s/register, Bearer) →
+// cria o noc_host + check k8s.kubelet (faz o nó aparecer em "Aplicações").
+// Devolve o host_id (bigint como string) pra taggear as métricas de pod.
+func (e *IngestExporter) RegisterK8sNode(ctx context.Context, cluster, node, nodeIP, k8sVersion string) (string, error) {
+	payload := map[string]string{
+		"cluster": cluster, "node": node, "node_ip": nodeIP, "k8s_version": k8sVersion,
+	}
+	body, _ := json.Marshal(payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, e.base+"/k8s/register", bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+e.token)
+	resp, err := e.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode/100 != 2 {
+		return "", fmt.Errorf("k8s register: HTTP %d", resp.StatusCode)
+	}
+	var out struct {
+		HostID json.Number `json:"host_id"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return "", err
+	}
+	return out.HostID.String(), nil
 }
 
 func kv(k, v string) *commonpb.KeyValue {
