@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -134,6 +135,14 @@ func main() {
 			whLog.Error("webhook server exited", "err", err)
 			os.Exit(1)
 		}
+		return
+	}
+
+	// Modo ingest certless (Datadog-style): manda telemetria OTLP pro gateway
+	// /api/ingest/v1 com Bearer token, sem enrollment/mTLS/cert por agent.
+	// Ativado por ISPWATCH_INGEST_URL (+ ISPWATCH_INGEST_TOKEN).
+	if ingestURL := strings.TrimSpace(os.Getenv("ISPWATCH_INGEST_URL")); ingestURL != "" {
+		runIngestMode(ingestURL)
 		return
 	}
 
@@ -747,6 +756,68 @@ func (c *gosnmpClient) Host() string { return c.host }
 func (c *gosnmpClient) Close() {
 	if c.snmp != nil && c.snmp.Conn != nil {
 		_ = c.snmp.Conn.Close()
+	}
+}
+
+// runIngestMode roda o agent no modelo "Datadog" (API key): recebe OTLP de
+// apps locais e emite as métricas do próprio host, encaminhando tudo pro
+// gateway /api/ingest/v1 com Bearer token — sem enrollment, sem mTLS, sem
+// cert por agent. É o caminho simples; o modo gRPC mTLS (main) segue intacto.
+func runIngestMode(ingestURL string) {
+	log := newLogger(getenvOr("COLLECTOR_LOG_LEVEL", "info"))
+	token := strings.TrimSpace(os.Getenv("ISPWATCH_INGEST_TOKEN"))
+	if token == "" {
+		log.Error("ingest mode: ISPWATCH_INGEST_TOKEN ausente")
+		os.Exit(1)
+	}
+	hostID := strings.TrimSpace(getenvOr("ISPWATCH_NODE_NAME", ""))
+	if hostID == "" {
+		hostID, _ = os.Hostname()
+	}
+	cluster := strings.TrimSpace(os.Getenv("ISPWATCH_CLUSTER"))
+
+	log.Info("ispwatch collector starting (ingest mode)",
+		"version", Version, "endpoint", ingestURL, "host", hostID, "cluster", cluster)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		s := <-sig
+		log.Info("signal received, shutting down", "signal", s.String())
+		cancel()
+	}()
+
+	exporter := otlp.NewIngestExporter(ingestURL, token, hostID, cluster, log)
+
+	// Métricas do próprio host (CPU/mem/disco/rede) → OTLP /metrics.
+	out := make(chan []*collectorv1.Metric, 256)
+	selfmetrics.Start(ctx, log, out, hostID, selfmetrics.DefaultInterval)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ms := <-out:
+				if err := exporter.PostMetrics(ctx, ms); err != nil {
+					log.Warn("ingest metrics failed", "err", err, "count", len(ms))
+				}
+			}
+		}
+	}()
+
+	// Receiver OTLP/HTTP (4318): apps locais mandam spans/metrics/logs e o
+	// agent encaminha o corpo cru pro gateway com o Bearer token.
+	httpAddr := otlp.ParsePortOrDefault(getenvOr("ISPWATCH_OTLP_HTTP_PORT", ""))
+	corsOrigins := otlp.ParseCORSOrigins(getenvOr("ISPWATCH_OTLP_HTTP_CORS_ORIGINS", "*"))
+	rec := otlp.NewHTTPReceiver(httpAddr, nil, log, otlp.DefaultMaxBodyBytes, corsOrigins)
+	rec.SetForwardRaw(func(signal, ct string, body []byte) error {
+		return exporter.PostRaw(ctx, signal, ct, body)
+	})
+	if err := rec.Start(ctx); err != nil {
+		log.Error("ingest mode: otlp http receiver falhou", "err", err)
+		os.Exit(1)
 	}
 }
 

@@ -22,6 +22,13 @@ set -eu
 
 LOG_LEVEL="${COLLECTOR_LOG_LEVEL:-info}"
 
+# Modo ingest certless (Datadog-style): manda OTLP+Bearer pro gateway, sem
+# enrollment/mTLS. O binário detecta ISPWATCH_INGEST_URL e roda esse modo.
+if [ -n "${ISPWATCH_INGEST_URL:-}" ]; then
+  echo "entrypoint: ingest mode (certless OTLP -> gateway)" >&2
+  exec /usr/local/bin/collector
+fi
+
 if [ -n "${ISPWATCH_BOOTSTRAP_TOKEN:-}" ]; then
   PKI_DIR="${ISPWATCH_PKI_DIR:-/var/lib/ispwatch-collector/pki}"
   IDENTITY_FILE="${PKI_DIR}/identity.env"

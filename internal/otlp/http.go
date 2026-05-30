@@ -81,6 +81,11 @@ type HTTPReceiver struct {
 	corsOrigins  []string // nil/empty = "*"
 	log          *slog.Logger
 
+	// forwardRaw, quando setado (modo ingest certless), encaminha o corpo
+	// OTLP cru pro gateway com Bearer token em vez de empurrar pro sink gRPC.
+	// signal ∈ {"traces","metrics","logs"}.
+	forwardRaw func(signal, contentType string, body []byte) error
+
 	server *http.Server
 
 	// Self-metric counters. Atomic pra evitar lock no hot path. Drenados via
@@ -128,6 +133,12 @@ func NewHTTPReceiver(addr string, sink SpanSink, log *slog.Logger, maxBody int64
 		log:              log.With("component", "otlp-http"),
 		endpointRequests: make(map[endpointKey]int64),
 	}
+}
+
+// SetForwardRaw ativa o modo ingest certless: o body OTLP cru é encaminhado
+// pro gateway (Bearer) em vez de convertido e empurrado pro sink gRPC.
+func (h *HTTPReceiver) SetForwardRaw(fn func(signal, contentType string, body []byte) error) {
+	h.forwardRaw = fn
 }
 
 // Start abre listener e roda até ctx ser cancelado. Erros de bind retornam
@@ -198,6 +209,14 @@ func (h *HTTPReceiver) corsOriginsForLog() string {
 
 func (h *HTTPReceiver) handleTraces(w http.ResponseWriter, r *http.Request) {
 	h.serveOTLP(w, r, "/v1/traces", func(body []byte, ct string) (int, error) {
+		if h.forwardRaw != nil {
+			if err := h.forwardRaw("traces", ct, body); err != nil {
+				return http.StatusBadGateway, fmt.Errorf("forward traces: %w", err)
+			}
+			h.tracesAccepted.Add(1)
+			writeOTLPOK(w, ct)
+			return http.StatusOK, nil
+		}
 		req := &tracepb.ExportTraceServiceRequest{}
 		if err := unmarshalOTLP(body, ct, req); err != nil {
 			return http.StatusBadRequest, fmt.Errorf("decode trace request: %w", err)
@@ -220,7 +239,11 @@ func (h *HTTPReceiver) handleTraces(w http.ResponseWriter, r *http.Request) {
 // a função de descarte por convertAndPush análogo ao de traces.
 func (h *HTTPReceiver) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	h.serveOTLP(w, r, "/v1/metrics", func(body []byte, ct string) (int, error) {
-		_ = body // descartado de propósito
+		if h.forwardRaw != nil {
+			if err := h.forwardRaw("metrics", ct, body); err != nil {
+				return http.StatusBadGateway, fmt.Errorf("forward metrics: %w", err)
+			}
+		}
 		h.metricsAccepted.Add(1)
 		writeOTLPOK(w, ct)
 		return http.StatusOK, nil
@@ -229,7 +252,11 @@ func (h *HTTPReceiver) handleMetrics(w http.ResponseWriter, r *http.Request) {
 
 func (h *HTTPReceiver) handleLogs(w http.ResponseWriter, r *http.Request) {
 	h.serveOTLP(w, r, "/v1/logs", func(body []byte, ct string) (int, error) {
-		_ = body
+		if h.forwardRaw != nil {
+			if err := h.forwardRaw("logs", ct, body); err != nil {
+				return http.StatusBadGateway, fmt.Errorf("forward logs: %w", err)
+			}
+		}
 		h.logsAccepted.Add(1)
 		writeOTLPOK(w, ct)
 		return http.StatusOK, nil

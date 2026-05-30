@@ -20,6 +20,13 @@ spec:
     spec:
       serviceAccountName: {{ include "ispwatch-agent.fullname" . }}
       hostNetwork: {{ .Values.hostNetwork }}
+      {{- if .Values.hostNetwork }}
+      # Sob hostNetwork o pod herda o resolv.conf do nó e perde o DNS do
+      # cluster (CoreDNS). ClusterFirstWithHostNet recupera a resolução de
+      # service names (ex: backend.ispwatch.svc do enroll/gRPC) e ainda
+      # resolve nomes públicos via upstream.
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
       {{- if .Values.ebpfTracing.enabled }}
       # eBPF L7 tracing exige hostPID pra resolver pid → container via
       # /proc do host (cgroup parsing). Sem isso o resolver vê só PIDs do
@@ -56,6 +63,14 @@ spec:
                   fieldPath: metadata.namespace
             - name: ISPWATCH_CLUSTER
               value: {{ .Values.clusterName | quote }}
+            {{- if .Values.ingest.url }}
+            # Modo ingest certless (Datadog-style): manda OTLP+Bearer pro
+            # gateway /api/ingest/v1. Sem enrollment, sem mTLS, sem cert.
+            - name: ISPWATCH_INGEST_URL
+              value: {{ .Values.ingest.url | quote }}
+            - name: ISPWATCH_INGEST_TOKEN
+              value: {{ required "values.ingest.token é obrigatório quando ingest.url está setado" .Values.ingest.token | quote }}
+            {{- else }}
             - name: ISPWATCH_AGENT_KIND
               value: {{ .Values.bootstrap.agentKind | default "k8s.node" | quote }}
             # Bootstrap enrollment — entrypoint detecta esses envs e dispara
@@ -75,6 +90,7 @@ spec:
             {{- end }}
             - name: ISPWATCH_PKI_DIR
               value: "/var/lib/ispwatch-collector/pki"
+            {{- end }}
             - name: COLLECTOR_LOG_LEVEL
               value: {{ .Values.logLevel | default "info" | quote }}
             {{- if .Values.ebpfTracing.enabled }}
