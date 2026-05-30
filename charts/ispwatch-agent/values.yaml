@@ -1,3 +1,21 @@
+# ── Modo de autenticação ──────────────────────────────────────────────
+# Dois modos mutuamente exclusivos:
+#
+#   (A) ingest (Datadog-style, RECOMENDADO): API key sobre HTTPS. Setou
+#       ingest.url + ingest.token? O agent manda OTLP+Bearer pro gateway
+#       /api/ingest/v1 — sem cert, sem enrollment. É o caminho simples.
+#
+#   (B) bootstrap (mTLS): se ingest.url ficar vazio, o agent troca um
+#       bootstrap token por um cert único por nó (1 agent = 1 cert).
+#
+# Quando ingest.url está setado, o bloco bootstrap é ignorado.
+ingest:
+  # URL do portal Telvyn (com ou sem /api/ingest/v1 — normalizado no agent).
+  # Ex: https://telvyn.suaempresa.com
+  url: ""
+  # Ingest token (iwI_...) gerado no painel (Monitores → Kubernetes).
+  token: ""
+
 # Bootstrap enrollment — Helm install distribui 1 token; cada pod
 # troca por seu cert único no boot via /api/agents/enroll (modelo
 # "1 agent = 1 host").
@@ -23,7 +41,7 @@ bootstrap:
 clusterName: "default"
 
 image:
-  repository: ghcr.io/davidandersonar/telvyn-agent
+  repository: ghcr.io/ispwatch/agent
   tag: "0.1.0"
   pullPolicy: IfNotPresent
 
