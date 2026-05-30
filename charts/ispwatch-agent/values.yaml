@@ -41,8 +41,9 @@ bootstrap:
 clusterName: "default"
 
 image:
-  repository: ghcr.io/ispwatch/agent
-  tag: "0.1.0"
+  repository: ghcr.io/davidandersonar/telvyn-agent
+  # Vazio = usa o appVersion do chart (setado pelo CI = a tag publicada).
+  tag: ""
   pullPolicy: IfNotPresent
 
 # hostNetwork=true permite que o agent leia localhost:10250 (kubelet) do
