@@ -1,0 +1,40 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.9
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.13.1.4
+    name: ciscoenvmonfanstatusdescr
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.13.1.4.1.3
+    name: community.huawei_basic_huawei_snmp_with_traps_ar161_and_s2220e.ciscoenvmonfanstate
+  metric_tags:
+  - tag: template_table
+    value: ciscoenvmonfanstatusdescr
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.13.1.4.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.13.1.5
+    name: ciscoenvmonsupplystatusdescr
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.13.1.5.1.3
+    name: community.huawei_basic_huawei_snmp_with_traps_ar161_and_s2220e.ciscoenvmonsupplystate
+  metric_tags:
+  - tag: template_table
+    value: ciscoenvmonsupplystatusdescr
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.13.1.5.1.2
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: huawei
+- tag: template
+  value: basic-huawei-snmp-with-traps-ar161-and-s2220e
+- tag: template_version
+  value: 6-0

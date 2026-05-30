@@ -1,0 +1,378 @@
+syntax = "proto3";
+
+package ispwatch.collector.v1;
+
+option go_package = "github.com/ispwatch/collector/proto/v1;collectorv1";
+option java_package = "system.monitoring.collector.v1";
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/duration.proto";
+
+// =====================================================================
+// CollectorService runs on the central IspWatch server.
+// Collector daemons connect TO it over mTLS (reverse tunnel pattern —
+// collectors behind NAT can be reached from the central control plane
+// without inbound firewall rules at the customer side).
+//
+// Streams are long-lived: the collector opens them at startup and keeps
+// them open. Reconnect logic lives in the collector binary (Go).
+// =====================================================================
+service CollectorService {
+
+  // Handshake. Sent once at startup and after every reconnect.
+  // Server returns the runtime config (which adapters to enable, batch
+  // sizes, intervals) and a session token used in subsequent streams.
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+
+  // Long-lived metric stream. Collector pushes batches; server acks.
+  // Bidirectional so server can backpressure ("slow down") via ack flow.
+  rpc StreamMetrics(stream MetricBatch) returns (stream MetricAck);
+
+  // Long-lived event stream (state changes — link down, BGP lost, etc).
+  rpc StreamEvents(stream EventBatch) returns (stream EventAck);
+
+  // Reverse channel for MCP-like tool execution.
+  // Collector keeps this stream open; server pushes ToolCommand whenever
+  // the IA causal layer needs to probe the customer environment
+  // (run an SSH command, poll an SNMP OID, query Zabbix history, etc).
+  // Collector executes locally and returns ToolResult.
+  rpc ToolChannel(stream ToolResult) returns (stream ToolCommand);
+
+  // Periodic health beacon (lag, drops, uptime). Feeds collector_health
+  // hypertable in TimescaleDB.
+  rpc ReportHealth(HealthReport) returns (HealthAck);
+
+  // Periodic topology report. Sent by the LLDP/CDP discover adapter as a
+  // batch (LLDP scans tend to be slow + sparse, not streaming). Server
+  // upserts into topology_edge with last_seen=NOW() and emits property
+  // change audit rows. Returns ack with how many edges were persisted vs
+  // dropped (e.g. unmatched remote chassis_id has no local host).
+  rpc ReportTopology(TopologyReport) returns (TopologyAck);
+
+  // Long-lived span stream. Agent recebe OTLP de pods Java instrumentados
+  // via -javaagent na porta local 4317, converte cada Span do OTLP pro
+  // nosso Span message (subset essencial) e envia em batches pro Quarkus.
+  // O tenant_id é injetado server-side a partir do cert mTLS — agente
+  // nunca declara tenant nos spans.
+  rpc StreamSpans(stream SpanBatch) returns (stream SpanAck);
+}
+
+// ---------------------------------------------------------------------
+// Handshake
+// ---------------------------------------------------------------------
+message RegisterRequest {
+  string collector_id   = 1;  // stable UUID of this collector instance
+  string tenant_id      = 2;  // tenant slug (matches Django tenant)
+  string version        = 3;  // collector binary version (semver)
+  string hostname       = 4;  // OS hostname for ops visibility
+  repeated string capabilities = 5; // ["zabbix","snmp","ssh","fortigate","mikrotik"]
+
+  // Phase 4 — opcional; agente reporta serviços detectados via gopsutil.
+  // Campo 20+ para evitar colisão com expansões futuras de campos 6-19.
+  // Consumido por Plan 04-08 (Quarkus lê) + Plan 04-09 (UI sugere template
+  // sem auto-aplicar — operador confirma). Hint não-autoritativo: lista é
+  // input não-confiável do agente, capada em 16 itens antes do envio.
+  repeated string discovered_services = 20;  // ["postgres", "nginx", "dockerd"]
+}
+
+message RegisterResponse {
+  string session_token              = 1;
+  CollectorConfig config            = 2;
+  google.protobuf.Timestamp issued_at = 3;
+}
+
+message CollectorConfig {
+  int32 metric_batch_size      = 1;  // flush after N metrics
+  int32 metric_flush_seconds   = 2;  // ...or N seconds, whichever first
+  int32 heartbeat_seconds      = 3;  // health report cadence
+  repeated AdapterConfig adapters = 4;
+  // Per-host tool jobs the operator scheduled in the UI. Each entry tells
+  // the agent: "run THIS tool against THAT host every N seconds". Distinct
+  // from `adapters` (which are long-lived continuous integrations like
+  // Zabbix); jobs are ticker-driven invocations of one Tool executor with
+  // resolved credentials inlined into args.
+  repeated ScheduledJob scheduled_jobs = 5;
+  // Phase 2 Plan 3 — server-driven check config. Parallel to adapters
+  // and scheduled_jobs. Hot-reloadable via tool=config.reload (see
+  // tools/config_reload.go arg "checks").
+  repeated CheckConfig checks = 6;
+
+  // Phase 3 Plan 4 — per-host cardinality budget enforced by the
+  // agent-side Tagger middleware (internal/checks/tagger.go). 0 means
+  // "use agent default" (defaultTaggerBudget = 10000). Decisão LOCKED
+  // em 03-CONTEXT.md: o escopo é per-HOST, não per-tenant (REQ-CHECK-06
+  // literal foi reinterpretado — um device exótico não pode consumir o
+  // budget de hosts bem-comportados do mesmo tenant).
+  int32 tagger_budget_per_host = 7;
+
+  // Phase 3 Plan 5 — CIDR ranges scanned by the snmp.autodiscover check.
+  // Empty = no scan. Multiple CIDRs OK (operator can scan management +
+  // production VLANs separately). IDS/SIEM podem flaggar essa operação
+  // como port scan; use somente em redes que você possui ou tem
+  // autorização explícita pra auditar (Pitfall 5 do RESEARCH).
+  repeated string autodiscovery_cidrs = 8;
+}
+
+message AdapterConfig {
+  string kind = 1;                   // "zabbix" — only continuous integration kind today
+  google.protobuf.Struct params = 2; // adapter-specific JSON (URL, intervals)
+}
+
+// One operator-scheduled tool invocation against a managed host. The agent
+// keeps a ticker per job and fires the tool with `args` (which already has
+// the resolved credential merged in by the server — agent does not look up
+// vault entries itself). Result of each invocation is converted to one or
+// more Metrics by the per-tool result-to-metric mapping in the agent.
+message ScheduledJob {
+  string job_id           = 1;  // stable id (Django pk) for log correlation
+  string tool             = 2;  // executor name ("snmp.get","ssh.ping","icmp.ping",...)
+  google.protobuf.Struct args = 3;  // tool-specific args, with secrets merged in
+  int32  interval_seconds = 4;  // tick cadence; <=0 means "run once at startup"
+  string host_id          = 5;  // canonical host identity for Metric.host_id
+  bool   enabled          = 6;  // false = ignored; lets operator pause without delete
+}
+
+// One server-configured continuous check the agent runs in-process at a
+// fixed interval. Distinct from `adapters` (long-lived continuous
+// integrations like Zabbix — DEPRECATED in Phase 1) and `scheduled_jobs`
+// (operator-scheduled tool invocations against managed hosts). A Check
+// runs INSIDE the agent and emits self-metrics about the host it lives on
+// (Local Agent mode per D-12) or the device it polls (Collector mode).
+//
+// Lifecycle: server pushes the full list via `config.reload` tool; agent
+// diff-applies (Reload semantics) without restart.
+message CheckConfig {
+  // Stable id for log correlation and metric_name suffixing.
+  // Convention: "<check_type>-<host_id>" or operator-set slug.
+  string check_id = 1;
+
+  // Registered check executor name (e.g. "linux.system"). Resolved
+  // against the agent's checks.Registry at Reload time; unknown types
+  // are logged and skipped (same semantic as scheduler/adapter Reload).
+  string check_type = 2;
+
+  // Run cadence. Required and > 0. Use Duration not int32 for symmetry
+  // with future sub-second intervals (e.g. ICMP ping check).
+  google.protobuf.Duration interval = 3;
+
+  // Check-specific knobs (mounts_filter, snmp_community, etc.). Opaque
+  // to the agent core — passed straight to the Check factory.
+  map<string, string> params = 4;
+
+  // tags k=v applied to EVERY metric emitted by this check (idiomatic
+  // datadog tagger pattern). Phase 4 template engine populates these
+  // with role=postgres, app=nginx, env=prod, etc.
+  map<string, string> static_tags = 5;
+
+  // Canonical host this check reports about. In Local Agent mode equals
+  // the agent's host_id; in Collector mode points at a remote device.
+  string host_id = 6;
+
+  // Pause-no-delete. false → ignored at Reload time (not held as paused).
+  bool enabled = 7;
+
+  // D-13 schema-forward — Phase 2 only accepts "linux.generic"; Phase 4
+  // resolves to a list of (check_type, params, static_tags) tuples.
+  string template_id = 8;
+
+  // Legacy flat-tag list. Kept reserved for tag callers; new code MUST
+  // use `static_tags` instead. Optional.
+  repeated string tags = 9;
+}
+
+// ---------------------------------------------------------------------
+// Metric stream
+// ---------------------------------------------------------------------
+message MetricBatch {
+  string collector_id     = 1;
+  int64  batch_seq        = 2;       // monotonic per-collector, used for ack correlation
+  repeated Metric metrics = 3;
+}
+
+message Metric {
+  google.protobuf.Timestamp time = 1;
+  string host_id        = 2;
+  string metric_name    = 3;
+  double value          = 4;
+  string interface_name = 5;         // optional (interface metrics)
+  string peer_id        = 6;         // optional (BGP/OSPF/etc neighbor)
+  map<string, string> tags = 7;
+  string source         = 8;         // "snmp" | "zabbix" | "syslog" | ...
+}
+
+message MetricAck {
+  int64  batch_seq = 1;
+  int32  accepted  = 2;
+  int32  rejected  = 3;
+  string error     = 4;              // empty on success
+}
+
+// ---------------------------------------------------------------------
+// Event stream (state changes)
+// ---------------------------------------------------------------------
+message EventBatch {
+  string collector_id   = 1;
+  int64  batch_seq      = 2;
+  repeated Event events = 3;
+}
+
+message Event {
+  google.protobuf.Timestamp time = 1;
+  string host_id    = 2;
+  string event_type = 3;             // "interface_down" | "bgp_peer_lost" | ...
+  string severity   = 4;             // "info" | "warning" | "critical"
+  google.protobuf.Struct details = 5;
+}
+
+message EventAck {
+  int64  batch_seq = 1;
+  int32  accepted  = 2;
+  int32  rejected  = 3;
+  string error     = 4;
+}
+
+// ---------------------------------------------------------------------
+// Reverse tool channel (server → collector → device)
+// Used by IA causal layer to probe customer environment on demand.
+// ---------------------------------------------------------------------
+message ToolCommand {
+  string command_id = 1;             // server-generated UUID; echoed back
+  string tool       = 2;             // "ssh.exec" | "snmp.get" | "zabbix.history" | ...
+  google.protobuf.Struct args = 3;   // tool-specific payload
+  int32  timeout_seconds = 4;
+}
+
+message ToolResult {
+  string command_id = 1;
+  bool   ok         = 2;
+  google.protobuf.Struct result = 3;
+  string error      = 4;
+  int64  duration_ms = 5;
+}
+
+// ---------------------------------------------------------------------
+// Health beacon
+// ---------------------------------------------------------------------
+message HealthReport {
+  string collector_id = 1;
+  google.protobuf.Timestamp time = 2;
+  double lag_seconds         = 3;    // how far behind real-time the pipeline is
+  double drops_per_min       = 4;    // metrics/events dropped due to backpressure
+  double uptime_seconds      = 5;
+  int64  metrics_sent_total  = 6;
+  int64  events_sent_total   = 7;
+  map<string, double> custom = 8;    // adapter-specific gauges
+}
+
+message HealthAck {
+  bool ok = 1;
+}
+
+// ---------------------------------------------------------------------
+// Topology discovery (LLDP/CDP)
+// ---------------------------------------------------------------------
+//
+// Each TopologyEdgeReport is one LLDP/CDP neighbor entry seen on a local
+// interface. The server resolves the *remote* side heuristically (chassisId
+// is usually a MAC; portId is iface name) against its own host inventory.
+// Unresolvable edges are NOT created — they are returned in the ack as
+// unmatched, so the operator can investigate (e.g. host not yet enrolled).
+message TopologyReport {
+  string collector_id              = 1;
+  int64  batch_seq                 = 2;  // monotonic, used for idempotency
+  google.protobuf.Timestamp scanned_at = 3;
+  repeated TopologyEdgeReport edges = 4;
+}
+
+message TopologyEdgeReport {
+  // ---- Local side (well-known to the server) ----
+  // host_id of the device WHERE the LLDP scan ran (managed by us).
+  string local_host_id   = 1;
+  string local_iface     = 2;        // "GigabitEthernet0/1"
+  int32  local_iface_speed_mbps = 3; // from ifSpeed; 0 if unknown
+
+  // ---- Remote side (discovered, must be resolved server-side) ----
+  // chassisIdSubtype per LLDP-MIB:
+  // 1=chassisComponent, 2=ifAlias, 3=portComponent, 4=macAddress,
+  // 5=networkAddress, 6=ifName, 7=local. Most common: 4 (MAC).
+  int32  remote_chassis_id_subtype = 4;
+  string remote_chassis_id         = 5;  // formatted per subtype (MAC as "aa:bb:..." for 4)
+
+  int32  remote_port_id_subtype    = 6;  // 1..7 per LLDP-MIB
+  string remote_port_id            = 7;
+  string remote_port_desc          = 8;  // optional human label
+  string remote_sys_name           = 9;  // hostname as advertised
+  string remote_sys_descr          = 10; // OS/vendor banner
+
+  // ---- Edge metadata ----
+  string layer            = 11;          // "L2" (LLDP) | "L3" (BGP/OSPF)
+  string source_protocol  = 12;          // "lldp" | "cdp" | "bgp" | "ospf"
+  string link_type        = 13;          // "ethernet" | "fiber" | ...
+
+  google.protobuf.Struct raw = 14;       // remaining TLVs for debug
+}
+
+message TopologyAck {
+  int64  batch_seq      = 1;
+  int32  edges_received = 2;
+  int32  edges_persisted = 3;
+  int32  edges_unmatched = 4;            // remote side could not be resolved
+  string error          = 5;             // empty on success
+}
+
+// ---------------------------------------------------------------------
+// Tracing — agent recebe OTLP de pods instrumentados via -javaagent
+// e re-empacota num formato compacto pro nosso storage Postgres.
+// Subset opinativo do OTLP (não 1:1) — só o que a UI consome.
+// ---------------------------------------------------------------------
+message SpanBatch {
+  string collector_id   = 1;
+  int64  batch_seq      = 2;
+  repeated Span spans   = 3;
+}
+
+message Span {
+  // trace_id = 32 hex chars (128 bits). span_id = 16 hex chars (64 bits).
+  // parent_span_id vazio quando é root span.
+  string trace_id        = 1;
+  string span_id         = 2;
+  string parent_span_id  = 3;
+
+  // service.name resource attr — origem do span. Para pods K8s
+  // instrumentados pelo nosso webhook, será o pod.name por convenção.
+  string service_name    = 4;
+
+  // Nome da operação (route, query, etc).
+  string name            = 5;
+
+  // OTLP SpanKind: 0 UNSPECIFIED, 1 INTERNAL, 2 SERVER, 3 CLIENT,
+  // 4 PRODUCER, 5 CONSUMER. Refletido sem reinterpretação.
+  int32  kind            = 6;
+
+  // Janela temporal — unix nanos (não Timestamp, evita alocação).
+  int64  start_unix_nano = 7;
+  int64  end_unix_nano   = 8;
+
+  // OTLP StatusCode: 0 UNSET, 1 OK, 2 ERROR.
+  int32  status_code     = 9;
+  string status_message  = 10;
+
+  // Pod identity — preenchido pelo agent a partir de OTEL_RESOURCE_ATTRIBUTES
+  // injetadas pelo webhook (k8s.namespace.name, k8s.pod.name). Backend usa
+  // pra ligar span → host_id sem precisar parsear resource map outra vez.
+  string namespace       = 11;
+  string pod             = 12;
+
+  // Attributes do span — chave:valor (string), flatten. Tipos não-string
+  // do OTLP são serializados via fmt.Sprint pelo agent antes do envio.
+  map<string, string> attributes = 13;
+}
+
+message SpanAck {
+  int64  batch_seq = 1;
+  int32  accepted  = 2;
+  int32  rejected  = 3;
+  string error     = 4;
+}

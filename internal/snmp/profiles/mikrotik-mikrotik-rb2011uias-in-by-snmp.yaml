@@ -1,0 +1,28 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.0
+metrics:
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.1.0
+    name: community.mikrotik_mikrotik_rb2011uias_in_by_snmp.system_hw_uptime
+- mib: SNMPv2-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.1.3.0
+    name: community.mikrotik_mikrotik_rb2011uias_in_by_snmp.system_net_uptime
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.2.3.1.5.65536
+    name: community.mikrotik_mikrotik_rb2011uias_in_by_snmp.vm_memory_total
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.2.3.1.6.65536
+    name: community.mikrotik_mikrotik_rb2011uias_in_by_snmp.vm_memory_used
+metric_tags:
+- tag: vendor
+  value: mikrotik
+- tag: template
+  value: mikrotik-rb2011uias-in-by-snmp
+- tag: template_version
+  value: 7-4

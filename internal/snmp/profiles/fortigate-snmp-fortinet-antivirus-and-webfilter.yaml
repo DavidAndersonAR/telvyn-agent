@@ -1,0 +1,86 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.12356
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.12356.101.8.2.1
+    name: fgavstatsentry
+  symbols:
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.12
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavftpvirusblocked
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.11
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavftpvirusdetected
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.4
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavhttpvirusblocked
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.3
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavhttpvirusdetected
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.10
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavimapvirusblocked
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.9
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavimapvirusdetected
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.14
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavimvirusblocked
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.13
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavimvirusdetected
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.16
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavnntpvirusblocked
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.15
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavnntpvirusdetected
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.18
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavoversizedblocked
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.17
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavoversizeddetected
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.8
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavpop3virusblocked
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.7
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavpop3virusdetected
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.6
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavsmtpvirusblocked
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.5
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavsmtpvirusdetected
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.2
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavvirusblocked
+  - oid: 1.3.6.1.4.1.12356.101.8.2.1.1.1
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgavvirusdetected
+  metric_tags:
+  - tag: template_table
+    value: fgavstatsentry
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.12356.101.8.2.1.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.12356.101.10.1.2.1
+    name: fgwebfilterstatsentry
+  symbols:
+  - oid: 1.3.6.1.4.1.12356.101.10.1.2.1.1.5
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgwfactivexblocked
+  - oid: 1.3.6.1.4.1.12356.101.10.1.2.1.1.7
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgwfappletblocked
+  - oid: 1.3.6.1.4.1.12356.101.10.1.2.1.1.6
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgwfcookieblocked
+  - oid: 1.3.6.1.4.1.12356.101.10.1.2.1.1.1
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgwfhttpblocked
+  - oid: 1.3.6.1.4.1.12356.101.10.1.2.1.1.2
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgwfhttpsblocked
+  - oid: 1.3.6.1.4.1.12356.101.10.1.2.1.1.4
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgwfhttpsurlblocked
+  - oid: 1.3.6.1.4.1.12356.101.10.1.2.1.1.3
+    name: community.fortigate_snmp_fortinet_antivirus_and_webfilter.fgwfhttpurlblocked
+  metric_tags:
+  - tag: template_table
+    value: fgwebfilterstatsentry
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.12356.101.10.1.2.1.1.1
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: fortigate
+- tag: template
+  value: snmp-fortinet-antivirus-and-webfilter
+- tag: template_version
+  value: 6-0

@@ -1,0 +1,116 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.27514
+metrics:
+- mib: QTECH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.27514.100.1.11.9.0
+    name: community.qtech_qtech_qsw_by_snmp.sensor_temp_value
+- mib: QTECH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.27514.100.1.11.10.0
+    name: community.qtech_qtech_qsw_by_snmp.system_cpu_util
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.1.0
+    name: community.qtech_qtech_qsw_by_snmp.system_hw_uptime
+- mib: SNMPv2-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.1.3.0
+    name: community.qtech_qtech_qsw_by_snmp.system_net_uptime
+- mib: QTECH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.27514.100.1.11.6.0
+    name: community.qtech_qtech_qsw_by_snmp.vm_memory_total
+- mib: QTECH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.27514.100.1.11.7.0
+    name: community.qtech_qtech_qsw_by_snmp.vm_memory_used
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.27514.100.1.12
+    name: fan_discovery
+  symbols:
+  - oid: 1.3.6.1.4.1.27514.100.1.12.1.3
+    name: community.qtech_qtech_qsw_by_snmp.sensor_fan_status
+  metric_tags:
+  - tag: template_table
+    value: fan-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.27514.100.1.12.1.3
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: net_if_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: community.qtech_qtech_qsw_by_snmp.net_if_in_discards
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.qtech_qtech_qsw_by_snmp.net_if_in_errors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: community.qtech_qtech_qsw_by_snmp.net_if_out_discards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.qtech_qtech_qsw_by_snmp.net_if_out_errors
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.qtech_qtech_qsw_by_snmp.net_if_status
+  - oid: 1.3.6.1.2.1.2.2.1.3
+    name: community.qtech_qtech_qsw_by_snmp.net_if_type
+  metric_tags:
+  - tag: template_table
+    value: net-if-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.8
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: net_if_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: community.qtech_qtech_qsw_by_snmp.net_if_in
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: community.qtech_qtech_qsw_by_snmp.net_if_out
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: community.qtech_qtech_qsw_by_snmp.net_if_speed
+  metric_tags:
+  - tag: template_table
+    value: net-if-discovery
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.10.7.2
+    name: net_if_duplex_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.10.7.2.1.19
+    name: community.qtech_qtech_qsw_by_snmp.net_if_duplex
+  metric_tags:
+  - tag: template_table
+    value: net-if-duplex-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.10.7.2.1.19
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.27514.100.1.7
+    name: psu_discovery
+  symbols:
+  - oid: 1.3.6.1.4.1.27514.100.1.7.1.5
+    name: community.qtech_qtech_qsw_by_snmp.sensor_psu_status
+  metric_tags:
+  - tag: template_table
+    value: psu-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.27514.100.1.7.1.5
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: qtech
+- tag: template
+  value: qtech-qsw-by-snmp
+- tag: template_version
+  value: 7-4

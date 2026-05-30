@@ -1,0 +1,40 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.2620
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.2620.1.6.7.8.2
+    name: fanspeedsensortable
+  symbols:
+  - oid: 1.3.6.1.4.1.2620.1.6.7.8.2.1.3
+    name: community.checkpoint_checkpoint_snmp.fanspeedsensorvalue
+  metric_tags:
+  - tag: template_table
+    value: fanspeedsensortable
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.2620.1.6.7.8.2.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.2620.1.6.7.8.1
+    name: temparturesensortable
+  symbols:
+  - oid: 1.3.6.1.4.1.2620.1.6.7.8.1.1.3
+    name: community.checkpoint_checkpoint_snmp.temperturesensorvalue
+  metric_tags:
+  - tag: template_table
+    value: temparturesensortable
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.2620.1.6.7.8.1.1.2
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: checkpoint
+- tag: template
+  value: checkpoint-snmp
+- tag: template_version
+  value: 6-0

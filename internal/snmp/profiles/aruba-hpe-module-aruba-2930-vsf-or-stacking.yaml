@@ -1,0 +1,94 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.11
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.99.1.1
+    name: hpchassistemperature
+  symbols:
+  - oid: 1.3.6.1.2.1.99.1.1.1.4
+    name: community.aruba_hpe_module_aruba_2930_vsf_or_stacking.hpchassistemperaturevalue
+  metric_tags:
+  - tag: template_table
+    value: hpchassistemperature
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.11.2.14.11.5.1.69.1
+    name: hpestacking
+  symbols:
+  - oid: 1.3.6.1.4.1.11.2.14.11.5.1.69.1.1.2
+    name: community.aruba_hpe_module_aruba_2930_vsf_or_stacking.hpstackswitchoperstatus
+  metric_tags:
+  - tag: template_table
+    value: hpestacking
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.11.2.14.11.5.1.69.1.2
+    name: hpestacking
+  symbols:
+  - oid: 1.3.6.1.4.1.11.2.14.11.5.1.69.1.2.1.2
+    name: community.aruba_hpe_module_aruba_2930_vsf_or_stacking.hpstackswitchadminstatus
+  metric_tags:
+  - tag: template_table
+    value: hpestacking
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.11.2.14.11.5.1.69.1.3
+    name: hpestacking
+  symbols:
+  - oid: 1.3.6.1.4.1.11.2.14.11.5.1.69.1.3.1.9
+    name: community.aruba_hpe_module_aruba_2930_vsf_or_stacking.hpicfvsfvcmemberstate
+  metric_tags:
+  - tag: template_table
+    value: hpestacking
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.11.2.14.11.5.1.116.1.3
+    name: hpevsfstackmemberstatus
+  symbols:
+  - oid: 1.3.6.1.4.1.11.2.14.11.5.1.116.1.3.1.9
+    name: community.aruba_hpe_module_aruba_2930_vsf_or_stacking.hpevsfstackvcmeberstatus
+  metric_tags:
+  - tag: template_table
+    value: hpevsfstackmemberstatus
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.11.2.14.11.5.1.116.1.3.1.9
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.11.2.14.11.5.1.54.2.1
+    name: hpicffanstate
+  symbols:
+  - oid: 1.3.6.1.4.1.11.2.14.11.5.1.54.2.1.1.4
+    name: community.aruba_hpe_module_aruba_2930_vsf_or_stacking.hpicffanstate
+  metric_tags:
+  - tag: template_table
+    value: hpicffanstate
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.11.2.14.11.5.1.54.2.1.1.4
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.11.2.14.11.5.1.55.1.1
+    name: hpicfpsstate
+  symbols:
+  - oid: 1.3.6.1.4.1.11.2.14.11.5.1.55.1.1.1.2
+    name: community.aruba_hpe_module_aruba_2930_vsf_or_stacking.hpicfpsstate
+  metric_tags:
+  - tag: template_table
+    value: hpicfpsstate
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.11.2.14.11.5.1.55.1.1.1.2
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: aruba
+- tag: template
+  value: hpe-module-aruba-2930-vsf-or-stacking
+- tag: template_version
+  value: 6-4

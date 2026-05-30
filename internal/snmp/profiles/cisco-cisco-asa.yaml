@@ -1,0 +1,28 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.9
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.109.1.1.1
+    name: numofcore
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.7
+    name: community.cisco_cisco_asa.cpmcputotal1minrev
+  - oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.8
+    name: community.cisco_cisco_asa.cpmcputotal5minrev
+  metric_tags:
+  - tag: template_table
+    value: numofcore
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.7
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: cisco
+- tag: template
+  value: cisco-asa
+- tag: template_version
+  value: 6-0

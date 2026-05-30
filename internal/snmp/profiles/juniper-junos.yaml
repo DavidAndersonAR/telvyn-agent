@@ -1,0 +1,49 @@
+# IspWatch SNMP profile — juniper-junos. Schema reference: RESEARCH.md Pattern 1.
+#
+# Cobre Juniper rodando Junos (MX/SRX/EX/QFX) — sysObjectID prefix
+# 1.3.6.1.4.1.2636.1.1.1.*.
+#
+# Stack OID: jnxOperatingTable (cpu por modulo), IF-MIB, BGP4-MIB.
+
+sysobjectid:
+  - 1.3.6.1.4.1.2636.1.1.1
+
+metrics:
+  # Juniper jnxOperatingTable::jnxOperatingCPU — utilizacao por componente
+  # (RoutingEngine, FPC, MIC). Em prod e comum filtrar por index pra
+  # isolar o RE; aqui emitimos como tabela e o agregador downstream filtra.
+  - mib: JUNIPER-MIB
+    table:
+      oid: 1.3.6.1.4.1.2636.3.1.13
+      name: jnxOperatingTable
+    symbols:
+      - { oid: 1.3.6.1.4.1.2636.3.1.13.1.8, name: juniper.cpu }
+    metric_tags:
+      # jnxOperatingDescr — vira label cpu_index ("Routing Engine 0", "FPC0", "MIC0/1")
+      - { tag: cpu_index, symbol: { oid: 1.3.6.1.4.1.2636.3.1.13.1.5, name: jnxOperatingDescr } }
+
+  - mib: IF-MIB
+    table:
+      oid: 1.3.6.1.2.1.2.2
+      name: ifTable
+    symbols:
+      - { oid: 1.3.6.1.2.1.2.2.1.10, name: snmp.if.in_octets }
+      - { oid: 1.3.6.1.2.1.2.2.1.16, name: snmp.if.out_octets }
+      - { oid: 1.3.6.1.2.1.2.2.1.14, name: snmp.if.in_errors }
+      - { oid: 1.3.6.1.2.1.2.2.1.20, name: snmp.if.out_errors }
+      - { oid: 1.3.6.1.2.1.2.2.1.8,  name: snmp.if.oper_status }
+    metric_tags:
+      - { tag: interface_name, symbol: { oid: 1.3.6.1.2.1.2.2.1.2, name: ifDescr } }
+
+  - mib: BGP4-MIB
+    table:
+      oid: 1.3.6.1.2.1.15.3
+      name: bgpPeerTable
+    symbols:
+      - { oid: 1.3.6.1.2.1.15.3.1.2, name: snmp.bgp.peer_state }
+    metric_tags:
+      - { tag: bgp_peer, symbol: { oid: 1.3.6.1.2.1.15.3.1.7, name: bgpPeerRemoteAddr } }
+
+metric_tags:
+  - { tag: vendor, value: juniper-junos }
+  - { tag: device_role, value: router }

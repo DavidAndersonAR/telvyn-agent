@@ -1,0 +1,68 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.6486
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifdescription
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.alcatel_lucent_enterprise_alcatel_lucent_enterprise_omniswitch_aos_8_x.inoctets
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.alcatel_lucent_enterprise_alcatel_lucent_enterprise_omniswitch_aos_8_x.outoctets
+  metric_tags:
+  - tag: template_table
+    value: ifdescription
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.6486.801.1.1.1.3.1.1.8
+    name: slotindex
+  symbols:
+  - oid: 1.3.6.1.4.1.6486.801.1.1.1.3.1.1.8.1.2
+    name: community.alcatel_lucent_enterprise_alcatel_lucent_enterprise_omniswitch_aos_8_x.freespace_slot
+  metric_tags:
+  - tag: template_table
+    value: slotindex
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.6486.801.1.2.1.16.1.1.1.1
+    name: vchassisnbr
+  symbols:
+  - oid: 1.3.6.1.4.1.6486.801.1.2.1.16.1.1.1.1.1.13
+    name: community.alcatel_lucent_enterprise_alcatel_lucent_enterprise_omniswitch_aos_8_x.cpu1dayavg_slot
+  - oid: 1.3.6.1.4.1.6486.801.1.2.1.16.1.1.1.1.1.12
+    name: community.alcatel_lucent_enterprise_alcatel_lucent_enterprise_omniswitch_aos_8_x.cpu1hravg_slot
+  - oid: 1.3.6.1.4.1.6486.801.1.2.1.16.1.1.1.1.1.11
+    name: community.alcatel_lucent_enterprise_alcatel_lucent_enterprise_omniswitch_aos_8_x.cpu1minavg_slot
+  - oid: 1.3.6.1.4.1.6486.801.1.2.1.16.1.1.1.1.1.10
+    name: community.alcatel_lucent_enterprise_alcatel_lucent_enterprise_omniswitch_aos_8_x.memory1dayavg_slot
+  - oid: 1.3.6.1.4.1.6486.801.1.2.1.16.1.1.1.1.1.9
+    name: community.alcatel_lucent_enterprise_alcatel_lucent_enterprise_omniswitch_aos_8_x.memory1hravg_slot
+  - oid: 1.3.6.1.4.1.6486.801.1.2.1.16.1.1.1.1.1.8
+    name: community.alcatel_lucent_enterprise_alcatel_lucent_enterprise_omniswitch_aos_8_x.memory1minavg_slot
+  - oid: 1.3.6.1.4.1.6486.801.1.2.1.16.1.1.1.1.1.7
+    name: community.alcatel_lucent_enterprise_alcatel_lucent_enterprise_omniswitch_aos_8_x.rxtx1dayavg_slot
+  - oid: 1.3.6.1.4.1.6486.801.1.2.1.16.1.1.1.1.1.6
+    name: community.alcatel_lucent_enterprise_alcatel_lucent_enterprise_omniswitch_aos_8_x.rxtx1hravg_slot
+  - oid: 1.3.6.1.4.1.6486.801.1.2.1.16.1.1.1.1.1.5
+    name: community.alcatel_lucent_enterprise_alcatel_lucent_enterprise_omniswitch_aos_8_x.rxtx1minavg_slot
+  metric_tags:
+  - tag: template_table
+    value: vchassisnbr
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.6486.801.1.2.1.16.1.1.1.1.1.14
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: alcatel-lucent-enterprise
+- tag: template
+  value: alcatel-lucent-enterprise-omniswitch-aos-8-x
+- tag: template_version
+  value: 6-0

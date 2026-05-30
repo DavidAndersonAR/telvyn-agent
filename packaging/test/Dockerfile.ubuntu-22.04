@@ -1,0 +1,14 @@
+FROM ubuntu:22.04
+
+# Base mínima pra rodar bash -n + shellcheck no install.sh.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+        bash ca-certificates curl shellcheck \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /test
+COPY install.sh /test/install.sh
+
+# Sintaxe + shellcheck. Não rodamos install full — exige tarball real
+# (Plan 09 release pipeline).
+CMD ["bash", "-c", "set -e && bash -n /test/install.sh && shellcheck -S warning /test/install.sh && echo 'ubuntu-22.04 OK'"]

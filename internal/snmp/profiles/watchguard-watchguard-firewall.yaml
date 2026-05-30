@@ -1,0 +1,48 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.3097
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifname
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.watchguard_watchguard_firewall.ifinerrors
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.watchguard_watchguard_firewall.ifinoctets
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.watchguard_watchguard_firewall.ifoperstatus
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.watchguard_watchguard_firewall.ifouterrors
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.watchguard_watchguard_firewall.ifoutoctets
+  metric_tags:
+  - tag: template_table
+    value: ifname
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.3097.4.3097.4.2.2
+    name: rule_snmpvalue
+  symbols:
+  - oid: 1.3.6.1.4.1.3097.4.3097.4.2.2.1.3
+    name: community.watchguard_watchguard_firewall.traffic
+  metric_tags:
+  - tag: template_table
+    value: rule-snmpvalue
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.3097.4.3097.4.2.2.1.2
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: watchguard
+- tag: template
+  value: watchguard-firewall
+- tag: template_version
+  value: 7-4

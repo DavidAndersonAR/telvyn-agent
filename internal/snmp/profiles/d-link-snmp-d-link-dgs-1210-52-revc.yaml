@@ -1,0 +1,36 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.0
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifindex
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.d_link_snmp_d_link_dgs_1210_52_revc.ifinerrors
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.d_link_snmp_d_link_dgs_1210_52_revc.ifinoctets
+  - oid: 1.3.6.1.2.1.2.2.1.9
+    name: community.d_link_snmp_d_link_dgs_1210_52_revc.iflastchange
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.d_link_snmp_d_link_dgs_1210_52_revc.ifoperstatus
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.d_link_snmp_d_link_dgs_1210_52_revc.ifoutoctets
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: community.d_link_snmp_d_link_dgs_1210_52_revc.ifspeed
+  metric_tags:
+  - tag: template_table
+    value: ifindex
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.1
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: d-link
+- tag: template
+  value: snmp-d-link-dgs-1210-52-revc
+- tag: template_version
+  value: 6-0

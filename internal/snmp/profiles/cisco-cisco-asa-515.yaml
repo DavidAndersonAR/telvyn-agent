@@ -1,0 +1,84 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.9
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.109.1.1.1
+    name: cpu_discovery
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.5
+    name: community.cisco_cisco_asa_515.system_cpu_util
+  metric_tags:
+  - tag: template_table
+    value: cpu-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.5
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.13.1.4
+    name: fan_discovery
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.13.1.4.1.3
+    name: community.cisco_cisco_asa_515.sensor_fan_status
+  metric_tags:
+  - tag: template_table
+    value: fan-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.13.1.4.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.10.7.2
+    name: net_if_duplex_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.10.7.2.1.19
+    name: community.cisco_cisco_asa_515.net_if_duplex
+  metric_tags:
+  - tag: template_table
+    value: net-if-duplex-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.10.7.2.1.19
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.13.1.5
+    name: psu_discovery
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.13.1.5.1.3
+    name: community.cisco_cisco_asa_515.sensor_psu_status
+  metric_tags:
+  - tag: template_table
+    value: psu-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.13.1.5.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.13.1.3
+    name: temperature_discovery
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.13.1.3.1.6
+    name: community.cisco_cisco_asa_515.sensor_temp_status
+  - oid: 1.3.6.1.4.1.9.9.13.1.3.1.3
+    name: community.cisco_cisco_asa_515.sensor_temp_value
+  metric_tags:
+  - tag: template_table
+    value: temperature-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.13.1.3.1.2
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: cisco
+- tag: template
+  value: cisco-asa-515
+- tag: template_version
+  value: 6-0

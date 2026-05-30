@@ -1,0 +1,124 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.9
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.117.1.8.1
+    name: cefcconnectorrating_power_consumption
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.117.1.8.1.1.1
+    name: community.cisco_cisco_7600_health_snmp.cefcconnectorrating
+  metric_tags:
+  - tag: template_table
+    value: cefcconnectorrating-power-consumption
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.117.1.8.2
+    name: cefcconnectorrating_power_consumption
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.117.1.8.2.1.1
+    name: community.cisco_cisco_7600_health_snmp.cefcmodulepowerconsumptiontable
+  metric_tags:
+  - tag: template_table
+    value: cefcconnectorrating-power-consumption
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.117.1.8.2.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.492.1.4.2
+    name: cefresourcefailurereason_cef
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.492.1.4.2.1.2
+    name: community.cisco_cisco_7600_health_snmp.cefresourcefailurereason
+  - oid: 1.3.6.1.4.1.9.9.492.1.4.2.1.1
+    name: community.cisco_cisco_7600_health_snmp.cefresourcememoryused
+  metric_tags:
+  - tag: template_table
+    value: cefresourcefailurereason-cef
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.492.1.4.2.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.13.1.4
+    name: ciscoenvmonfanstatusdescr_fan
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.13.1.4.1.3
+    name: community.cisco_cisco_7600_health_snmp.ciscoenvmonfanstate
+  metric_tags:
+  - tag: template_table
+    value: ciscoenvmonfanstatusdescr-fan
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.13.1.4.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.13.1.5
+    name: ciscoenvmonsupplystatusdescr_power_supply
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.13.1.5.1.3
+    name: community.cisco_cisco_7600_health_snmp.ciscoenvmonsupplystate
+  metric_tags:
+  - tag: template_table
+    value: ciscoenvmonsupplystatusdescr-power-supply
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.13.1.5.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.48.1.1
+    name: ciscomemorypoolname_memory
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.48.1.1.1.6
+    name: community.cisco_cisco_7600_health_snmp.ciscomemorypoolfree
+  - oid: 1.3.6.1.4.1.9.9.48.1.1.1.5
+    name: community.cisco_cisco_7600_health_snmp.ciscomemorypoolused
+  metric_tags:
+  - tag: template_table
+    value: ciscomemorypoolname-memory
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.48.1.1.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.109.1.1.1
+    name: cpmcputotalphysicalindex_cpu
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.7
+    name: community.cisco_cisco_7600_health_snmp.cpmcputotal1minrev
+  - oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.8
+    name: community.cisco_cisco_7600_health_snmp.cpmcputotal5minrev
+  metric_tags:
+  - tag: template_table
+    value: cpmcputotalphysicalindex-cpu
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.9.9.91.1.1.1
+    name: entphysicalname_temperature
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.91.1.1.1.1.5
+    name: community.cisco_cisco_7600_health_snmp.entsensorstatus
+  - oid: 1.3.6.1.4.1.9.9.91.1.1.1.1.4
+    name: community.cisco_cisco_7600_health_snmp.entsensorvalue
+  metric_tags:
+  - tag: template_table
+    value: entphysicalname-temperature
+metric_tags:
+- tag: vendor
+  value: cisco
+- tag: template
+  value: cisco-7600-health-snmp
+- tag: template_version
+  value: 6-0

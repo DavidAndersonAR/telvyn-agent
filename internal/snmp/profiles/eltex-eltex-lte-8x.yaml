@@ -1,0 +1,34 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.35265
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.35265.1.21.6.1
+    name: lte8stontstatemac
+  symbols:
+  - oid: 1.3.6.1.4.1.35265.1.21.6.1.1.15
+    name: community.eltex_eltex_lte_8x.laserpower_dbm
+  - oid: 1.3.6.1.4.1.35265.1.21.6.1.1.7
+    name: community.eltex_eltex_lte_8x.stateid
+  - oid: 1.3.6.1.4.1.35265.1.21.6.1.1.4
+    name: community.eltex_eltex_lte_8x.stateoltid
+  - oid: 1.3.6.1.4.1.35265.1.21.6.1.1.5
+    name: community.eltex_eltex_lte_8x.stateoltport
+  - oid: 1.3.6.1.4.1.35265.1.21.6.1.1.6
+    name: community.eltex_eltex_lte_8x.statestate
+  metric_tags:
+  - tag: template_table
+    value: lte8stontstatemac
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.35265.1.21.6.1.1.1
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: eltex
+- tag: template
+  value: eltex-lte-8x
+- tag: template_version
+  value: 6-0

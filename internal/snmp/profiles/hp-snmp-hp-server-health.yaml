@@ -1,0 +1,146 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.232
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.232.3.2.2.2
+    name: cpqdaaccelcntlrindex_snmpvalue
+  symbols:
+  - oid: 1.3.6.1.4.1.232.3.2.2.2.1.9
+    name: community.hp_snmp_hp_server_health.cpqdaaccelcondition
+  metric_tags:
+  - tag: template_table
+    value: cpqdaaccelcntlrindex-snmpvalue
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.232.3.2.2.2.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.232.3.2.2.1
+    name: cpqdacntlrindex_snmpvalue
+  symbols:
+  - oid: 1.3.6.1.4.1.232.3.2.2.1.1.6
+    name: community.hp_snmp_hp_server_health.cpqdacntlrcondition
+  metric_tags:
+  - tag: template_table
+    value: cpqdacntlrindex-snmpvalue
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.232.3.2.2.1.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.232.3.2.3.1
+    name: cpqdalogdrvindex_snmpvalue
+  symbols:
+  - oid: 1.3.6.1.4.1.232.3.2.3.1.1.11
+    name: community.hp_snmp_hp_server_health.cpqdalogdrvcondition
+  metric_tags:
+  - tag: template_table
+    value: cpqdalogdrvindex-snmpvalue
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.232.3.2.3.1.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.232.3.2.5.1
+    name: cpqdaphydrvindex_snmpvalue
+  symbols:
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.37
+    name: community.hp_snmp_hp_server_health.cpqdaphydrvcondition
+  metric_tags:
+  - tag: template_table
+    value: cpqdaphydrvindex-snmpvalue
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.232.3.2.5.1.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.232.3.2.4.1
+    name: cpqdasparecntlrindex_snmpvalue
+  symbols:
+  - oid: 1.3.6.1.4.1.232.3.2.4.1.1.6
+    name: community.hp_snmp_hp_server_health.cpqdasparecondition
+  metric_tags:
+  - tag: template_table
+    value: cpqdasparecntlrindex-snmpvalue
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.232.3.2.4.1.1.1
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.232.6.2.6.7
+    name: cpqheflttolfanindex_snmpvalue
+  symbols:
+  - oid: 1.3.6.1.4.1.232.6.2.6.7.1.9
+    name: community.hp_snmp_hp_server_health.cpqheflttolfancondition
+  - oid: 1.3.6.1.4.1.232.6.2.6.7.1.3
+    name: community.hp_snmp_hp_server_health.cpqheflttolfanlocale
+  - oid: 1.3.6.1.4.1.232.6.2.6.7.1.4
+    name: community.hp_snmp_hp_server_health.cpqheflttolfanpresent
+  - oid: 1.3.6.1.4.1.232.6.2.6.7.1.7
+    name: community.hp_snmp_hp_server_health.cpqheflttolfanredundant
+  metric_tags:
+  - tag: template_table
+    value: cpqheflttolfanindex-snmpvalue
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.232.6.2.6.7.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.232.6.2.9.3
+    name: cpqheflttolpowersupplybay_snmpvalue
+  symbols:
+  - oid: 1.3.6.1.4.1.232.6.2.9.3.1.8
+    name: community.hp_snmp_hp_server_health.cpqheflttolpowersupplycapacitymaximum
+  - oid: 1.3.6.1.4.1.232.6.2.9.3.1.7
+    name: community.hp_snmp_hp_server_health.cpqheflttolpowersupplycapacityused
+  - oid: 1.3.6.1.4.1.232.6.2.9.3.1.4
+    name: community.hp_snmp_hp_server_health.cpqheflttolpowersupplycondition
+  - oid: 1.3.6.1.4.1.232.6.2.9.3.1.6
+    name: community.hp_snmp_hp_server_health.cpqheflttolpowersupplymainvoltage
+  - oid: 1.3.6.1.4.1.232.6.2.9.3.1.3
+    name: community.hp_snmp_hp_server_health.cpqheflttolpowersupplypresent
+  - oid: 1.3.6.1.4.1.232.6.2.9.3.1.9
+    name: community.hp_snmp_hp_server_health.cpqheflttolpowersupplyredundant
+  - oid: 1.3.6.1.4.1.232.6.2.9.3.1.5
+    name: community.hp_snmp_hp_server_health.cpqheflttolpowersupplystatus
+  metric_tags:
+  - tag: template_table
+    value: cpqheflttolpowersupplybay-snmpvalue
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.232.6.2.9.3.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.232.6.2.6.8
+    name: cpqhetemperatureindex_snmpvalue
+  symbols:
+  - oid: 1.3.6.1.4.1.232.6.2.6.8.1.4
+    name: community.hp_snmp_hp_server_health.cpqhetemperaturecelsius
+  - oid: 1.3.6.1.4.1.232.6.2.6.8.1.6
+    name: community.hp_snmp_hp_server_health.cpqhetemperaturecondition
+  - oid: 1.3.6.1.4.1.232.6.2.6.8.1.3
+    name: community.hp_snmp_hp_server_health.cpqhetemperaturelocale
+  metric_tags:
+  - tag: template_table
+    value: cpqhetemperatureindex-snmpvalue
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.232.6.2.6.8.1.2
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: hp
+- tag: template
+  value: snmp-hp-server-health
+- tag: template_version
+  value: 6-0

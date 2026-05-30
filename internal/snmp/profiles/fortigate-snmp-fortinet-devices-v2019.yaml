@@ -1,0 +1,26 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.0
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifname
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: community.fortigate_snmp_fortinet_devices_v2019.ifhighspeed
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.fortigate_snmp_fortinet_devices_v2019.ifinoctets
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.fortigate_snmp_fortinet_devices_v2019.ifoutoctets
+  metric_tags:
+  - tag: template_table
+    value: ifname
+metric_tags:
+- tag: vendor
+  value: fortigate
+- tag: template
+  value: snmp-fortinet-devices-v2019
+- tag: template_version
+  value: 6-0

@@ -1,0 +1,62 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.25506
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.4.1.25506.2.70.1.1
+    name: transceivers_snmpvalue
+  symbols:
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.17
+    name: community.hp_gm_ddmi.hh3ctransceiverbiascurrent
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.26
+    name: community.hp_gm_ddmi.hh3ctransceiverbiashialarm
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.27
+    name: community.hp_gm_ddmi.hh3ctransceiverbiasloalarm
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.12
+    name: community.hp_gm_ddmi.hh3ctransceivercurrxpower
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.9
+    name: community.hp_gm_ddmi.hh3ctransceivercurtxpower
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.8
+    name: community.hp_gm_ddmi.hh3ctransceiverdiagnostic
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.6
+    name: community.hp_gm_ddmi.hh3ctransceiverfiberdiametertype
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.13
+    name: community.hp_gm_ddmi.hh3ctransceivermaxrxpower
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.10
+    name: community.hp_gm_ddmi.hh3ctransceivermaxtxpower
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.14
+    name: community.hp_gm_ddmi.hh3ctransceiverminrxpower
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.11
+    name: community.hp_gm_ddmi.hh3ctransceivermintxpower
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.15
+    name: community.hp_gm_ddmi.hh3ctransceivertemperature
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.18
+    name: community.hp_gm_ddmi.hh3ctransceivertemphialarm
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.19
+    name: community.hp_gm_ddmi.hh3ctransceivertemploalarm
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.7
+    name: community.hp_gm_ddmi.hh3ctransceivertransferdistance
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.22
+    name: community.hp_gm_ddmi.hh3ctransceivervcchialarm
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.23
+    name: community.hp_gm_ddmi.hh3ctransceivervccloalarm
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.16
+    name: community.hp_gm_ddmi.hh3ctransceivervoltage
+  - oid: 1.3.6.1.4.1.25506.2.70.1.1.1.3
+    name: community.hp_gm_ddmi.hh3ctransceiverwavelength
+  metric_tags:
+  - tag: template_table
+    value: transceivers-snmpvalue
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.4.1.25506.2.70.1.1.1.1
+      name: templateDiscoveryValue
+metric_tags:
+- tag: vendor
+  value: hp
+- tag: template
+  value: gm-ddmi
+- tag: template_version
+  value: 6-0

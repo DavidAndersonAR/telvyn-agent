@@ -1,0 +1,61 @@
+[Unit]
+Description=IspWatch Agent
+Documentation=https://docs.ispwatch.com/agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ispwatch
+Group=ispwatch
+ExecStart=/usr/local/bin/ispwatch-agent --config /etc/ispwatch/agent.yaml
+Restart=on-failure
+RestartSec=10s
+StartLimitInterval=60s
+StartLimitBurst=5
+
+# === Hardening obrigatório ============================================
+# CAP_NET_RAW libera ICMP ping sem privilegio root (Plan 03-03 depende).
+# CAP_NET_BIND_SERVICE permite bind em portas < 1024 caso algum check
+# precise (margem futura — checks atuais não bindam portas baixas).
+AmbientCapabilities=CAP_NET_RAW CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_RAW CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+# Pitfall 7: precisa listar EXATAMENTE os dirs que o agente escreve,
+# senão WAL trava com EROFS. /etc/ispwatch fica read-only via strict.
+ReadWritePaths=/var/lib/ispwatch /var/log/ispwatch
+
+# === Hardening adicional (RESEARCH §Security Domain) ==================
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectProc=invisible
+ProcSubset=pid
+# Assumption A9: AF_NETLINK é obrigatório porque gopsutil + checks de
+# socket usam netlink pra ler stats do kernel. Sem ele alguns checks
+# falham com erro críptico EAFNOSUPPORT.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+# Go runtime não faz JIT — seguro proibir páginas W+X.
+MemoryDenyWriteExecute=true
+# Permite syscalls de serviço comuns e remove subsets perigosos.
+# Equilíbrio segurança vs compatibilidade (Pitfall 4).
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources @debug @mount @raw-io @reboot @swap @clock @module
+SystemCallArchitectures=native
+KeyringMode=private
+UMask=0027
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ispwatch-agent
+
+[Install]
+WantedBy=multi-user.target

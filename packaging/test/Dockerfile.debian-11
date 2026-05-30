@@ -1,0 +1,11 @@
+FROM debian:11
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+        bash ca-certificates curl shellcheck \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /test
+COPY install.sh /test/install.sh
+
+CMD ["bash", "-c", "set -e && bash -n /test/install.sh && shellcheck -S warning /test/install.sh && echo 'debian-11 OK'"]

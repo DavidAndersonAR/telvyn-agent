@@ -1,0 +1,48 @@
+# IspWatch SNMP profile — generic-snmpv2.
+#
+# Fallback explicito quando o sysObjectID do device nao casa nenhum perfil
+# vendor especifico. Carrega so o que esta na SNMPv2-MIB / HOST-RESOURCES-MIB
+# padrao — qualquer agente SNMP minimamente conformante responde.
+#
+# IMPORTANTE: este perfil NAO coleta ifTable pra evitar duplicacao com perfis
+# vendor (que tambem cobrem ifTable com nomes proprios). Quando NENHUM template
+# vendor estiver linkado e voce quiser metricas de interface no formato
+# generico, use um template separado tipo "snmp.if-table-generic".
+#
+# A entrada sysobjectid abaixo (1.3.6.1.4.1.0) e propositalmente um OID
+# invalido (enterprise 0 nao existe) — nunca casa em auto-detect. Este
+# perfil so e selecionado via:
+#   1. LoadProfile("generic-snmpv2") explicito pelo operador
+#   2. Fallback automatico no snmp.generic check quando MatchSysObjectID
+#      retorna ok=false
+
+sysobjectid:
+  - 1.3.6.1.4.1.0
+
+metrics:
+  # System uptime — SNMPv2-MIB::sysUpTime (centisegundos desde boot)
+  - mib: SNMPv2-MIB
+    symbol:
+      oid: 1.3.6.1.2.1.1.3.0
+      name: snmp.sys.uptime
+
+discovery_rules:
+  # CPU por core — HOST-RESOURCES-MIB::hrProcessorTable
+  - name: cpu
+    keys:
+      - { label: cpu_index, oid: 1.3.6.1.2.1.25.3.3.1.1 }
+    items:
+      - { name: snmp.hr.processor_load, oid: 1.3.6.1.2.1.25.3.3.1.2 }
+
+  # Memoria por storage entry — HOST-RESOURCES-MIB::hrStorageTable
+  # row_index distingue RAM/swap/disco; hrStorageDescr da o nome humano.
+  - name: storage
+    keys:
+      - { label: storage_descr,  oid: 1.3.6.1.2.1.25.2.3.1.3 }
+      - { label: storage_units,  oid: 1.3.6.1.2.1.25.2.3.1.4 }
+    items:
+      - { name: snmp.hr.storage_size,  oid: 1.3.6.1.2.1.25.2.3.1.5 }
+      - { name: snmp.hr.storage_used,  oid: 1.3.6.1.2.1.25.2.3.1.6 }
+
+metric_tags:
+  - { tag: vendor, value: generic }

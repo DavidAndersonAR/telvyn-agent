@@ -1,0 +1,202 @@
+# Generated from community-templates Network_Devices. Converted scalar get[] and supported numeric LLD item_prototypes only.
+
+sysobjectid:
+- 1.3.6.1.4.1.0
+metrics:
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ubiquiti_vlan_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: community.ubiquiti_ubiquiti_firewall.vlan_bytes_in
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: community.ubiquiti_ubiquiti_firewall.vlan_bytes_out
+  metric_tags:
+  - tag: template_table
+    value: ubiquiti-vlan-discovery
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ubiquiti_vpn_l2tp_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_l2tp_in_bytes
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_l2tp_in_errors
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_l2tp_out_bytes
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_l2tp_out_errors
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_l2tp_status
+  metric_tags:
+  - tag: template_table
+    value: ubiquiti-vpn-l2tp-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ubiquiti_vpn_openvpn_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_openvpn_in_bytes
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_openvpn_in_errors
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_openvpn_out_bytes
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_openvpn_out_errors
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_openvpn_status
+  metric_tags:
+  - tag: template_table
+    value: ubiquiti-vpn-openvpn-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ubiquiti_vpn_policy_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_policy_in_bytes
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_policy_in_errors
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_policy_out_bytes
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_policy_out_errors
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_policy_status
+  metric_tags:
+  - tag: template_table
+    value: ubiquiti-vpn-policy-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ubiquiti_vpn_pptp_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_pptp_in_bytes
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_pptp_in_errors
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_pptp_out_bytes
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_pptp_out_errors
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_pptp_status
+  metric_tags:
+  - tag: template_table
+    value: ubiquiti-vpn-pptp-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ubiquiti_vpn_route_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_route_in_bytes
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_route_in_errors
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_route_out_bytes
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_route_out_errors
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_route_status
+  metric_tags:
+  - tag: template_table
+    value: ubiquiti-vpn-route-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ubiquiti_vpn_teleport_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_teleport_in_bytes
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_teleport_in_errors
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_teleport_out_bytes
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_teleport_out_errors
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_teleport_status
+  metric_tags:
+  - tag: template_table
+    value: ubiquiti-vpn-teleport-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ubiquiti_vpn_wireguard_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.10
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_wireguard_in_bytes
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_wireguard_in_errors
+  - oid: 1.3.6.1.2.1.2.2.1.16
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_wireguard_out_bytes
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_wireguard_out_errors
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_vpn_wireguard_status
+  metric_tags:
+  - tag: template_table
+    value: ubiquiti-vpn-wireguard-discovery
+  - tag: template_discovery_value
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: templateDiscoveryValue
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ubiquiti_xint_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_xint_extended_errors_in
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_xint_extended_errors_out
+  metric_tags:
+  - tag: template_table
+    value: ubiquiti-xint-discovery
+- mib: COMMUNITY-TEMPLATE
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ubiquiti_xint_discovery
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_xint_hcin_bytes
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: community.ubiquiti_ubiquiti_firewall.ubiquiti_xint_hcout_bytes
+  metric_tags:
+  - tag: template_table
+    value: ubiquiti-xint-discovery
+metric_tags:
+- tag: vendor
+  value: ubiquiti
+- tag: template
+  value: ubiquiti-firewall
+- tag: template_version
+  value: 7-0
