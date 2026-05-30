@@ -17,7 +17,7 @@
 #   INSTALL_TOKEN          (REQUIRED) single-use enrollment token
 #   INSTALL_ENROLL_URL     (REQUIRED) full URL of the /enroll endpoint
 #   INSTALL_DIR            base dir for certs+config         [default: /etc/ispwatch]
-#   COLLECTOR_IMAGE        Docker image                      [default: ghcr.io/ispwatch/collector:latest]
+#   COLLECTOR_IMAGE        Docker image                      [default: ghcr.io/davidandersonar/telvyn-agent:latest]
 #   COLLECTOR_LOG_LEVEL    debug|info|warn|error             [default: info]
 #   COLLECTOR_NAME         container name                    [default: ispwatch-collector]
 #   INSTALL_NO_START       if set, write files but don't 'docker compose up'
@@ -52,7 +52,7 @@ die()  { printf '%s ✗%s %s\n' "$C_RED" "$C_RESET" "$*" >&2; exit "${2:-1}"; }
 : "${INSTALL_ENROLL_URL:?Defina INSTALL_ENROLL_URL=https://.../api/noc/collectors/enroll/}"
 
 INSTALL_DIR="${INSTALL_DIR:-/etc/ispwatch}"
-COLLECTOR_IMAGE="${COLLECTOR_IMAGE:-ghcr.io/ispwatch/collector:latest}"
+COLLECTOR_IMAGE="${COLLECTOR_IMAGE:-ghcr.io/davidandersonar/telvyn-agent:latest}"
 COLLECTOR_LOG_LEVEL="${COLLECTOR_LOG_LEVEL:-info}"
 COLLECTOR_NAME="${COLLECTOR_NAME:-ispwatch-collector}"
 
