@@ -39,6 +39,7 @@ import (
 	"github.com/ispwatch/collector/internal/transport/wal"
 	collectorv1 "github.com/ispwatch/collector/proto/v1"
 
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -770,7 +771,7 @@ func runIngestMode(ingestURL string) {
 		log.Error("ingest mode: ISPWATCH_INGEST_TOKEN ausente")
 		os.Exit(1)
 	}
-	hostID := strings.TrimSpace(getenvOr("ISPWATCH_NODE_NAME", ""))
+	hostID := strings.TrimSpace(getenvOr("ISPWATCH_NODE_NAME", getenvOr("NODE_NAME", "")))
 	if hostID == "" {
 		hostID, _ = os.Hostname()
 	}
@@ -807,6 +808,21 @@ func runIngestMode(ingestURL string) {
 		}
 	}()
 
+	// k8s: registra o nó (→ noc_host + check k8s.kubelet, aparece em
+	// "Aplicações") e roda o kubelet check LOCAL (pods/containers/node) com o
+	// host_id retornado. Mesma coleta do agent completo — só o envio muda
+	// (OTLP+Bearer em vez de gRPC mTLS).
+	if strings.EqualFold(getenvOr("ISPWATCH_AGENT_KIND", ""), "k8s.node") {
+		nodeIP := strings.TrimSpace(getenvOr("NODE_IP", ""))
+		nodeHostID, err := exporter.RegisterK8sNode(ctx, cluster, hostID, nodeIP, "")
+		if err != nil {
+			log.Warn("k8s register falhou — sigo só com métricas de host", "err", err)
+		} else {
+			log.Info("k8s node registrado", "host_id", nodeHostID, "node", hostID)
+			startKubeletCheck(ctx, log, out, nodeHostID)
+		}
+	}
+
 	// Receiver OTLP/HTTP (4318): apps locais mandam spans/metrics/logs e o
 	// agent encaminha o corpo cru pro gateway com o Bearer token.
 	httpAddr := otlp.ParsePortOrDefault(getenvOr("ISPWATCH_OTLP_HTTP_PORT", ""))
@@ -819,6 +835,70 @@ func runIngestMode(ingestURL string) {
 		log.Error("ingest mode: otlp http receiver falhou", "err", err)
 		os.Exit(1)
 	}
+}
+
+// startKubeletCheck roda o check k8s.kubelet LOCALMENTE (sem depender do
+// servidor mandar a config via config-pull), emitindo métricas de
+// node/pod/container pro channel out com host_id = id do noc_host registrado
+// (pra bater no filtro do drill de pods: k8s_pod_*{host_id="..."}).
+func startKubeletCheck(ctx context.Context, log *slog.Logger, out chan<- []*collectorv1.Metric, hostID string) {
+	factory, ok := checks.Default.Get("k8s.kubelet")
+	if !ok {
+		log.Warn("kubelet check factory ausente")
+		return
+	}
+	insecure := "false"
+	if getenvOr("ISPWATCH_KUBELET_INSECURE", "1") == "1" {
+		insecure = "true"
+	}
+	cfg := &collectorv1.CheckConfig{
+		CheckId:   "k8s.kubelet-" + hostID,
+		CheckType: "k8s.kubelet",
+		HostId:    hostID,
+		Enabled:   true,
+		Interval:  durationpb.New(15 * time.Second),
+		Params: map[string]string{
+			"kubelet_url":          getenvOr("ISPWATCH_KUBELET_URL", "https://localhost:10250"),
+			"token_file":           getenvOr("ISPWATCH_KUBELET_TOKEN_FILE", "/var/run/secrets/kubernetes.io/serviceaccount/token"),
+			"insecure_skip_verify": insecure,
+		},
+	}
+	chk, err := factory(cfg)
+	if err != nil {
+		log.Warn("kubelet check factory error", "err", err)
+		return
+	}
+	clog := log.With("component", "k8s-kubelet", "host_id", hostID)
+	go func() {
+		runOnce := func() {
+			ms, err := chk.Run(ctx)
+			if err != nil {
+				clog.Debug("kubelet check run error", "err", err)
+				return
+			}
+			if len(ms) == 0 {
+				return
+			}
+			select {
+			case out <- ms:
+			case <-ctx.Done():
+			default:
+				clog.Warn("kubelet out channel full, dropping", "count", len(ms))
+			}
+		}
+		runOnce()
+		t := time.NewTicker(15 * time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+				runOnce()
+			}
+		}
+	}()
+	clog.Info("kubelet check started (local)", "interval", "15s")
 }
 
 func getenvOr(key, def string) string {

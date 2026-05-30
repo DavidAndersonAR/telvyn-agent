@@ -70,6 +70,17 @@ spec:
               value: {{ .Values.ingest.url | quote }}
             - name: ISPWATCH_INGEST_TOKEN
               value: {{ required "values.ingest.token é obrigatório quando ingest.url está setado" .Values.ingest.token | quote }}
+            # Coleta de k8s no modo ingest: registra o nó + roda o kubelet
+            # check local (pods/containers). O SA token é montado em
+            # /var/run/secrets/.../token; kubelet self-signed → insecure.
+            - name: ISPWATCH_AGENT_KIND
+              value: "k8s.node"
+            - name: ISPWATCH_KUBELET_URL
+              value: "https://localhost:10250"
+            - name: ISPWATCH_KUBELET_TOKEN_FILE
+              value: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            - name: ISPWATCH_KUBELET_INSECURE
+              value: "1"
             {{- else }}
             - name: ISPWATCH_AGENT_KIND
               value: {{ .Values.bootstrap.agentKind | default "k8s.node" | quote }}
