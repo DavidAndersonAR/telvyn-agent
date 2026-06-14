@@ -4,6 +4,7 @@ go 1.25.0
 
 require (
 	github.com/ClickHouse/ch-go v0.62.0
+	github.com/DataDog/sketches-go v1.4.8
 	github.com/alicebob/miniredis/v2 v2.38.0
 	github.com/cilium/ebpf v0.20.0
 	github.com/docker/docker v28.5.1+incompatible
