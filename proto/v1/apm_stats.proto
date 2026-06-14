@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package ispwatch.collector.v1;
+
+option go_package = "github.com/ispwatch/collector/proto/v1;collectorv1";
+option java_package = "system.monitoring.collector.v1";
+option java_multiple_files = true;
+
+// =====================================================================
+// APM stats — agregados na BORDA pelo trace-agent (concentrator) e
+// enviados ao backend via POST /api/ingest/v1/apm/stats (certless/Bearer).
+// Espelha o mesmo proto do backend (isp-watch). ok_summary/error_summary
+// são DDSketch no encoding nativo flag-based (sketches-go ↔ sketches-java).
+// Latências em NANOS; erro relativo do sketch = 1% nas duas pontas.
+// =====================================================================
+
+message ApmStatsPayload {
+  string agent_version = 1;
+  repeated ApmStatsBucket buckets = 2;
+}
+
+message ApmStatsBucket {
+  int64 start_unix_nano = 1;
+  int64 duration_nano = 2;
+  repeated ApmGroupedStats stats = 3;
+}
+
+message ApmGroupedStats {
+  string env = 1;
+  string service = 2;
+  string resource = 3;
+  string operation = 4;
+  int32 span_kind = 5;
+  int32 http_status_code = 6;
+  uint64 hits = 7;
+  uint64 errors = 8;
+  uint64 duration_sum_nano = 9;
+  bytes ok_summary = 10;
+  bytes error_summary = 11;
+  bool top_level = 12;
+}

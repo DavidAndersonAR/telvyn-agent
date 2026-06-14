@@ -477,3 +477,97 @@ func TestStartReceiverNoLeaks(t *testing.T) {
 // ensure exported alias still imports for callers — compile-time guard,
 // removes risk of unused import warnings in vendored builds.
 var _ = fmt.Sprintf
+
+// TestHTTPTracesSamplingForwardsOnlyKept: no modo forwardRaw com sampler ativo,
+// só os spans aprovados são reempacotados e encaminhados. Entram 2 spans (1 OK,
+// 1 ERRO) e o sampler mantém só erro → o corpo encaminhado tem 1 span.
+func TestHTTPTracesSamplingForwardsOnlyKept(t *testing.T) {
+	sink := &fakeSink{}
+	lis, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	addr := lis.Addr().String()
+	lis.Close()
+
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	rec := NewHTTPReceiver(addr, sink, log, 1<<20, nil)
+
+	var mu sync.Mutex
+	var forwarded [][]byte
+	rec.SetForwardRaw(func(signal, ct string, body []byte) error {
+		if signal == "traces" {
+			mu.Lock()
+			forwarded = append(forwarded, append([]byte(nil), body...))
+			mu.Unlock()
+		}
+		return nil
+	})
+	rec.SetTraceSampler(func(traceID string, status int32, dur int64) bool {
+		return status == 2 // mantém só erro
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go func() { _ = rec.Start(ctx) }()
+	base := "http://" + addr
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		if resp, e := http.Get(base + "/healthz"); e == nil {
+			resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				break
+			}
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+
+	req := &tracepb.ExportTraceServiceRequest{
+		ResourceSpans: []*tracedatapb.ResourceSpans{{
+			Resource: &resourcepb.Resource{Attributes: []*commonpb.KeyValue{{Key: "service.name", Value: strVal("svc")}}},
+			ScopeSpans: []*tracedatapb.ScopeSpans{{
+				Spans: []*tracedatapb.Span{
+					{TraceId: bytes16("t-ok"), SpanId: bytes8("s-ok"), Name: "ok",
+						StartTimeUnixNano: 1000, EndTimeUnixNano: 2000},
+					{TraceId: bytes16("t-err"), SpanId: bytes8("s-err"), Name: "err",
+						StartTimeUnixNano: 1000, EndTimeUnixNano: 2000,
+						Status: &tracedatapb.Status{Code: tracedatapb.Status_STATUS_CODE_ERROR}},
+				},
+			}},
+		}},
+	}
+	body, err := protojson.Marshal(req)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	resp, err := http.Post(base+"/v1/traces", "application/json", bytes.NewReader(body))
+	if err != nil {
+		t.Fatalf("post: %v", err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status %d", resp.StatusCode)
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+	if len(forwarded) != 1 {
+		t.Fatalf("esperava 1 forward, veio %d", len(forwarded))
+	}
+	out := &tracepb.ExportTraceServiceRequest{}
+	if err := protojson.Unmarshal(forwarded[0], out); err != nil {
+		t.Fatalf("unmarshal forwarded: %v", err)
+	}
+	total, names := 0, []string{}
+	for _, rs := range out.ResourceSpans {
+		for _, ss := range rs.ScopeSpans {
+			for _, s := range ss.Spans {
+				total++
+				names = append(names, s.Name)
+			}
+		}
+	}
+	if total != 1 || names[0] != "err" {
+		t.Fatalf("esperava só o span de erro, veio total=%d names=%v", total, names)
+	}
+}
