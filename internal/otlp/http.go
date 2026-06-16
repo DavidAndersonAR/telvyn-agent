@@ -36,6 +36,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -85,6 +86,18 @@ type HTTPReceiver struct {
 	// OTLP cru pro gateway com Bearer token em vez de empurrar pro sink gRPC.
 	// signal ∈ {"traces","metrics","logs"}.
 	forwardRaw func(signal, contentType string, body []byte) error
+
+	// apmTap, quando setado, recebe uma CÓPIA parseada dos spans de traces no
+	// caminho forwardRaw — pro trace-agent resumir (stats) na borda SEM mexer
+	// no corpo cru que segue sendo repassado. Best-effort: erro de parse só é
+	// logado, nunca quebra o forward.
+	apmTap func(spans []*collectorv1.Span)
+
+	// traceSampler, quando setado, decide por span (trace_id/status/duração) se
+	// o detalhe cru vai ser ENCAMINHADO. Quando ativo, o caminho forwardRaw
+	// reempacota só os spans amostrados em vez de repassar o corpo cru. As
+	// stats (apmTap) seguem sendo contadas com 100% dos spans, antes do filtro.
+	traceSampler func(traceID string, statusCode int32, durationNano int64) bool
 
 	server *http.Server
 
@@ -139,6 +152,239 @@ func NewHTTPReceiver(addr string, sink SpanSink, log *slog.Logger, maxBody int64
 // pro gateway (Bearer) em vez de convertido e empurrado pro sink gRPC.
 func (h *HTTPReceiver) SetForwardRaw(fn func(signal, contentType string, body []byte) error) {
 	h.forwardRaw = fn
+}
+
+// SetAPMTap registra um observador dos spans de traces (modo forwardRaw). Roda
+// no caminho de repasse cru, recebendo uma cópia parseada — pro concentrator
+// resumir na borda. Não altera o que é repassado.
+func (h *HTTPReceiver) SetAPMTap(fn func(spans []*collectorv1.Span)) {
+	h.apmTap = fn
+}
+
+// SetTraceSampler ativa o sampling no encaminhamento: só os spans aprovados pela
+// função são reempacotados e enviados. As stats (apmTap) já foram contadas antes,
+// com 100% dos spans, então continuam exatas.
+func (h *HTTPReceiver) SetTraceSampler(fn func(traceID string, statusCode int32, durationNano int64) bool) {
+	h.traceSampler = fn
+}
+
+// filterSampledSpans remove dos ResourceSpans os spans NÃO aprovados pelo keep,
+// in-place. Retorna quantos sobraram.
+func filterSampledSpans(req *tracepb.ExportTraceServiceRequest, keep func(traceID string, statusCode int32, durationNano int64) bool) int {
+	total := 0
+	for _, rs := range req.ResourceSpans {
+		for _, ss := range rs.ScopeSpans {
+			kept := ss.Spans[:0]
+			for _, s := range ss.Spans {
+				var status int32
+				if s.Status != nil {
+					status = int32(s.Status.Code)
+				}
+				dur := int64(s.EndTimeUnixNano) - int64(s.StartTimeUnixNano)
+				if keep(hex.EncodeToString(s.TraceId), status, dur) {
+					kept = append(kept, s)
+					total++
+				}
+			}
+			ss.Spans = kept
+		}
+	}
+	return total
+}
+
+// marshalOTLP é o inverso do unmarshalOTLP — reempacota o req filtrado no mesmo
+// content-type do request original. SÓ usado pro caminho protobuf (proto.Marshal
+// preserva os bytes dos IDs). Pro JSON usamos tapAndSampleJSON, porque o
+// protojson serializa bytes como base64 e o backend /traces espera HEX.
+func marshalOTLP(msg proto.Message, ct string) ([]byte, error) {
+	switch ct {
+	case "application/json":
+		return protojson.Marshal(msg)
+	case "application/x-protobuf":
+		return proto.Marshal(msg)
+	}
+	return nil, fmt.Errorf("unsupported content-type: %s", ct)
+}
+
+// --- OTLP/JSON RAW: tap (stats) + sampling preservando o byte-a-byte ---------
+// O protojson troca hex<->base64 nos IDs (bytes). Pra não corromper, aqui
+// trabalhamos no JSON cru: cada span é mantido como json.RawMessage (verbatim),
+// e só lemos os campos necessários pra decidir manter/dropar e pra contar stats.
+
+type otlpTraceDoc struct {
+	ResourceSpans []otlpResourceSpans `json:"resourceSpans"`
+}
+type otlpResourceSpans struct {
+	Resource   json.RawMessage  `json:"resource,omitempty"`
+	ScopeSpans []otlpScopeSpans `json:"scopeSpans"`
+	SchemaURL  string           `json:"schemaUrl,omitempty"`
+}
+type otlpScopeSpans struct {
+	Scope     json.RawMessage   `json:"scope,omitempty"`
+	Spans     []json.RawMessage `json:"spans"`
+	SchemaURL string            `json:"schemaUrl,omitempty"`
+}
+type otlpResourceFields struct {
+	Attributes []otlpKeyValue `json:"attributes"`
+}
+type otlpKeyValue struct {
+	Key   string `json:"key"`
+	Value struct {
+		StringValue *string `json:"stringValue"`
+		IntValue    *string `json:"intValue"` // int64 vira string no OTLP/JSON
+	} `json:"value"`
+}
+type otlpSpanFields struct {
+	TraceID           string   `json:"traceId"`
+	Name              string   `json:"name"`
+	Kind              otlpEnum `json:"kind"`
+	StartTimeUnixNano string   `json:"startTimeUnixNano"`
+	EndTimeUnixNano   string   `json:"endTimeUnixNano"`
+	Status            *struct {
+		Code otlpEnum `json:"code"`
+	} `json:"status"`
+	Attributes []otlpKeyValue `json:"attributes"`
+}
+
+// otlpEnum aceita enum do OTLP/JSON em qualquer forma: número (2), número em
+// string ("2") ou nome ("STATUS_CODE_ERROR" / "SPAN_KIND_SERVER") — protojson e
+// SDKs divergem nisso.
+type otlpEnum int32
+
+var otlpEnumNames = map[string]int32{
+	"STATUS_CODE_UNSET": 0, "STATUS_CODE_OK": 1, "STATUS_CODE_ERROR": 2,
+	"SPAN_KIND_UNSPECIFIED": 0, "SPAN_KIND_INTERNAL": 1, "SPAN_KIND_SERVER": 2,
+	"SPAN_KIND_CLIENT": 3, "SPAN_KIND_PRODUCER": 4, "SPAN_KIND_CONSUMER": 5,
+}
+
+func (e *otlpEnum) UnmarshalJSON(b []byte) error {
+	if len(b) == 0 {
+		return nil
+	}
+	if b[0] != '"' { // número direto
+		var n int32
+		if err := json.Unmarshal(b, &n); err != nil {
+			return err
+		}
+		*e = otlpEnum(n)
+		return nil
+	}
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+	if n, err := strconv.Atoi(s); err == nil {
+		*e = otlpEnum(n)
+		return nil
+	}
+	*e = otlpEnum(otlpEnumNames[s]) // nome desconhecido → 0
+	return nil
+}
+
+// tapAndSampleJSON parseia o corpo OTLP/JSON, chama apmTap com TODOS os spans
+// (pra stats) e, se traceSampler estiver setado, remove os spans não amostrados
+// re-serializando o doc (cada span kept é emitido verbatim). Retorna o corpo de
+// saída, quantos spans sobraram e se o parse deu certo (false → caller faz
+// fallback e encaminha o corpo original).
+func (h *HTTPReceiver) tapAndSampleJSON(body []byte) (outBody []byte, kept int, ok bool) {
+	var doc otlpTraceDoc
+	if err := json.Unmarshal(body, &doc); err != nil {
+		return nil, 0, false
+	}
+	var allSpans []*collectorv1.Span
+	for ri := range doc.ResourceSpans {
+		rs := &doc.ResourceSpans[ri]
+		var service, env, namespace, pod string
+		if len(rs.Resource) > 0 {
+			var rf otlpResourceFields
+			if json.Unmarshal(rs.Resource, &rf) == nil {
+				attrs := kvToMap(rf.Attributes)
+				service = attrs["service.name"]
+				env = attrs["deployment.environment"]
+				namespace = attrs["k8s.namespace.name"]
+				pod = attrs["k8s.pod.name"]
+				if service == "" {
+					service = pod
+				}
+			}
+		}
+		for si := range rs.ScopeSpans {
+			ss := &rs.ScopeSpans[si]
+			keptSpans := ss.Spans[:0]
+			for _, raw := range ss.Spans {
+				var f otlpSpanFields
+				parsed := json.Unmarshal(raw, &f) == nil
+				var statusCode int32
+				var dur int64
+				if parsed {
+					if f.Status != nil {
+						statusCode = int32(f.Status.Code)
+					}
+					dur = atoiNano(f.EndTimeUnixNano) - atoiNano(f.StartTimeUnixNano)
+					if h.apmTap != nil {
+						allSpans = append(allSpans, &collectorv1.Span{
+							TraceId:       f.TraceID,
+							ServiceName:   service,
+							Name:          f.Name,
+							Kind:          int32(f.Kind),
+							StartUnixNano: atoiNano(f.StartTimeUnixNano),
+							EndUnixNano:   atoiNano(f.EndTimeUnixNano),
+							StatusCode:    statusCode,
+							Namespace:     namespace,
+							Pod:           pod,
+							Attributes:    mergeEnv(kvToMap(f.Attributes), env),
+						})
+					}
+				}
+				// Sem sampler → mantém tudo. Parse falhou → mantém (fail-safe).
+				if h.traceSampler == nil || !parsed || h.traceSampler(f.TraceID, statusCode, dur) {
+					keptSpans = append(keptSpans, raw)
+					kept++
+				}
+			}
+			ss.Spans = keptSpans
+		}
+	}
+	if h.apmTap != nil && len(allSpans) > 0 {
+		h.apmTap(allSpans)
+	}
+	if h.traceSampler == nil {
+		return body, kept, true // sem sampling: corpo original intacto
+	}
+	nb, err := json.Marshal(&doc)
+	if err != nil {
+		return nil, 0, false
+	}
+	return nb, kept, true
+}
+
+func kvToMap(kvs []otlpKeyValue) map[string]string {
+	m := make(map[string]string, len(kvs))
+	for _, kv := range kvs {
+		if kv.Value.StringValue != nil {
+			m[kv.Key] = *kv.Value.StringValue
+		} else if kv.Value.IntValue != nil {
+			m[kv.Key] = *kv.Value.IntValue
+		}
+	}
+	return m
+}
+
+func mergeEnv(attrs map[string]string, env string) map[string]string {
+	if env != "" {
+		if attrs == nil {
+			attrs = map[string]string{}
+		}
+		if _, ok := attrs["deployment.environment"]; !ok {
+			attrs["deployment.environment"] = env
+		}
+	}
+	return attrs
+}
+
+func atoiNano(s string) int64 {
+	n, _ := strconv.ParseInt(s, 10, 64)
+	return n
 }
 
 // Start abre listener e roda até ctx ser cancelado. Erros de bind retornam
@@ -210,7 +456,46 @@ func (h *HTTPReceiver) corsOriginsForLog() string {
 func (h *HTTPReceiver) handleTraces(w http.ResponseWriter, r *http.Request) {
 	h.serveOTLP(w, r, "/v1/traces", func(body []byte, ct string) (int, error) {
 		if h.forwardRaw != nil {
-			if err := h.forwardRaw("traces", ct, body); err != nil {
+			outBody := body
+			// Trace-agent: resume com 100% dos spans e amostra o que é
+			// encaminhado. Best-effort — parse falho cai no fail-safe (encaminha
+			// o corpo original, não perde trace nem quebra o cliente).
+			if h.apmTap != nil || h.traceSampler != nil {
+				if ct == "application/json" {
+					// JSON: tap + sample no nível CRU, preservando o byte-a-byte
+					// de cada span (IDs em hex ficam hex; protojson usaria base64
+					// e o backend /traces rejeita).
+					if nb, kept, okp := h.tapAndSampleJSON(body); okp {
+						if h.traceSampler != nil && kept == 0 {
+							h.tracesAccepted.Add(1)
+							writeOTLPOK(w, ct)
+							return http.StatusOK, nil
+						}
+						outBody = nb
+					}
+				} else {
+					// protobuf: round-trip proto preserva os bytes dos IDs.
+					req := &tracepb.ExportTraceServiceRequest{}
+					if perr := unmarshalOTLP(body, ct, req); perr == nil {
+						if h.apmTap != nil {
+							if spans := convertResourceSpans(req.ResourceSpans); len(spans) > 0 {
+								h.apmTap(spans)
+							}
+						}
+						if h.traceSampler != nil {
+							if filterSampledSpans(req, h.traceSampler) == 0 {
+								h.tracesAccepted.Add(1)
+								writeOTLPOK(w, ct)
+								return http.StatusOK, nil
+							}
+							if b, merr := marshalOTLP(req, ct); merr == nil {
+								outBody = b
+							}
+						}
+					}
+				}
+			}
+			if err := h.forwardRaw("traces", ct, outBody); err != nil {
 				return http.StatusBadGateway, fmt.Errorf("forward traces: %w", err)
 			}
 			h.tracesAccepted.Add(1)
