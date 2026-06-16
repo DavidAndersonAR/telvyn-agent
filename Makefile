@@ -30,7 +30,7 @@ proto:
 	protoc --proto_path=proto/v1 \
 	       --go_out=proto/v1 --go_opt=paths=source_relative \
 	       --go-grpc_out=proto/v1 --go-grpc_opt=paths=source_relative \
-	       proto/v1/collector.proto
+	       proto/v1/collector.proto proto/v1/apm_stats.proto
 
 build:
 	go build $(GOFLAGS) -o collector ./cmd/collector

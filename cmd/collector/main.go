@@ -19,6 +19,10 @@ import (
 	"github.com/gosnmp/gosnmp"
 
 	"github.com/ispwatch/collector/internal/adapters"
+	"github.com/ispwatch/collector/internal/apm/concentrator"
+	"github.com/ispwatch/collector/internal/apm/obfuscate"
+	"github.com/ispwatch/collector/internal/apm/sampler"
+	"github.com/ispwatch/collector/internal/apm/statsfwd"
 	"github.com/ispwatch/collector/internal/checks"
 	"github.com/ispwatch/collector/internal/config"
 	"github.com/ispwatch/collector/internal/configcache"
@@ -831,6 +835,41 @@ func runIngestMode(ingestURL string) {
 	rec.SetForwardRaw(func(signal, ct string, body []byte) error {
 		return exporter.PostRaw(ctx, signal, ct, body)
 	})
+
+	// Trace-agent (Datadog-style): resume os spans NA BORDA. O corpo cru segue
+	// sendo repassado normalmente; em paralelo, cada span é higienizado e
+	// contado num DDSketch por bucket de 10s, e o resumo (hits/errors/latência
+	// exatos) vai pro /api/ingest/v1/apm/stats. Não-destrutivo: nada de span se
+	// perde; só passa a existir a métrica agregada.
+	apmConc := concentrator.New(log)
+	apmStats := statsfwd.New(nil, ingestURL, token, Version, log)
+	rec.SetAPMTap(func(spans []*collectorv1.Span) {
+		for _, s := range spans {
+			obfuscate.Apply(s)
+			apmConc.Add(s)
+		}
+	})
+	// Sampler (igual ao Datadog): guarda todo erro + todo trace lento (>2s) +
+	// uma amostra de 10% dos normais; o resto NÃO é encaminhado em detalhe. As
+	// stats acima já contam 100%, então os números seguem exatos.
+	apmSampler := sampler.New(0.10, 2*time.Second)
+	rec.SetTraceSampler(apmSampler.KeepRaw)
+	go func() {
+		t := time.NewTicker(concentrator.BucketDuration)
+		defer t.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				_ = apmStats.Send(context.Background(), apmConc.Flush()) // best-effort no shutdown
+				return
+			case <-t.C:
+				if err := apmStats.Send(ctx, apmConc.Flush()); err != nil {
+					log.Warn("apm stats flush failed", "err", err)
+				}
+			}
+		}
+	}()
+
 	if err := rec.Start(ctx); err != nil {
 		log.Error("ingest mode: otlp http receiver falhou", "err", err)
 		os.Exit(1)
