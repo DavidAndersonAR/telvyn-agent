@@ -7,6 +7,17 @@
 //   - postgres.replication_lag_seconds — NOW() - pg_last_xact_replay_timestamp()
 //   - postgres.wal_lag_bytes           — pg_wal_lsn_diff(receive_lsn, replay_lsn)
 //   - postgres.vacuum_stale_tables     — tabelas sem autovacuum há 24h+
+//   - postgres.total_connections       — todas as conexões do database atual
+//   - postgres.max_connections         — pg_settings max_connections (saturação)
+//   - postgres.cache_hit_ratio         — blks_hit / (blks_hit + blks_read), 0..1
+//   - postgres.deadlocks               — pg_stat_database.deadlocks (cumulativo)
+//   - postgres.commits                 — pg_stat_database.xact_commit (cumulativo)
+//   - postgres.rollbacks               — pg_stat_database.xact_rollback (cumulativo)
+//   - postgres.locks_waiting           — pg_locks NOT granted (contenção)
+//   - postgres.database_size_bytes     — pg_database_size(current_database())
+//
+// Tudo via views nativas (pg_stat_*, pg_locks, pg_settings) — não exige a
+// extensão pg_stat_statements nem permissões além de leitura.
 //
 // Pool config (RESEARCH §Pitfall 5 mitigation): MaxConns=2, MinConns=0,
 // Ping no factory; falha → pool.Close() + return err (no leak).
@@ -108,6 +119,28 @@ const (
 
 	sqlVacuumStaleTables = `SELECT count(*)::BIGINT FROM pg_stat_user_tables ` +
 		`WHERE last_autovacuum < NOW() - INTERVAL '24 hours' OR last_autovacuum IS NULL`
+
+	sqlTotalConnections = `SELECT count(*)::BIGINT FROM pg_stat_activity ` +
+		`WHERE datname = current_database()`
+
+	sqlMaxConnections = `SELECT setting::BIGINT FROM pg_settings WHERE name = 'max_connections'`
+
+	sqlCacheHitRatio = `SELECT ` +
+		`COALESCE(sum(blks_hit)::FLOAT8 / NULLIF(sum(blks_hit) + sum(blks_read), 0), 1)::FLOAT8 ` +
+		`FROM pg_stat_database WHERE datname = current_database()`
+
+	sqlDeadlocks = `SELECT COALESCE(deadlocks, 0)::BIGINT ` +
+		`FROM pg_stat_database WHERE datname = current_database()`
+
+	sqlCommits = `SELECT COALESCE(xact_commit, 0)::BIGINT ` +
+		`FROM pg_stat_database WHERE datname = current_database()`
+
+	sqlRollbacks = `SELECT COALESCE(xact_rollback, 0)::BIGINT ` +
+		`FROM pg_stat_database WHERE datname = current_database()`
+
+	sqlLocksWaiting = `SELECT count(*)::BIGINT FROM pg_locks WHERE NOT granted`
+
+	sqlDatabaseSize = `SELECT pg_database_size(current_database())::BIGINT`
 )
 
 // newPostgresServerCheck é a Factory pública registrada em init() para
@@ -176,13 +209,13 @@ func (c *postgresServer) Close() error {
 	return nil
 }
 
-// Run executa as 6 queries em paralelo conceitual (sequencial aqui pra
-// preservar pool MaxConns=2 sem contenção) e emite até 6 métricas. Best-
-// effort: erro em uma query individual loga e segue — outras métricas ainda
-// são emitidas. Erro só é retornado se ctx cancelar.
+// Run executa as queries sequencialmente (pra preservar pool MaxConns=2 sem
+// contenção) e emite até 14 métricas. Best-effort: erro em uma query
+// individual loga e segue — outras métricas ainda são emitidas. Erro só é
+// retornado se ctx cancelar.
 func (c *postgresServer) Run(ctx context.Context) ([]*collectorv1.Metric, error) {
 	now := timestamppb.Now()
-	out := make([]*collectorv1.Metric, 0, 6)
+	out := make([]*collectorv1.Metric, 0, 14)
 
 	queryInt64 := func(sql string) (int64, bool) {
 		qctx, cancel := context.WithTimeout(ctx, postgresQueryTimeout)
@@ -222,6 +255,30 @@ func (c *postgresServer) Run(ctx context.Context) ([]*collectorv1.Metric, error)
 	}
 	if v, ok := queryInt64(sqlVacuumStaleTables); ok {
 		out = append(out, c.metric(now, "postgres.vacuum_stale_tables", float64(v)))
+	}
+	if v, ok := queryInt64(sqlTotalConnections); ok {
+		out = append(out, c.metric(now, "postgres.total_connections", float64(v)))
+	}
+	if v, ok := queryInt64(sqlMaxConnections); ok {
+		out = append(out, c.metric(now, "postgres.max_connections", float64(v)))
+	}
+	if v, ok := queryFloat64(sqlCacheHitRatio); ok {
+		out = append(out, c.metric(now, "postgres.cache_hit_ratio", v))
+	}
+	if v, ok := queryInt64(sqlDeadlocks); ok {
+		out = append(out, c.metric(now, "postgres.deadlocks", float64(v)))
+	}
+	if v, ok := queryInt64(sqlCommits); ok {
+		out = append(out, c.metric(now, "postgres.commits", float64(v)))
+	}
+	if v, ok := queryInt64(sqlRollbacks); ok {
+		out = append(out, c.metric(now, "postgres.rollbacks", float64(v)))
+	}
+	if v, ok := queryInt64(sqlLocksWaiting); ok {
+		out = append(out, c.metric(now, "postgres.locks_waiting", float64(v)))
+	}
+	if v, ok := queryInt64(sqlDatabaseSize); ok {
+		out = append(out, c.metric(now, "postgres.database_size_bytes", float64(v)))
 	}
 
 	if err := ctx.Err(); err != nil {
