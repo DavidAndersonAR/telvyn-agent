@@ -62,10 +62,16 @@ type LogRecord struct {
 // Single struct atomicamente safe; instanciado uma vez no main.
 type LogsExporter struct {
 	collectorID string
-	endpoint    string // ex: https://quarkus:8444
+	endpoint    string // ex: https://quarkus:8444 (modo mTLS)
 	tenantID    string
 	httpClient  *http.Client
 	log         *slog.Logger
+
+	// ingest != nil ⇒ modo certless (Datadog-style): em vez do POST mTLS pro
+	// /api/collector/v1/logs, cada batch sai como OTLP JSON + Bearer pro
+	// gateway /api/ingest/v1/logs. Toda a maquinaria de buffer/flush/overflow
+	// é reusada — só o transporte do sendBatch muda.
+	ingest *IngestExporter
 
 	mu  sync.Mutex
 	buf []LogRecord
@@ -114,6 +120,17 @@ func NewLogsExporter(endpoint, tenantID, collectorID string, certPath, keyPath, 
 		},
 		log: log.With("component", "otlp-logs"),
 	}, nil
+}
+
+// NewIngestLogsExporter constrói um LogsExporter no modo certless: os batches
+// são enviados via ingest.PostLogs (OTLP JSON + Bearer) em vez do canal mTLS.
+// Reusa Push/Run/flush/overflow/Stats do exporter mTLS.
+func NewIngestLogsExporter(ingest *IngestExporter, log *slog.Logger) *LogsExporter {
+	return &LogsExporter{
+		ingest:     ingest,
+		httpClient: &http.Client{Timeout: LogsRequestTimeout},
+		log:        log.With("component", "otlp-logs-ingest"),
+	}
 }
 
 // Push adiciona records ao buffer interno. Não bloqueia — overflow >4x
@@ -200,6 +217,9 @@ type logRecordWire struct {
 
 // sendBatch monta o JSON batch e POSTa.
 func (e *LogsExporter) sendBatch(ctx context.Context, batch []LogRecord) error {
+	if e.ingest != nil {
+		return e.ingest.PostLogs(ctx, batch)
+	}
 	if e.endpoint == "" {
 		return fmt.Errorf("logs exporter endpoint not configured")
 	}

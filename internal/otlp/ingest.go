@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -149,6 +150,122 @@ func (e *IngestExporter) PostMetrics(ctx context.Context, metrics []*collectorv1
 		return err
 	}
 	return e.PostRaw(ctx, "metrics", "application/json", body)
+}
+
+// ---- Logs (OTLP JSON) -------------------------------------------------
+
+// Shapes JSON do OTLP logs export (resourceLogs → scopeLogs → logRecords).
+// Construímos à mão (sem dep do proto otlp/logs) porque o gateway Quarkus
+// parseia via Jackson — só precisa do shape, não do protobuf. Espelha o que
+// parseOtlpJsonLogs espera: service.name/host.name/k8s.* em resource attrs,
+// body.stringValue, timeUnixNano como string, severityNumber como número.
+type otlpLogsPayload struct {
+	ResourceLogs []otlpResourceLogs `json:"resourceLogs"`
+}
+
+type otlpResourceLogs struct {
+	Resource  otlpResource    `json:"resource"`
+	ScopeLogs []otlpScopeLogs `json:"scopeLogs"`
+}
+
+type otlpResource struct {
+	Attributes []otlpKeyValue `json:"attributes"`
+}
+
+type otlpScopeLogs struct {
+	LogRecords []otlpLogRecord `json:"logRecords"`
+}
+
+type otlpLogRecord struct {
+	TimeUnixNano   string         `json:"timeUnixNano"`
+	SeverityNumber int            `json:"severityNumber,omitempty"`
+	SeverityText   string         `json:"severityText,omitempty"`
+	Body           otlpAnyValue   `json:"body"`
+	Attributes     []otlpKeyValue `json:"attributes,omitempty"`
+}
+
+type otlpKeyValue struct {
+	Key   string       `json:"key"`
+	Value otlpAnyValue `json:"value"`
+}
+
+type otlpAnyValue struct {
+	StringValue string `json:"stringValue"`
+}
+
+func strKV(k, v string) otlpKeyValue {
+	return otlpKeyValue{Key: k, Value: otlpAnyValue{StringValue: v}}
+}
+
+// PostLogs converte LogRecords internos → OTLP JSON e manda pro /logs com
+// Bearer. Agrupa por (service, namespace, pod) em ResourceLogs distintos —
+// o backend lê service.name do resource attr e namespace/pod do attr mesclado,
+// então o agrupamento dá service_name correto por pod. k8s.container.name e
+// outros attrs ficam no log record (variam por linha dentro do pod).
+func (e *IngestExporter) PostLogs(ctx context.Context, records []LogRecord) error {
+	if len(records) == 0 {
+		return nil
+	}
+	var payload otlpLogsPayload
+	groups := make(map[string]int, 8) // chave → índice em payload.ResourceLogs
+	for _, r := range records {
+		ns := r.Attributes["k8s.namespace.name"]
+		pod := r.Attributes["k8s.pod.name"]
+		svc := r.ServiceName
+		host := r.Hostname
+		if host == "" {
+			host = e.hostID
+		}
+		key := svc + "\x00" + ns + "\x00" + pod + "\x00" + host
+		idx, ok := groups[key]
+		if !ok {
+			resAttrs := make([]otlpKeyValue, 0, 5)
+			if svc != "" {
+				resAttrs = append(resAttrs, strKV("service.name", svc))
+			}
+			if host != "" {
+				resAttrs = append(resAttrs, strKV("host.name", host))
+			}
+			if ns != "" {
+				resAttrs = append(resAttrs, strKV("k8s.namespace.name", ns))
+			}
+			if pod != "" {
+				resAttrs = append(resAttrs, strKV("k8s.pod.name", pod))
+			}
+			if e.clusterName != "" {
+				resAttrs = append(resAttrs, strKV("k8s.cluster.name", e.clusterName))
+			}
+			payload.ResourceLogs = append(payload.ResourceLogs, otlpResourceLogs{
+				Resource:  otlpResource{Attributes: resAttrs},
+				ScopeLogs: []otlpScopeLogs{{}},
+			})
+			idx = len(payload.ResourceLogs) - 1
+			groups[key] = idx
+		}
+		// Attrs do record: tudo menos os que viraram resource attr (evita dup).
+		recAttrs := make([]otlpKeyValue, 0, len(r.Attributes))
+		for k, v := range r.Attributes {
+			switch k {
+			case "k8s.namespace.name", "k8s.pod.name", "service.name", "host.name":
+				continue
+			}
+			recAttrs = append(recAttrs, strKV(k, v))
+		}
+		rec := otlpLogRecord{
+			TimeUnixNano:   strconv.FormatInt(r.TimestampUnixNano, 10),
+			SeverityNumber: r.SeverityNumber,
+			SeverityText:   r.SeverityText,
+			Body:           otlpAnyValue{StringValue: r.Body},
+			Attributes:     recAttrs,
+		}
+		sl := &payload.ResourceLogs[idx].ScopeLogs[0]
+		sl.LogRecords = append(sl.LogRecords, rec)
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	return e.PostRaw(ctx, "logs", "application/json", body)
 }
 
 // RegisterK8sNode registra o nó no backend (POST /k8s/register, Bearer) →

@@ -870,10 +870,43 @@ func runIngestMode(ingestURL string) {
 		}
 	}()
 
+	// Coleta de logs (toggle, estilo Datadog): taila /var/log/pods (CRI) e
+	// encaminha cada linha como OTLP JSON + Bearer pro gateway /api/ingest/v1/logs.
+	if getenvOr("ISPWATCH_LOGS_ENABLED", "0") == "1" {
+		startIngestPodLogs(ctx, log, exporter, hostID)
+	} else {
+		log.Debug("pod logs desativados (set ISPWATCH_LOGS_ENABLED=1 pra habilitar)")
+	}
+
 	if err := rec.Start(ctx); err != nil {
 		log.Error("ingest mode: otlp http receiver falhou", "err", err)
 		os.Exit(1)
 	}
+}
+
+// startIngestPodLogs monta o pipeline de logs de pod no modo ingest: um
+// LogsExporter certless (batch → OTLP JSON + Bearer) + o tailer CRI. Exclui o
+// próprio namespace do agent (POD_NAMESPACE) e os de ISPWATCH_LOGS_EXCLUDE_NAMESPACES
+// pra evitar loop de logs.
+func startIngestPodLogs(ctx context.Context, log *slog.Logger, exporter *otlp.IngestExporter, hostID string) {
+	logsExp := otlp.NewIngestLogsExporter(exporter, log)
+
+	exclude := []string{}
+	if self := strings.TrimSpace(getenvOr("POD_NAMESPACE", "")); self != "" {
+		exclude = append(exclude, self)
+	}
+	for _, ns := range strings.Split(getenvOr("ISPWATCH_LOGS_EXCLUDE_NAMESPACES", ""), ",") {
+		if ns = strings.TrimSpace(ns); ns != "" {
+			exclude = append(exclude, ns)
+		}
+	}
+
+	cursorPath := getenvOr("ISPWATCH_LOGS_CURSOR_PATH", "/var/lib/ispwatch-collector/log_cursors.json")
+	tailer := logs.NewCRILogsTailer(logsExp, cursorPath, hostID, exclude, log)
+
+	go logsExp.Run(ctx)
+	go tailer.Run(ctx)
+	log.Info("pod logs habilitados (CRI tailer)", "cursor", cursorPath, "exclude_ns", strings.Join(exclude, ","))
 }
 
 // startKubeletCheck roda o check k8s.kubelet LOCALMENTE (sem depender do
