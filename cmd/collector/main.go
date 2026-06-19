@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -878,6 +879,15 @@ func runIngestMode(ingestURL string) {
 		log.Debug("pod logs desativados (set ISPWATCH_LOGS_ENABLED=1 pra habilitar)")
 	}
 
+	// Checagens agendadas (config-pull): registra o collector e puxa os checks
+	// que o usuário criou no painel, executando cada um no intervalo. O resultado
+	// vai pelo mesmo canal `out` (PostMetrics entrega). Reusa a máquina mTLS.
+	if getenvOr("ISPWATCH_CHECKS_ENABLED", "1") == "1" {
+		startIngestChecks(ctx, log, exporter, token, ingestURL, hostID, out)
+	} else {
+		log.Debug("checagens agendadas desativadas (set ISPWATCH_CHECKS_ENABLED=1 pra habilitar)")
+	}
+
 	if err := rec.Start(ctx); err != nil {
 		log.Error("ingest mode: otlp http receiver falhou", "err", err)
 		os.Exit(1)
@@ -907,6 +917,76 @@ func startIngestPodLogs(ctx context.Context, log *slog.Logger, exporter *otlp.In
 	go logsExp.Run(ctx)
 	go tailer.Run(ctx)
 	log.Info("pod logs habilitados (CRI tailer)", "cursor", cursorPath, "exclude_ns", strings.Join(exclude, ","))
+}
+
+// startIngestChecks liga o config-pull no modo ingest: registra o collector
+// (Bearer) pra obter collector_id+tenant, monta um checks.Runtime emitindo no
+// mesmo canal `out`, e roda o loop de config-pull com um client que injeta o
+// Bearer token. Reusa toda a máquina de checks/scheduler do modo mTLS.
+func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.IngestExporter, token, ingestURL, hostID string, out chan<- []*collectorv1.Metric) {
+	name := strings.TrimSpace(hostID)
+	if name == "" {
+		name, _ = os.Hostname()
+	}
+	collectorID, tenantID, err := exporter.RegisterCollector(ctx, name, []string{"metrics", "checks"})
+	if err != nil {
+		log.Warn("checks: registro de collector falhou — config-pull desativado", "err", err)
+		return
+	}
+	if collectorID == "" {
+		log.Warn("checks: collector_id vazio do register — config-pull desativado")
+		return
+	}
+
+	// Base raiz do servidor (config-pull fica em /api/collector/v1/config, fora
+	// do /api/ingest/v1).
+	base := strings.TrimRight(strings.TrimSpace(ingestURL), "/")
+	base = strings.TrimRight(strings.TrimSuffix(base, "/api/ingest/v1"), "/")
+
+	runtime := checks.New(ctx, log, checks.Default, out)
+	runtime.SetWorkerPools(5, 10)
+	runtime.SetJitter(1000)
+	runtime.SetTagger(checks.NewTagger(config.DefaultTaggerBudget, log))
+
+	pollSecs := 15
+	if v := strings.TrimSpace(getenvOr("ISPWATCH_CHECKS_POLL_SECONDS", "")); v != "" {
+		if n, e := strconv.Atoi(v); e == nil && n > 0 {
+			pollSecs = n
+		}
+	}
+
+	bearerClient := &http.Client{
+		Timeout:   30 * time.Second,
+		Transport: bearerRoundTripper{token: token, rt: http.DefaultTransport},
+	}
+
+	go func() {
+		if err := configpull.Run(ctx, configpull.Config{
+			Endpoint:     base,
+			CollectorID:  collectorID,
+			TenantID:     tenantID,
+			PollInterval: time.Duration(pollSecs) * time.Second,
+			HTTPClient:   bearerClient,
+			Logger:       log,
+		}, runtime); err != nil {
+			log.Warn("config pull (ingest) encerrou", "err", err)
+		}
+	}()
+	log.Info("checagens agendadas habilitadas (config-pull)",
+		"collector_id", collectorID, "tenant", tenantID, "base", base, "poll_s", pollSecs)
+}
+
+// bearerRoundTripper injeta Authorization: Bearer <token> em cada request —
+// usado pelo client de config-pull no modo ingest (sem mTLS).
+type bearerRoundTripper struct {
+	token string
+	rt    http.RoundTripper
+}
+
+func (b bearerRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	r2 := req.Clone(req.Context())
+	r2.Header.Set("Authorization", "Bearer "+b.token)
+	return b.rt.RoundTrip(r2)
 }
 
 // startKubeletCheck roda o check k8s.kubelet LOCALMENTE (sem depender do

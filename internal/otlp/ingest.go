@@ -301,6 +301,40 @@ func (e *IngestExporter) RegisterK8sNode(ctx context.Context, cluster, node, nod
 	return out.HostID.String(), nil
 }
 
+// RegisterCollector registra/atualiza o collector deste agente no backend
+// (POST /collector/register, Bearer) → upsert em noc_collector por (tenant,
+// name). Devolve o collector_id (UUID) + tenant, que o agente usa no
+// config-pull (Bearer) pra puxar as checagens agendadas que o usuário criou.
+func (e *IngestExporter) RegisterCollector(ctx context.Context, name string, capabilities []string) (string, string, error) {
+	if capabilities == nil {
+		capabilities = []string{}
+	}
+	payload := map[string]any{"name": name, "capabilities": capabilities}
+	body, _ := json.Marshal(payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, e.base+"/collector/register", bytes.NewReader(body))
+	if err != nil {
+		return "", "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+e.token)
+	resp, err := e.client.Do(req)
+	if err != nil {
+		return "", "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode/100 != 2 {
+		return "", "", fmt.Errorf("collector register: HTTP %d", resp.StatusCode)
+	}
+	var out struct {
+		CollectorID string `json:"collector_id"`
+		Tenant      string `json:"tenant"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return "", "", err
+	}
+	return out.CollectorID, out.Tenant, nil
+}
+
 func kv(k, v string) *commonpb.KeyValue {
 	return &commonpb.KeyValue{
 		Key:   k,
