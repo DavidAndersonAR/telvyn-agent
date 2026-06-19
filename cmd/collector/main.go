@@ -373,7 +373,7 @@ func main() {
 	}
 	registry.Register(tools.NewConfigReload(runtime.Reload, sched.ReloadServerDriven, checksReloadFn))
 
-	// Phase 5 — pull-based config loop (Zabbix-like). Substitui o caminho
+	// Phase 5 — pull-based config loop. Substitui o caminho
 	// push (config.reload via gRPC) por polling HTTP do servidor. Aplica
 	// deltas via ApplyDelta no scheduler, sem stop-the-world.
 	// Phase 5b — auth migrou de JWT estático (env AGENT_TOKEN) pra mTLS.
@@ -392,12 +392,12 @@ func main() {
 	go quarkusScraper.Run(ctx)
 
 	pollInterval := time.Duration(cfg.ConfigPollSeconds) * time.Second
-	// checks.SetBackend habilita checks (ex: zabbix.sync) a postarem dados
-	// de volta pro backend usando o mesmo cert mTLS. Falha aqui não derruba
-	// o agent — checks dependentes só vão errar no primeiro tick.
+	// checks.SetBackend habilita checks a postarem dados de volta pro backend
+	// usando o mesmo cert mTLS. Falha aqui não derruba o agent — checks
+	// dependentes só vão errar no primeiro tick.
 	if err := checks.SetBackend(httpEndpoint, cfg.TenantID, cfg.CollectorID,
 		cfg.ClientCert, cfg.ClientKey, cfg.TrustBundle); err != nil {
-		log.Warn("checks.SetBackend failed (zabbix.sync ingestion will fail)", "err", err)
+		log.Warn("checks.SetBackend failed (ingestion will fail)", "err", err)
 	}
 
 	// journald → OTLP logs export. Default off; ativa via

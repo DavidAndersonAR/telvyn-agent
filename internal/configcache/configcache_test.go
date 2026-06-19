@@ -36,7 +36,7 @@ func cfgWithJobs(n int) *collectorv1.CollectorConfig {
 func cfgWithAdapters(n int) *collectorv1.CollectorConfig {
 	c := &collectorv1.CollectorConfig{}
 	for i := 0; i < n; i++ {
-		c.Adapters = append(c.Adapters, &collectorv1.AdapterConfig{Kind: "zabbix"})
+		c.Adapters = append(c.Adapters, &collectorv1.AdapterConfig{Kind: "generic"})
 	}
 	return c
 }

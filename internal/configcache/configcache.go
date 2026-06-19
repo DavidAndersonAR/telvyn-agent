@@ -1,6 +1,6 @@
 // Package configcache persists the last-known-good server-driven config to
 // disk so the collector can keep running its jobs across a backend restart or
-// a multi-hour POP isolation — like a Zabbix proxy caching its config (Task 2,
+// a multi-hour POP isolation — like a remote proxy caching its config (Task 2,
 // config/job continuity).
 //
 // What is cached: the full CollectorConfig proto from the most recent
@@ -19,7 +19,7 @@
 // from a TRANSIENT empty generation that Quarkus hands out mid-restart (before
 // it has rehydrated the job set from its DB).
 //
-// Given that ambiguity, the safe default for a Zabbix-proxy-style collector is
+// Given that ambiguity, the safe default for a remote-proxy-style collector is
 // KEEP-CURRENT-ON-EMPTY: an empty Register config is treated as "no opinion,
 // keep what you have" and the running job set is NOT torn down. This trades a
 // rare stale-config window (operator genuinely cleared all jobs, agent keeps

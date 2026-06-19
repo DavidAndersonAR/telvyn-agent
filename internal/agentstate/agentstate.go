@@ -3,7 +3,7 @@
 // (checks ↔ selfmetrics, principalmente).
 //
 // Tudo aqui é atomic — mudanças em runtime via config-pull (ex:
-// zabbix.sync entregou local_host_id) podem acontecer concorrentemente
+// entrega de local_host_id) podem acontecer concorrentemente
 // com leituras de selfmetrics.
 package agentstate
 
@@ -12,8 +12,8 @@ import "sync/atomic"
 var localHostID atomic.Int64
 
 // SetLocalHostID amarra a "identidade ISPWatch" do host físico onde o
-// agent roda. Atualmente setado por internal/checks.zabbix_sync quando
-// o param local_host_id != 0. 0 = não amarrado.
+// agent roda. Setado via config-pull quando o param local_host_id != 0.
+// 0 = não amarrado.
 func SetLocalHostID(id int64) {
 	localHostID.Store(id)
 }

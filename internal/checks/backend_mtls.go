@@ -3,9 +3,8 @@
 //
 // Sem refactor agressivo: o main.go injeta a config aqui (cert/key/trust +
 // endpoint + tenant + collector) uma vez no boot. Checks que precisam
-// chamar o backend (ex: zabbix.sync postando lotes de hosts) consomem via
-// PostJSON. Não há leitura concorrente do alvo durante runtime — config
-// é write-once.
+// chamar o backend (postando lotes de dados) consomem via PostJSON. Não há
+// leitura concorrente do alvo durante runtime — config é write-once.
 package checks
 
 import (

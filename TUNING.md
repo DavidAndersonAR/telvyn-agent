@@ -1,6 +1,6 @@
 # Tuning do Agent IspWatch
 
-Guia rápido pra dimensionar o agent conforme a quantidade de hosts que ele monitora. Equivalente ao `zabbix_agentd.conf` / `zabbix_proxy.conf`.
+Guia rápido pra dimensionar o agent conforme a quantidade de hosts que ele monitora.
 
 ## Defaults atuais
 

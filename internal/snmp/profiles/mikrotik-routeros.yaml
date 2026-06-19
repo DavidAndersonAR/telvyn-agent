@@ -288,7 +288,7 @@ metrics:
       - { tag: ospf_area_id, symbol: { oid: 1.3.6.1.2.1.14.2.1.1, name: ospfAreaId } }
 
 # =============================================================================
-# DISCOVERY RULES (Zabbix-like: keys for labels + items for metrics, join
+# DISCOVERY RULES (keys for labels + items for metrics, join
 # by row_index). Used for tables where the newer discovery_rules format
 # provides cleaner key/item separation than the table+symbols format.
 # =============================================================================
