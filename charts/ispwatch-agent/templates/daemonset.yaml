@@ -104,6 +104,15 @@ spec:
             {{- end }}
             - name: COLLECTOR_LOG_LEVEL
               value: {{ .Values.logLevel | default "info" | quote }}
+            {{- if .Values.logs.enabled }}
+            # Coleta de logs: taila /var/log/pods (CRI) → OTLP JSON + Bearer.
+            - name: ISPWATCH_LOGS_ENABLED
+              value: "1"
+            {{- with .Values.logs.excludeNamespaces }}
+            - name: ISPWATCH_LOGS_EXCLUDE_NAMESPACES
+              value: {{ join "," . | quote }}
+            {{- end }}
+            {{- end }}
             {{- if .Values.ebpfTracing.enabled }}
             - name: ISPWATCH_EBPF_TRACING
               value: "1"
@@ -125,6 +134,13 @@ spec:
               mountPath: /var/lib/ispwatch-collector
             - name: tmp
               mountPath: /tmp
+            {{- if .Values.logs.enabled }}
+            # Logs de pod (CRI). /var/log/pods tem os arquivos reais de log
+            # de todos os pods do nó; read-only basta.
+            - name: varlogpods
+              mountPath: /var/log/pods
+              readOnly: true
+            {{- end }}
             {{- if .Values.ebpfTracing.enabled }}
             # eBPF precisa de /sys/kernel/debug (kprobes) + /sys/fs/bpf
             # (BPF maps persistentes). Read-only quando o kernel suporta;
@@ -168,6 +184,11 @@ spec:
           emptyDir: {}
         - name: tmp
           emptyDir: {}
+        {{- if .Values.logs.enabled }}
+        - name: varlogpods
+          hostPath:
+            path: /var/log/pods
+        {{- end }}
         {{- if .Values.ebpfTracing.enabled }}
         - name: debugfs
           hostPath:

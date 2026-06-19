@@ -72,6 +72,18 @@ priorityClassName: ""
 
 podAnnotations: {}
 
+# Coleta de logs (toggle, estilo Datadog). Quando habilitado, o agent taila
+# /var/log/pods (formato CRI — containerd/k3s/CRI-O) e encaminha cada linha
+# como OTLP JSON + Bearer pro gateway /api/ingest/v1/logs. namespace/pod/
+# container são derivados do path. Arquivo novo começa do EOF (só logs novos).
+#
+# Exige montar /var/log/pods do host (read-only). O próprio namespace do agent
+# é sempre excluído (evita loop); adicione outros em excludeNamespaces.
+logs:
+  enabled: false
+  # Namespaces extras a ignorar (além do namespace do próprio agent).
+  excludeNamespaces: []
+
 # eBPF L7 tracing (Phase 2). Quando habilitado, o agent carrega
 # programas BPF que escutam tcp_sendmsg/recvmsg + uprobes TLS, decodifica
 # wire protocols (Postgres, Redis, HTTP, MySQL, Mongo, Kafka, etc.) e gera
