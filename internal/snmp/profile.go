@@ -58,15 +58,15 @@ type Profile struct {
 	Metrics     []ProfileMetric    `yaml:"metrics"`
 	MetricTags  []ProfileMetricTag `yaml:"metric_tags"`
 
-	// Novo formato (Zabbix-like): discovery_rules + items por row.
+	// Novo formato: discovery_rules + items por row.
 	// Cada rule executa N walks de keys (= labels) + N walks de items (=
 	// medições), e emite metric por (row_index × item) com labels herdados
 	// das keys + static_tags. Co-existe com Metrics; ambos rodam em Collect.
 	DiscoveryRules []ProfileDiscoveryRule `yaml:"discovery_rules,omitempty"`
 }
 
-// ProfileDiscoveryRule é o equivalente a um "discovery rule + item prototypes"
-// de Zabbix: walks distintos pra labels (keys) e métricas (items), join por
+// ProfileDiscoveryRule é um "discovery rule + item prototypes":
+// walks distintos pra labels (keys) e métricas (items), join por
 // row_index.
 type ProfileDiscoveryRule struct {
 	Name       string            `yaml:"name"`
@@ -371,7 +371,7 @@ func (p *Profile) Collect(ctx context.Context, c *Client, hostID string, staticT
 		}
 	}
 
-	// Novo formato (Zabbix-like): discovery_rules. Cada rule:
+	// Novo formato: discovery_rules. Cada rule:
 	//   1) walk keys → map[rowSuffix]map[label]value (labels da row)
 	//   2) walk items → para cada PDU, lookup labels pelo rowSuffix, emit
 	// Falha de uma rule = skip silencioso (paralela ao tratamento de tabelas).

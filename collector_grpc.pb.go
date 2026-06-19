@@ -52,7 +52,7 @@ type CollectorServiceClient interface {
 	// Reverse channel for MCP-like tool execution.
 	// Collector keeps this stream open; server pushes ToolCommand whenever
 	// the IA causal layer needs to probe the customer environment
-	// (run an SSH command, poll an SNMP OID, query Zabbix history, etc).
+	// (run an SSH command, poll an SNMP OID, etc).
 	// Collector executes locally and returns ToolResult.
 	ToolChannel(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ToolResult, ToolCommand], error)
 	// Periodic health beacon (lag, drops, uptime). Feeds collector_health
@@ -153,7 +153,7 @@ type CollectorServiceServer interface {
 	// Reverse channel for MCP-like tool execution.
 	// Collector keeps this stream open; server pushes ToolCommand whenever
 	// the IA causal layer needs to probe the customer environment
-	// (run an SSH command, poll an SNMP OID, query Zabbix history, etc).
+	// (run an SSH command, poll an SNMP OID, etc).
 	// Collector executes locally and returns ToolResult.
 	ToolChannel(grpc.BidiStreamingServer[ToolResult, ToolCommand]) error
 	// Periodic health beacon (lag, drops, uptime). Feeds collector_health

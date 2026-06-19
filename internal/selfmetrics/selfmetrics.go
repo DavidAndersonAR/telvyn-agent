@@ -130,7 +130,7 @@ func run(
 			log.Warn("self-metrics out channel full, dropping batch", "count", len(metrics))
 		}
 
-		// Quando o agent foi amarrado a um noc_host (via zabbix.sync param
+		// Quando o agent foi amarrado a um noc_host (via param
 		// local_host_id), duplica cada métrica sem __self__ e com host_id
 		// setado ao bigint do host. VmRemoteWriter, sem ver __self__, deixa
 		// o nome (cpu_user, mem_used, …) e usa host_id direto — caem nos

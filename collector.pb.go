@@ -32,7 +32,7 @@ type RegisterRequest struct {
 	TenantId      string                 `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`          // tenant slug (matches Django tenant)
 	Version       string                 `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`                            // collector binary version (semver)
 	Hostname      string                 `protobuf:"bytes,4,opt,name=hostname,proto3" json:"hostname,omitempty"`                          // OS hostname for ops visibility
-	Capabilities  []string               `protobuf:"bytes,5,rep,name=capabilities,proto3" json:"capabilities,omitempty"`                  // ["zabbix","snmp","ssh","fortigate","mikrotik"]
+	Capabilities  []string               `protobuf:"bytes,5,rep,name=capabilities,proto3" json:"capabilities,omitempty"`                  // ["snmp","ssh","fortigate","mikrotik"]
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -170,8 +170,8 @@ type CollectorConfig struct {
 	Adapters           []*AdapterConfig       `protobuf:"bytes,4,rep,name=adapters,proto3" json:"adapters,omitempty"`
 	// Per-host tool jobs the operator scheduled in the UI. Each entry tells
 	// the agent: "run THIS tool against THAT host every N seconds". Distinct
-	// from `adapters` (which are long-lived continuous integrations like
-	// Zabbix); jobs are ticker-driven invocations of one Tool executor with
+	// from `adapters` (which are long-lived continuous integrations);
+	// jobs are ticker-driven invocations of one Tool executor with
 	// resolved credentials inlined into args.
 	ScheduledJobs []*ScheduledJob `protobuf:"bytes,5,rep,name=scheduled_jobs,json=scheduledJobs,proto3" json:"scheduled_jobs,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -245,7 +245,7 @@ func (x *CollectorConfig) GetScheduledJobs() []*ScheduledJob {
 
 type AdapterConfig struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Kind          string                 `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`     // "zabbix" — only continuous integration kind today
+	Kind          string                 `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`     // adapter kind (continuous integration)
 	Params        *structpb.Struct       `protobuf:"bytes,2,opt,name=params,proto3" json:"params,omitempty"` // adapter-specific JSON (URL, intervals)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -456,7 +456,7 @@ type Metric struct {
 	InterfaceName string                 `protobuf:"bytes,5,opt,name=interface_name,json=interfaceName,proto3" json:"interface_name,omitempty"` // optional (interface metrics)
 	PeerId        string                 `protobuf:"bytes,6,opt,name=peer_id,json=peerId,proto3" json:"peer_id,omitempty"`                      // optional (BGP/OSPF/etc neighbor)
 	Tags          map[string]string      `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Source        string                 `protobuf:"bytes,8,opt,name=source,proto3" json:"source,omitempty"` // "snmp" | "zabbix" | "syslog" | ...
+	Source        string                 `protobuf:"bytes,8,opt,name=source,proto3" json:"source,omitempty"` // "snmp" | "syslog" | ...
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -829,7 +829,7 @@ func (x *EventAck) GetError() string {
 type ToolCommand struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	CommandId      string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"` // server-generated UUID; echoed back
-	Tool           string                 `protobuf:"bytes,2,opt,name=tool,proto3" json:"tool,omitempty"`                            // "ssh.exec" | "snmp.get" | "zabbix.history" | ...
+	Tool           string                 `protobuf:"bytes,2,opt,name=tool,proto3" json:"tool,omitempty"`                            // "ssh.exec" | "snmp.get" | ...
 	Args           *structpb.Struct       `protobuf:"bytes,3,opt,name=args,proto3" json:"args,omitempty"`                            // tool-specific payload
 	TimeoutSeconds int32                  `protobuf:"varint,4,opt,name=timeout_seconds,json=timeoutSeconds,proto3" json:"timeout_seconds,omitempty"`
 	unknownFields  protoimpl.UnknownFields

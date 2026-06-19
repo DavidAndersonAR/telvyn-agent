@@ -15,7 +15,7 @@ import (
 
 // IcmpPing sends ICMP echo requests to a single target and emits two metrics:
 // avg RTT in ms and loss percentage. Used as a scheduled job per managed host
-// so the operator gets a per-equipment latency series independent of Zabbix.
+// so the operator gets a per-equipment latency series.
 //
 // args schema:
 //

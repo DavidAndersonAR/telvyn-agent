@@ -36,7 +36,7 @@ service CollectorService {
   // Reverse channel for MCP-like tool execution.
   // Collector keeps this stream open; server pushes ToolCommand whenever
   // the IA causal layer needs to probe the customer environment
-  // (run an SSH command, poll an SNMP OID, query Zabbix history, etc).
+  // (run an SSH command, poll an SNMP OID, etc).
   // Collector executes locally and returns ToolResult.
   rpc ToolChannel(stream ToolResult) returns (stream ToolCommand);
 
@@ -67,7 +67,7 @@ message RegisterRequest {
   string tenant_id      = 2;  // tenant slug (matches Django tenant)
   string version        = 3;  // collector binary version (semver)
   string hostname       = 4;  // OS hostname for ops visibility
-  repeated string capabilities = 5; // ["zabbix","snmp","ssh","fortigate","mikrotik"]
+  repeated string capabilities = 5; // ["snmp","ssh","fortigate","mikrotik"]
 
   // Phase 4 — opcional; agente reporta serviços detectados via gopsutil.
   // Campo 20+ para evitar colisão com expansões futuras de campos 6-19.
@@ -90,8 +90,8 @@ message CollectorConfig {
   repeated AdapterConfig adapters = 4;
   // Per-host tool jobs the operator scheduled in the UI. Each entry tells
   // the agent: "run THIS tool against THAT host every N seconds". Distinct
-  // from `adapters` (which are long-lived continuous integrations like
-  // Zabbix); jobs are ticker-driven invocations of one Tool executor with
+  // from `adapters` (which are long-lived continuous integrations);
+  // jobs are ticker-driven invocations of one Tool executor with
   // resolved credentials inlined into args.
   repeated ScheduledJob scheduled_jobs = 5;
   // Phase 2 Plan 3 — server-driven check config. Parallel to adapters
@@ -116,7 +116,7 @@ message CollectorConfig {
 }
 
 message AdapterConfig {
-  string kind = 1;                   // "zabbix" — only continuous integration kind today
+  string kind = 1;                   // adapter kind (continuous integration)
   google.protobuf.Struct params = 2; // adapter-specific JSON (URL, intervals)
 }
 
@@ -136,7 +136,7 @@ message ScheduledJob {
 
 // One server-configured continuous check the agent runs in-process at a
 // fixed interval. Distinct from `adapters` (long-lived continuous
-// integrations like Zabbix — DEPRECATED in Phase 1) and `scheduled_jobs`
+// integrations — DEPRECATED in Phase 1) and `scheduled_jobs`
 // (operator-scheduled tool invocations against managed hosts). A Check
 // runs INSIDE the agent and emits self-metrics about the host it lives on
 // (Local Agent mode per D-12) or the device it polls (Collector mode).
@@ -199,7 +199,7 @@ message Metric {
   string interface_name = 5;         // optional (interface metrics)
   string peer_id        = 6;         // optional (BGP/OSPF/etc neighbor)
   map<string, string> tags = 7;
-  string source         = 8;         // "snmp" | "zabbix" | "syslog" | ...
+  string source         = 8;         // "snmp" | "syslog" | ...
 }
 
 message MetricAck {
@@ -239,7 +239,7 @@ message EventAck {
 // ---------------------------------------------------------------------
 message ToolCommand {
   string command_id = 1;             // server-generated UUID; echoed back
-  string tool       = 2;             // "ssh.exec" | "snmp.get" | "zabbix.history" | ...
+  string tool       = 2;             // "ssh.exec" | "snmp.get" | ...
   google.protobuf.Struct args = 3;   // tool-specific payload
   int32  timeout_seconds = 4;
 }

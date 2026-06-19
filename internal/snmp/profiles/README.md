@@ -19,7 +19,7 @@ infra/collector/agent/internal/snmp/profiles/
 ```
 
 **Por que arquivo e não banco?** Profiles são *configuração de produto*
-(igual aos profiles do Datadog/Zabbix templates), não dado de tenant. Vão
+(igual aos profiles do Datadog), não dado de tenant. Vão
 junto com o release do collector, versionam via git, e o operador final
 só **seleciona** o profile pela UI/API — não edita OID.
 

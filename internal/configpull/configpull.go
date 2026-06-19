@@ -1,7 +1,7 @@
 // Package configpull implementa o cliente pull-based de config do collector.
 //
 // Phase 5 — substitui o caminho push (config.reload via gRPC) por polling do
-// endpoint HTTP /api/collector/v1/config?since=<v>. Modelo Zabbix-like:
+// endpoint HTTP /api/collector/v1/config?since=<v>. Modelo pull-based:
 //   - Servidor não sabe quando empurrar; agente decide ritmo via collector.conf
 //   - Servidor mantém versão monotônica per-tenant e devolve delta
 //   - Agente aplica delta via checks.Runtime.ApplyDelta — sem stop-the-world
