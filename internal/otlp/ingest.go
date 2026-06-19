@@ -164,12 +164,12 @@ type otlpLogsPayload struct {
 }
 
 type otlpResourceLogs struct {
-	Resource  otlpResource    `json:"resource"`
+	Resource  otlpLogResource `json:"resource"`
 	ScopeLogs []otlpScopeLogs `json:"scopeLogs"`
 }
 
-type otlpResource struct {
-	Attributes []otlpKeyValue `json:"attributes"`
+type otlpLogResource struct {
+	Attributes []otlpLogKV `json:"attributes"`
 }
 
 type otlpScopeLogs struct {
@@ -177,24 +177,26 @@ type otlpScopeLogs struct {
 }
 
 type otlpLogRecord struct {
-	TimeUnixNano   string         `json:"timeUnixNano"`
-	SeverityNumber int            `json:"severityNumber,omitempty"`
-	SeverityText   string         `json:"severityText,omitempty"`
-	Body           otlpAnyValue   `json:"body"`
-	Attributes     []otlpKeyValue `json:"attributes,omitempty"`
+	TimeUnixNano   string       `json:"timeUnixNano"`
+	SeverityNumber int          `json:"severityNumber,omitempty"`
+	SeverityText   string       `json:"severityText,omitempty"`
+	Body           otlpLogValue `json:"body"`
+	Attributes     []otlpLogKV  `json:"attributes,omitempty"`
 }
 
-type otlpKeyValue struct {
+// otlpLogKV / otlpLogValue: shapes próprios dos logs (o http.go já tem um
+// otlpKeyValue do receiver de spans, com Value inline — por isso prefixo Log).
+type otlpLogKV struct {
 	Key   string       `json:"key"`
-	Value otlpAnyValue `json:"value"`
+	Value otlpLogValue `json:"value"`
 }
 
-type otlpAnyValue struct {
+type otlpLogValue struct {
 	StringValue string `json:"stringValue"`
 }
 
-func strKV(k, v string) otlpKeyValue {
-	return otlpKeyValue{Key: k, Value: otlpAnyValue{StringValue: v}}
+func logKV(k, v string) otlpLogKV {
+	return otlpLogKV{Key: k, Value: otlpLogValue{StringValue: v}}
 }
 
 // PostLogs converte LogRecords internos → OTLP JSON e manda pro /logs com
@@ -219,43 +221,43 @@ func (e *IngestExporter) PostLogs(ctx context.Context, records []LogRecord) erro
 		key := svc + "\x00" + ns + "\x00" + pod + "\x00" + host
 		idx, ok := groups[key]
 		if !ok {
-			resAttrs := make([]otlpKeyValue, 0, 5)
+			resAttrs := make([]otlpLogKV, 0, 5)
 			if svc != "" {
-				resAttrs = append(resAttrs, strKV("service.name", svc))
+				resAttrs = append(resAttrs, logKV("service.name", svc))
 			}
 			if host != "" {
-				resAttrs = append(resAttrs, strKV("host.name", host))
+				resAttrs = append(resAttrs, logKV("host.name", host))
 			}
 			if ns != "" {
-				resAttrs = append(resAttrs, strKV("k8s.namespace.name", ns))
+				resAttrs = append(resAttrs, logKV("k8s.namespace.name", ns))
 			}
 			if pod != "" {
-				resAttrs = append(resAttrs, strKV("k8s.pod.name", pod))
+				resAttrs = append(resAttrs, logKV("k8s.pod.name", pod))
 			}
 			if e.clusterName != "" {
-				resAttrs = append(resAttrs, strKV("k8s.cluster.name", e.clusterName))
+				resAttrs = append(resAttrs, logKV("k8s.cluster.name", e.clusterName))
 			}
 			payload.ResourceLogs = append(payload.ResourceLogs, otlpResourceLogs{
-				Resource:  otlpResource{Attributes: resAttrs},
+				Resource:  otlpLogResource{Attributes: resAttrs},
 				ScopeLogs: []otlpScopeLogs{{}},
 			})
 			idx = len(payload.ResourceLogs) - 1
 			groups[key] = idx
 		}
 		// Attrs do record: tudo menos os que viraram resource attr (evita dup).
-		recAttrs := make([]otlpKeyValue, 0, len(r.Attributes))
+		recAttrs := make([]otlpLogKV, 0, len(r.Attributes))
 		for k, v := range r.Attributes {
 			switch k {
 			case "k8s.namespace.name", "k8s.pod.name", "service.name", "host.name":
 				continue
 			}
-			recAttrs = append(recAttrs, strKV(k, v))
+			recAttrs = append(recAttrs, logKV(k, v))
 		}
 		rec := otlpLogRecord{
 			TimeUnixNano:   strconv.FormatInt(r.TimestampUnixNano, 10),
 			SeverityNumber: r.SeverityNumber,
 			SeverityText:   r.SeverityText,
-			Body:           otlpAnyValue{StringValue: r.Body},
+			Body:           otlpLogValue{StringValue: r.Body},
 			Attributes:     recAttrs,
 		}
 		sl := &payload.ResourceLogs[idx].ScopeLogs[0]
