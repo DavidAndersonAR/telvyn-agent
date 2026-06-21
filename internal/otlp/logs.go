@@ -55,6 +55,8 @@ type LogRecord struct {
 	SeverityNumber    int               // OTel severity 1-24
 	SeverityText      string            // "INFO" | "WARN" | "ERROR" | ...
 	Body              string            // mensagem
+	TraceID           string            // hex32, vazio se a linha não trouxe — liga o log ao trace
+	SpanID            string            // hex16, vazio se ausente
 	Attributes        map[string]string // attrs do log record
 }
 
@@ -237,6 +239,8 @@ func (e *LogsExporter) sendBatch(ctx context.Context, batch []LogRecord) error {
 			SeverityNumber: r.SeverityNumber,
 			SeverityText:   r.SeverityText,
 			Body:           r.Body,
+			TraceID:        r.TraceID,
+			SpanID:         r.SpanID,
 			Attributes:     r.Attributes,
 		})
 	}
