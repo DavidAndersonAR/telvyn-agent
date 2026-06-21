@@ -26,6 +26,7 @@ package logs
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"io"
 	"log/slog"
 	"os"
@@ -304,6 +305,22 @@ func (t *CRILogsTailer) handleLine(line string, meta criFileInfo, svc string, pa
 	}
 
 	sevNum, sevText := streamToSeverity(stream)
+	body := full
+	var traceID, spanID string
+	// Log estruturado (JSON): extrai a mensagem, o nível e o número do
+	// trace/span pra correlação. Linha que NÃO é JSON fica idêntica a antes
+	// (body = a linha inteira; trace/span vazios).
+	if fields := jsonLogFields(full); fields != nil {
+		if m := firstField(fields, "message", "msg", "body", "log", "@message", "event"); m != "" {
+			body = m
+		}
+		traceID = firstField(fields, "trace_id", "traceId", "traceID", "dd.trace_id", "otel.trace_id")
+		spanID = firstField(fields, "span_id", "spanId", "spanID", "dd.span_id", "otel.span_id")
+		if n, txt, ok := levelToSeverity(firstField(fields, "level", "severity", "severity_text", "levelname", "lvl")); ok {
+			sevNum, sevText = n, txt
+		}
+	}
+
 	t.linesTotal.Add(1)
 	t.exporter.Push(otlp.LogRecord{
 		TimestampUnixNano: parseCRITime(tsStr),
@@ -311,7 +328,9 @@ func (t *CRILogsTailer) handleLine(line string, meta criFileInfo, svc string, pa
 		Hostname:          t.hostname,
 		SeverityNumber:    sevNum,
 		SeverityText:      sevText,
-		Body:              full,
+		Body:              body,
+		TraceID:           traceID,
+		SpanID:            spanID,
 		Attributes: map[string]string{
 			"k8s.namespace.name": meta.namespace,
 			"k8s.pod.name":       meta.pod,
@@ -320,6 +339,80 @@ func (t *CRILogsTailer) handleLine(line string, meta criFileInfo, svc string, pa
 			"source":             "k8s",
 		},
 	})
+}
+
+// jsonLogFields tenta interpretar a linha como JSON de log estruturado e
+// devolve os campos escalares (string/número/bool) achatados. Retorna nil se a
+// linha não for um objeto JSON — nesse caso o tailer mantém o comportamento de
+// texto puro (nada se perde).
+func jsonLogFields(line string) map[string]string {
+	s := strings.TrimSpace(line)
+	if len(s) == 0 || s[0] != '{' {
+		return nil
+	}
+	var m map[string]any
+	if err := json.Unmarshal([]byte(s), &m); err != nil {
+		return nil
+	}
+	out := make(map[string]string, len(m))
+	for k, v := range m {
+		switch t := v.(type) {
+		case string:
+			out[k] = t
+		case float64:
+			out[k] = strconv.FormatFloat(t, 'f', -1, 64)
+		case bool:
+			if t {
+				out[k] = "true"
+			} else {
+				out[k] = "false"
+			}
+		case map[string]any:
+			// Vários loggers JSON (ex.: Quarkus) aninham trace/span numa
+			// gaveta "mdc". Achatamos os campos string dela pro nível de cima,
+			// sem sobrescrever uma chave que já veio no topo.
+			if k == "mdc" {
+				for mk, mv := range t {
+					if s, ok := mv.(string); ok {
+						if _, exists := out[mk]; !exists {
+							out[mk] = s
+						}
+					}
+				}
+			}
+		}
+	}
+	return out
+}
+
+// firstField devolve o primeiro valor não-vazio dentre as chaves dadas.
+func firstField(m map[string]string, keys ...string) string {
+	for _, k := range keys {
+		if v := m[k]; v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+// levelToSeverity mapeia um nível textual de log → (severity_number, texto, ok).
+// ok=false quando o nível é desconhecido/vazio (aí mantém o nível do stream).
+func levelToSeverity(lv string) (int, string, bool) {
+	switch strings.ToUpper(strings.TrimSpace(lv)) {
+	case "TRACE":
+		return 1, "TRACE", true
+	case "DEBUG":
+		return 5, "DEBUG", true
+	case "INFO", "INFORMATION", "NOTICE":
+		return 9, "INFO", true
+	case "WARN", "WARNING":
+		return 13, "WARN", true
+	case "ERROR", "ERR", "SEVERE":
+		return 17, "ERROR", true
+	case "FATAL", "CRITICAL", "CRIT", "EMERGENCY", "ALERT":
+		return 21, "FATAL", true
+	}
+	return 0, "", false
 }
 
 func (t *CRILogsTailer) cursorFlushLoop(ctx context.Context) {
