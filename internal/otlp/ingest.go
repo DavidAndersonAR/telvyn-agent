@@ -181,6 +181,8 @@ type otlpLogRecord struct {
 	SeverityNumber int          `json:"severityNumber,omitempty"`
 	SeverityText   string       `json:"severityText,omitempty"`
 	Body           otlpLogValue `json:"body"`
+	TraceID        string       `json:"traceId,omitempty"`
+	SpanID         string       `json:"spanId,omitempty"`
 	Attributes     []otlpLogKV  `json:"attributes,omitempty"`
 }
 
@@ -258,6 +260,8 @@ func (e *IngestExporter) PostLogs(ctx context.Context, records []LogRecord) erro
 			SeverityNumber: r.SeverityNumber,
 			SeverityText:   r.SeverityText,
 			Body:           otlpLogValue{StringValue: r.Body},
+			TraceID:        r.TraceID,
+			SpanID:         r.SpanID,
 			Attributes:     recAttrs,
 		}
 		sl := &payload.ResourceLogs[idx].ScopeLogs[0]
