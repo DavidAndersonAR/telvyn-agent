@@ -53,12 +53,14 @@ const (
 // Scraper roda um loop polling no backend pra descobrir quais pods
 // instrumentar e scrape /q/metrics de cada um.
 type Scraper struct {
-	backend      string // ex: https://quarkus:8444
+	backend      string // ex: https://quarkus:8444 (mTLS) ou http://backend:8080 (ingest)
 	tenantID     string
 	collectorID  string
 	clientCert   string
 	clientKey    string
 	trustBundle  string
+	token        string // Bearer (modo ingest/certless)
+	certless     bool   // true → busca a lista via Bearer no gateway de ingest
 	out          chan<- []*collectorv1.Metric
 	log          *slog.Logger
 	interval     time.Duration
@@ -75,6 +77,22 @@ func New(backend, tenantID, collectorID string,
 		clientCert:  clientCert,
 		clientKey:   clientKey,
 		trustBundle: trustBundle,
+		out:         out,
+		log:         log.With("component", "quarkus-scraper"),
+		interval:    defaultInterval,
+	}
+}
+
+// NewCertless constrói o scraper pro modo ingest (Bearer). Busca a lista de
+// workloads instrumentados no gateway de ingest (/api/ingest/v1/k8s/instrumentation)
+// e raspa /q/metrics dos pods locais cujo workload bate. Sem mTLS.
+func NewCertless(ingestURL, token, collectorID string,
+	out chan<- []*collectorv1.Metric, log *slog.Logger) *Scraper {
+	return &Scraper{
+		backend:     ingestURL,
+		token:       token,
+		collectorID: collectorID,
+		certless:    true,
 		out:         out,
 		log:         log.With("component", "quarkus-scraper"),
 		interval:    defaultInterval,
@@ -100,6 +118,7 @@ func (s *Scraper) Run(ctx context.Context) {
 type instrEntry struct {
 	Namespace string `json:"namespace"`
 	Pod       string `json:"pod"`
+	Workload  string `json:"workload"`
 	Mode      string `json:"mode"`
 }
 
@@ -116,44 +135,66 @@ func (s *Scraper) tick(ctx context.Context) {
 	if len(list) == 0 {
 		return
 	}
-	// Cache de pods locais pra reusar na iteração.
+	// Conjunto de (namespace, workload) marcados como quarkus_metrics. Casamos
+	// por WORKLOAD, não pelo nome do pod: o pod muda a cada restart e a entrada
+	// guarda um pod-snapshot que envelhece — o workload é estável.
+	want := make(map[string]bool, len(list))
+	for _, e := range list {
+		if e.Mode != "quarkus_metrics" {
+			continue
+		}
+		wl := e.Workload
+		if wl == "" {
+			wl = workloadOf(e.Pod)
+		}
+		want[podKey(e.Namespace, wl)] = true
+	}
+	if len(want) == 0 {
+		return
+	}
 	podIPs, podErr := s.localPodIPs(ctx)
 	if podErr != nil {
 		s.log.Warn("local pod list failed", "err", podErr)
 		return
 	}
 	scraped := 0
-	for _, e := range list {
-		if e.Mode != "quarkus_metrics" {
+	for key, ip := range podIPs {
+		if ip == "" {
 			continue
 		}
-		ip, ok := podIPs[podKey(e.Namespace, e.Pod)]
-		if !ok || ip == "" {
-			continue // pod não está neste nó — outro agent cuida
+		ns, pod, ok := splitPodKey(key)
+		if !ok {
+			continue
 		}
-		metrics, err := s.scrapePod(ctx, ip, e.Namespace, e.Pod)
+		if !want[podKey(ns, workloadOf(pod))] {
+			continue // pod não pertence a workload instrumentado (ou está em outro nó)
+		}
+		metrics, err := s.scrapePod(ctx, ip, ns, pod)
 		if err != nil {
-			s.log.Warn("scrape failed", "ns", e.Namespace, "pod", e.Pod, "ip", ip, "err", err)
+			s.log.Warn("scrape failed", "ns", ns, "pod", pod, "ip", ip, "err", err)
 			continue
 		}
 		if len(metrics) > 0 {
 			select {
 			case s.out <- metrics:
 				scraped++
-				s.log.Info("quarkus metrics scraped", "pod", e.Pod, "count", len(metrics))
+				s.log.Info("quarkus metrics scraped", "pod", pod, "count", len(metrics))
 			default:
-				s.log.Warn("metric out channel full, dropped batch", "pod", e.Pod)
+				s.log.Warn("metric out channel full, dropped batch", "pod", pod)
 			}
 		}
 	}
-	if scraped == 0 && len(list) > 0 {
-		s.log.Info("quarkus scraper tick: no pods on this node matched", "list_size", len(list))
+	if scraped == 0 {
+		s.log.Info("quarkus scraper tick: no instrumented pods on this node", "workloads", len(want))
 	}
 }
 
 // fetchList GET backend /api/collector/v1/k8s/instrumentation?tenant_id=X
 // usando mTLS já configurado (mesmo cert dos outros caminhos REST).
 func (s *Scraper) fetchList(ctx context.Context) ([]instrEntry, error) {
+	if s.certless {
+		return s.fetchListCertless(ctx)
+	}
 	url := strings.TrimRight(s.backend, "/") +
 		"/api/collector/v1/k8s/instrumentation?tenant_id=" + s.tenantID +
 		"&collector_id=" + s.collectorID
@@ -179,6 +220,106 @@ func (s *Scraper) fetchList(ctx context.Context) ([]instrEntry, error) {
 		return nil, err
 	}
 	return r.Entries, nil
+}
+
+// fetchListCertless busca a lista via Bearer no gateway de ingest. O tenant é
+// resolvido pelo token, então não há query param.
+func (s *Scraper) fetchListCertless(ctx context.Context) ([]instrEntry, error) {
+	url := strings.TrimRight(s.backend, "/") + "/api/ingest/v1/k8s/instrumentation"
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+s.token)
+	req.Header.Set("Accept", "application/json")
+	client := &http.Client{Timeout: scrapeTimeout}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode/100 != 2 {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+		return nil, fmt.Errorf("status %d: %s", resp.StatusCode, body)
+	}
+	var r instrResp
+	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return nil, err
+	}
+	return r.Entries, nil
+}
+
+// splitPodKey separa "namespace/pod" — inverso de podKey.
+func splitPodKey(key string) (ns, pod string, ok bool) {
+	i := strings.IndexByte(key, '/')
+	if i < 0 {
+		return "", "", false
+	}
+	return key[:i], key[i+1:], true
+}
+
+// workloadOf deriva o nome do workload (Deployment/StatefulSet/DaemonSet) a
+// partir do nome do pod. MESMA heurística do frontend (lib/workload.ts):
+//
+//	backend-7959f7697-z6psv → backend   (Deployment: -<rsHash>-<podHash>)
+//	postgres-0              → postgres   (StatefulSet: -<ordinal>)
+//
+// Idempotente pra nomes que já são workload.
+func workloadOf(pod string) string {
+	if pod == "" {
+		return pod
+	}
+	parts := strings.Split(pod, "-")
+	if len(parts) < 2 {
+		return pod
+	}
+	last := parts[len(parts)-1]
+	if !isPodSuffix(last) && !isAllDigits(last) {
+		return pod
+	}
+	end := len(parts) - 1
+	if end >= 2 && isReplicaSetHash(parts[end-1]) {
+		end--
+	}
+	return strings.Join(parts[:end], "-")
+}
+
+func isAlnumLower(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, c := range s {
+		if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+			return false
+		}
+	}
+	return true
+}
+
+func isAllDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func isPodSuffix(s string) bool { return len(s) == 5 && isAlnumLower(s) }
+
+func isReplicaSetHash(s string) bool {
+	if len(s) < 8 || len(s) > 10 || !isAlnumLower(s) {
+		return false
+	}
+	for _, c := range s {
+		if c >= '0' && c <= '9' {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Scraper) mtlsClient() (*http.Client, error) {
