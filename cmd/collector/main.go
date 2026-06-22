@@ -837,6 +837,25 @@ func runIngestMode(ingestURL string) {
 		return exporter.PostRaw(ctx, signal, ct, body)
 	})
 
+	// Item 1 — carimbo de pod/namespace por IP de origem (origin-detection
+	// estilo Datadog / k8sattributes do OTel): spans de apps auto-instrumentadas
+	// que NÃO anunciam k8s.namespace.name/k8s.pod.name passam a cair no pod certo.
+	// Independe do eBPF (vale com tracing eBPF desligado). Só em nós k8s, onde o
+	// kubelet local lista os pods e seus IPs; em bare-metal não há o que resolver.
+	if strings.EqualFold(getenvOr("ISPWATCH_AGENT_KIND", ""), "k8s.node") {
+		kubeletURL := getenvOr("ISPWATCH_KUBELET_URL", "https://localhost:10250")
+		tokenFile := getenvOr("ISPWATCH_KUBELET_TOKEN_FILE", "/var/run/secrets/kubernetes.io/serviceaccount/token")
+		caFile := getenvOr("ISPWATCH_KUBELET_CA_FILE", "")
+		insecure := getenvOr("ISPWATCH_KUBELET_INSECURE", "1") == "1"
+		if resolver, err := ebpf.NewPodResolver(kubeletURL, tokenFile, caFile, insecure, log); err != nil {
+			log.Warn("otlp: pod stamping desativado (spans sem pod salvo se a app anunciar)", "err", err)
+		} else {
+			go resolver.Run(ctx)
+			rec.SetPodResolver(resolver)
+			log.Info("otlp: carimbo de pod/namespace por IP de origem ativo (kubelet)")
+		}
+	}
+
 	// Trace-agent (Datadog-style): resume os spans NA BORDA. O corpo cru segue
 	// sendo repassado normalmente; em paralelo, cada span é higienizado e
 	// contado num DDSketch por bucket de 10s, e o resumo (hits/errors/latência
