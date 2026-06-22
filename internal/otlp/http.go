@@ -50,6 +50,7 @@ import (
 	"time"
 
 	tracepb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
+	resourcepb "go.opentelemetry.io/proto/otlp/resource/v1"
 	tracedatapb "go.opentelemetry.io/proto/otlp/trace/v1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -98,6 +99,13 @@ type HTTPReceiver struct {
 	// reempacota só os spans amostrados em vez de repassar o corpo cru. As
 	// stats (apmTap) seguem sendo contadas com 100% dos spans, antes do filtro.
 	traceSampler func(traceID string, statusCode int32, durationNano int64) bool
+
+	// resolver, quando setado, resolve o IP de origem da conexão OTLP em
+	// (namespace, pod) via o índice do kubelet — pra carimbar spans de apps
+	// auto-instrumentadas que NÃO anunciam k8s.namespace.name/k8s.pod.name
+	// (origin-detection estilo Datadog / k8sattributes do OTel). A app que já
+	// manda esses atributos tem prioridade; só preenchemos o que falta.
+	resolver PodIPResolver
 
 	server *http.Server
 
@@ -167,6 +175,17 @@ func (h *HTTPReceiver) SetAPMTap(fn func(spans []*collectorv1.Span)) {
 func (h *HTTPReceiver) SetTraceSampler(fn func(traceID string, statusCode int32, durationNano int64) bool) {
 	h.traceSampler = fn
 }
+
+// PodIPResolver resolve um IP de origem em (namespace, pod). Implementado pelo
+// ebpf.PodResolverImpl (índice do kubelet, atualizado a cada 30s). Só ResolveIP
+// interessa aqui — o stamping OTLP é sempre pelo IP de quem abriu a conexão.
+type PodIPResolver interface {
+	ResolveIP(ip string) (namespace, pod string, ok bool)
+}
+
+// SetPodResolver liga o carimbo de pod/namespace por IP de origem (item 1). Sem
+// ele, spans seguem sem identidade quando a app não anuncia os atributos k8s.
+func (h *HTTPReceiver) SetPodResolver(r PodIPResolver) { h.resolver = r }
 
 // filterSampledSpans remove dos ResourceSpans os spans NÃO aprovados pelo keep,
 // in-place. Retorna quantos sobraram.
@@ -286,11 +305,19 @@ func (e *otlpEnum) UnmarshalJSON(b []byte) error {
 // re-serializando o doc (cada span kept é emitido verbatim). Retorna o corpo de
 // saída, quantos spans sobraram e se o parse deu certo (false → caller faz
 // fallback e encaminha o corpo original).
-func (h *HTTPReceiver) tapAndSampleJSON(body []byte) (outBody []byte, kept int, ok bool) {
+func (h *HTTPReceiver) tapAndSampleJSON(body []byte, clientIP string) (outBody []byte, kept int, ok bool) {
 	var doc otlpTraceDoc
 	if err := json.Unmarshal(body, &doc); err != nil {
 		return nil, 0, false
 	}
+	// Resolve o pod emissor pelo IP de origem UMA vez (todos os resourceSpans do
+	// request vêm da mesma conexão = mesmo pod). Só preenche o que faltar.
+	var rNs, rPod string
+	var rok bool
+	if h.resolver != nil {
+		rNs, rPod, rok = h.resolver.ResolveIP(clientIP)
+	}
+	injected := false
 	var allSpans []*collectorv1.Span
 	for ri := range doc.ResourceSpans {
 		rs := &doc.ResourceSpans[ri]
@@ -306,6 +333,26 @@ func (h *HTTPReceiver) tapAndSampleJSON(body []byte) (outBody []byte, kept int, 
 				if service == "" {
 					service = pod
 				}
+			}
+		}
+		// Carimbo por IP: preenche namespace/pod ausentes no resource (pro corpo
+		// encaminhado) e nas vars locais (pra cópia de stats). A app que já
+		// anuncia tem prioridade.
+		if rok && (namespace == "" || pod == "") {
+			needNs := namespace == ""
+			needPod := pod == ""
+			if newRaw, changed := enrichJSONResource(rs.Resource, rNs, rPod, needNs, needPod); changed {
+				rs.Resource = newRaw
+				if needNs {
+					namespace = rNs
+				}
+				if needPod {
+					pod = rPod
+				}
+				if service == "" {
+					service = pod
+				}
+				injected = true
 			}
 		}
 		for si := range rs.ScopeSpans {
@@ -348,8 +395,8 @@ func (h *HTTPReceiver) tapAndSampleJSON(body []byte) (outBody []byte, kept int, 
 	if h.apmTap != nil && len(allSpans) > 0 {
 		h.apmTap(allSpans)
 	}
-	if h.traceSampler == nil {
-		return body, kept, true // sem sampling: corpo original intacto
+	if h.traceSampler == nil && !injected {
+		return body, kept, true // nada a alterar: corpo original intacto
 	}
 	nb, err := json.Marshal(&doc)
 	if err != nil {
@@ -385,6 +432,119 @@ func mergeEnv(attrs map[string]string, env string) map[string]string {
 func atoiNano(s string) int64 {
 	n, _ := strconv.ParseInt(s, 10, 64)
 	return n
+}
+
+// clientIPFromRequest extrai só o host de r.RemoteAddr ("IP:port" → "IP"). NÃO
+// confia em X-Forwarded-For: o caminho app→agent é direto no nó (hostPort), e um
+// XFF forjado levaria a um carimbo de pod errado.
+func clientIPFromRequest(r *http.Request) string {
+	if r == nil {
+		return ""
+	}
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return strings.TrimSpace(r.RemoteAddr)
+	}
+	return host
+}
+
+// enrichResourceAttrsProto injeta k8s.namespace.name/k8s.pod.name nos resource
+// attributes (protobuf) quando ausentes, resolvendo o IP de origem → pod. A app
+// que já anuncia esses atributos tem prioridade. Retorna true se mexeu em algo.
+func (h *HTTPReceiver) enrichResourceAttrsProto(req *tracepb.ExportTraceServiceRequest, clientIP string) bool {
+	if h.resolver == nil || req == nil {
+		return false
+	}
+	ns, pod, ok := h.resolver.ResolveIP(clientIP)
+	if !ok || (ns == "" && pod == "") {
+		return false
+	}
+	injected := false
+	for _, rs := range req.ResourceSpans {
+		if rs == nil {
+			continue
+		}
+		if rs.Resource == nil {
+			rs.Resource = &resourcepb.Resource{}
+		}
+		haveNs, havePod := false, false
+		for _, a := range rs.Resource.Attributes {
+			switch a.GetKey() {
+			case "k8s.namespace.name":
+				if a.GetValue().GetStringValue() != "" {
+					haveNs = true
+				}
+			case "k8s.pod.name":
+				if a.GetValue().GetStringValue() != "" {
+					havePod = true
+				}
+			}
+		}
+		if !haveNs && ns != "" {
+			rs.Resource.Attributes = append(rs.Resource.Attributes, kv("k8s.namespace.name", ns))
+			injected = true
+		}
+		if !havePod && pod != "" {
+			rs.Resource.Attributes = append(rs.Resource.Attributes, kv("k8s.pod.name", pod))
+			injected = true
+		}
+	}
+	return injected
+}
+
+// enrichJSONResource adiciona k8s.namespace.name/k8s.pod.name ao bloco resource
+// (OTLP/JSON cru) preservando os demais campos e os spans verbatim (que ficam
+// como json.RawMessage no doc). Retorna o resource reescrito e se mudou algo.
+func enrichJSONResource(raw json.RawMessage, ns, pod string, needNs, needPod bool) (json.RawMessage, bool) {
+	m := map[string]json.RawMessage{}
+	if len(raw) > 0 {
+		if err := json.Unmarshal(raw, &m); err != nil {
+			return raw, false
+		}
+	}
+	var attrs []json.RawMessage
+	if a, ok := m["attributes"]; ok && len(a) > 0 {
+		if err := json.Unmarshal(a, &attrs); err != nil {
+			return raw, false // attributes malformado: não arrisca perder os originais
+		}
+	}
+	changed := false
+	if needNs && ns != "" {
+		attrs = append(attrs, kvJSON("k8s.namespace.name", ns))
+		changed = true
+	}
+	if needPod && pod != "" {
+		attrs = append(attrs, kvJSON("k8s.pod.name", pod))
+		changed = true
+	}
+	if !changed {
+		return raw, false
+	}
+	nb, err := json.Marshal(attrs)
+	if err != nil {
+		return raw, false
+	}
+	m["attributes"] = nb
+	out, err := json.Marshal(m)
+	if err != nil {
+		return raw, false
+	}
+	return out, true
+}
+
+// kvJSON monta um KeyValue OTLP/JSON com stringValue (sem intValue:null que
+// confundiria o parser do backend).
+func kvJSON(k, v string) json.RawMessage {
+	var e struct {
+		Key   string `json:"key"`
+		Value struct {
+			StringValue string `json:"stringValue"`
+		} `json:"value"`
+	}
+	e.Key = k
+	e.Value.StringValue = v
+	b, _ := json.Marshal(&e)
+	return b
 }
 
 // Start abre listener e roda até ctx ser cancelado. Erros de bind retornam
@@ -454,7 +614,7 @@ func (h *HTTPReceiver) corsOriginsForLog() string {
 // --- Handlers ---------------------------------------------------------------
 
 func (h *HTTPReceiver) handleTraces(w http.ResponseWriter, r *http.Request) {
-	h.serveOTLP(w, r, "/v1/traces", func(body []byte, ct string) (int, error) {
+	h.serveOTLP(w, r, "/v1/traces", func(body []byte, ct string, clientIP string) (int, error) {
 		if h.forwardRaw != nil {
 			outBody := body
 			// Trace-agent: resume com 100% dos spans e amostra o que é
@@ -465,7 +625,7 @@ func (h *HTTPReceiver) handleTraces(w http.ResponseWriter, r *http.Request) {
 					// JSON: tap + sample no nível CRU, preservando o byte-a-byte
 					// de cada span (IDs em hex ficam hex; protojson usaria base64
 					// e o backend /traces rejeita).
-					if nb, kept, okp := h.tapAndSampleJSON(body); okp {
+					if nb, kept, okp := h.tapAndSampleJSON(body, clientIP); okp {
 						if h.traceSampler != nil && kept == 0 {
 							h.tracesAccepted.Add(1)
 							writeOTLPOK(w, ct)
@@ -477,17 +637,26 @@ func (h *HTTPReceiver) handleTraces(w http.ResponseWriter, r *http.Request) {
 					// protobuf: round-trip proto preserva os bytes dos IDs.
 					req := &tracepb.ExportTraceServiceRequest{}
 					if perr := unmarshalOTLP(body, ct, req); perr == nil {
+						// Carimba pod/namespace pelo IP de origem ANTES do tap (pra
+						// stats por pod) e da serialização (pra o backend gravar).
+						injected := h.enrichResourceAttrsProto(req, clientIP)
 						if h.apmTap != nil {
 							if spans := convertResourceSpans(req.ResourceSpans); len(spans) > 0 {
 								h.apmTap(spans)
 							}
 						}
+						sampled := false
 						if h.traceSampler != nil {
 							if filterSampledSpans(req, h.traceSampler) == 0 {
 								h.tracesAccepted.Add(1)
 								writeOTLPOK(w, ct)
 								return http.StatusOK, nil
 							}
+							sampled = true
+						}
+						// Reempacota o corpo encaminhado se mexemos nele (injeção de
+						// pod/namespace) ou se o sampler removeu spans.
+						if injected || sampled {
 							if b, merr := marshalOTLP(req, ct); merr == nil {
 								outBody = b
 							}
@@ -506,6 +675,7 @@ func (h *HTTPReceiver) handleTraces(w http.ResponseWriter, r *http.Request) {
 		if err := unmarshalOTLP(body, ct, req); err != nil {
 			return http.StatusBadRequest, fmt.Errorf("decode trace request: %w", err)
 		}
+		h.enrichResourceAttrsProto(req, clientIP)
 		n := h.convertAndPush(req)
 		h.spansAccepted.Add(int64(n))
 		h.tracesAccepted.Add(1)
@@ -523,7 +693,7 @@ func (h *HTTPReceiver) handleTraces(w http.ResponseWriter, r *http.Request) {
 // retry e poluam o agent log. Quando o backend ganhar essas pipelines, troca
 // a função de descarte por convertAndPush análogo ao de traces.
 func (h *HTTPReceiver) handleMetrics(w http.ResponseWriter, r *http.Request) {
-	h.serveOTLP(w, r, "/v1/metrics", func(body []byte, ct string) (int, error) {
+	h.serveOTLP(w, r, "/v1/metrics", func(body []byte, ct string, _ string) (int, error) {
 		if h.forwardRaw != nil {
 			if err := h.forwardRaw("metrics", ct, body); err != nil {
 				return http.StatusBadGateway, fmt.Errorf("forward metrics: %w", err)
@@ -536,7 +706,7 @@ func (h *HTTPReceiver) handleMetrics(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HTTPReceiver) handleLogs(w http.ResponseWriter, r *http.Request) {
-	h.serveOTLP(w, r, "/v1/logs", func(body []byte, ct string) (int, error) {
+	h.serveOTLP(w, r, "/v1/logs", func(body []byte, ct string, _ string) (int, error) {
 		if h.forwardRaw != nil {
 			if err := h.forwardRaw("logs", ct, body); err != nil {
 				return http.StatusBadGateway, fmt.Errorf("forward logs: %w", err)
@@ -551,7 +721,7 @@ func (h *HTTPReceiver) handleLogs(w http.ResponseWriter, r *http.Request) {
 // serveOTLP centraliza: CORS preflight, validação de método/content-type,
 // leitura limitada + descompressão gzip, contadores de status e dispatch
 // pro handler específico.
-func (h *HTTPReceiver) serveOTLP(w http.ResponseWriter, r *http.Request, endpoint string, fn func(body []byte, ct string) (int, error)) {
+func (h *HTTPReceiver) serveOTLP(w http.ResponseWriter, r *http.Request, endpoint string, fn func(body []byte, ct string, clientIP string) (int, error)) {
 	h.requestsTotal.Add(1)
 
 	h.applyCORS(w, r)
@@ -583,7 +753,7 @@ func (h *HTTPReceiver) serveOTLP(w http.ResponseWriter, r *http.Request, endpoin
 		return
 	}
 
-	status, err = fn(body, ct)
+	status, err = fn(body, ct, clientIPFromRequest(r))
 	if err != nil {
 		h.log.Warn("otlp http handler error", "endpoint", endpoint, "err", err, "status", status)
 		h.writeError(w, status, err.Error())
