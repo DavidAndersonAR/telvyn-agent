@@ -813,6 +813,15 @@ func runIngestMode(ingestURL string) {
 		}
 	}()
 
+	// Runtime (JVM): scrape /q/metrics dos workloads marcados como
+	// quarkus_metrics (aba Runtime). Certless/Bearer; busca a lista no gateway
+	// e casa por workload (sobrevive a restart de pod). Só em nós k8s. Publica
+	// pelo mesmo `out` (→ PostMetrics Bearer).
+	if strings.EqualFold(getenvOr("ISPWATCH_AGENT_KIND", ""), "k8s.node") {
+		qs := quarkus.NewCertless(ingestURL, token, hostID, out, log)
+		go qs.Run(ctx)
+	}
+
 	// k8s: registra o nó (→ noc_host + check k8s.kubelet, aparece em
 	// "Aplicações") e roda o kubelet check LOCAL (pods/containers/node) com o
 	// host_id retornado. Mesma coleta do agent completo — só o envio muda
