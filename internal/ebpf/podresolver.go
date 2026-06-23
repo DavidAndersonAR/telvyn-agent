@@ -43,6 +43,7 @@ type KubeletPodLister interface {
 type PodIndex struct {
 	ByContainerID map[string]NamespacedName
 	ByPodIP       map[string]NamespacedName
+	ByNsPod       map[string]PodSvcMeta // "namespace/pod" → unified service tagging
 }
 
 type NamespacedName struct {
@@ -50,15 +51,25 @@ type NamespacedName struct {
 	Pod       string
 }
 
+// PodSvcMeta carrega a unified service tagging lida das labels do pod
+// (tags.datadoghq.com/service|version|env) — pra carimbar log/metric com o
+// MESMO service dos traces (igual Datadog). Vazio quando o pod não tem a label.
+type PodSvcMeta struct {
+	Service string
+	Version string
+	Env     string
+}
+
 // PodResolverImpl satisfaz PodResolver. Construída via NewPodResolver.
 type PodResolverImpl struct {
 	lister KubeletPodLister
 	log    *slog.Logger
 
-	mu      sync.RWMutex
-	pidToID map[uint32]pidCacheEntry
-	idToPod map[string]NamespacedName // containerID  → pod
-	ipToPod map[string]NamespacedName // pod IP       → pod (lado server)
+	mu         sync.RWMutex
+	pidToID    map[uint32]pidCacheEntry
+	idToPod    map[string]NamespacedName // containerID  → pod
+	ipToPod    map[string]NamespacedName // pod IP       → pod (lado server)
+	nsPodToSvc map[string]PodSvcMeta     // "namespace/pod" → unified service tagging
 
 	listInterval time.Duration
 }
@@ -90,6 +101,7 @@ func NewPodResolver(kubeletURL, tokenFile, caFile string, insecure bool, log *sl
 		pidToID:      map[uint32]pidCacheEntry{},
 		idToPod:      map[string]NamespacedName{},
 		ipToPod:      map[string]NamespacedName{},
+		nsPodToSvc:   map[string]PodSvcMeta{},
 		listInterval: listInterval,
 	}, nil
 }
@@ -118,6 +130,7 @@ func (r *PodResolverImpl) refresh(ctx context.Context) {
 	r.mu.Lock()
 	r.idToPod = idx.ByContainerID
 	r.ipToPod = idx.ByPodIP
+	r.nsPodToSvc = idx.ByNsPod
 	r.mu.Unlock()
 	r.log.Debug("kubelet /pods refresh",
 		"containers", len(idx.ByContainerID), "ips", len(idx.ByPodIP))
@@ -158,6 +171,20 @@ func (r *PodResolverImpl) ResolveIP(ip string) (string, string, bool) {
 		return "", "", false
 	}
 	return pod.Namespace, pod.Pod, true
+}
+
+// ServiceForPod devolve a unified service tagging (service/version/env) lida das
+// labels do pod — pra carimbar os logs com o MESMO service dos traces (igual
+// Datadog). ok=false quando o pod não tem a label tags.datadoghq.com/service;
+// nesse caso o chamador cai no nome derivado do workload.
+func (r *PodResolverImpl) ServiceForPod(namespace, pod string) (service, version, env string, ok bool) {
+	r.mu.RLock()
+	m, found := r.nsPodToSvc[namespace+"/"+pod]
+	r.mu.RUnlock()
+	if !found || m.Service == "" {
+		return "", "", "", false
+	}
+	return m.Service, m.Version, m.Env, true
 }
 
 func (r *PodResolverImpl) containerIDFor(pid uint32) string {
@@ -252,8 +279,18 @@ func (h *httpPodLister) List(ctx context.Context) (PodIndex, error) {
 	}
 	byID := make(map[string]NamespacedName, len(list.Items)*2)
 	byIP := make(map[string]NamespacedName, len(list.Items)*2)
+	byNsPod := make(map[string]PodSvcMeta, len(list.Items))
 	for _, p := range list.Items {
 		ns := NamespacedName{Namespace: p.Metadata.Namespace, Pod: p.Metadata.Name}
+		// unified service tagging: lê as labels tags.datadoghq.com/* do pod
+		// (convenção Datadog) pra carimbar o log com o mesmo service dos traces.
+		if svc := p.Metadata.Labels["tags.datadoghq.com/service"]; svc != "" {
+			byNsPod[p.Metadata.Namespace+"/"+p.Metadata.Name] = PodSvcMeta{
+				Service: svc,
+				Version: p.Metadata.Labels["tags.datadoghq.com/version"],
+				Env:     p.Metadata.Labels["tags.datadoghq.com/env"],
+			}
+		}
 		for _, c := range p.Status.ContainerStatuses {
 			id := stripContainerIDPrefix(c.ContainerID)
 			if id != "" {
@@ -277,7 +314,7 @@ func (h *httpPodLister) List(ctx context.Context) (PodIndex, error) {
 			}
 		}
 	}
-	return PodIndex{ByContainerID: byID, ByPodIP: byIP}, nil
+	return PodIndex{ByContainerID: byID, ByPodIP: byIP, ByNsPod: byNsPod}, nil
 }
 
 // stripContainerIDPrefix converte "containerd://abc..." em "abc...".
@@ -292,8 +329,9 @@ func stripContainerIDPrefix(s string) string {
 type kubeletPodList struct {
 	Items []struct {
 		Metadata struct {
-			Name      string `json:"name"`
-			Namespace string `json:"namespace"`
+			Name      string            `json:"name"`
+			Namespace string            `json:"namespace"`
+			Labels    map[string]string `json:"labels"`
 		} `json:"metadata"`
 		Status struct {
 			PodIP  string `json:"podIP"`
