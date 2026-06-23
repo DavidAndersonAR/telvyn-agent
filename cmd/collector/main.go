@@ -951,6 +951,21 @@ func startIngestPodLogs(ctx context.Context, log *slog.Logger, exporter *otlp.In
 	cursorPath := getenvOr("ISPWATCH_LOGS_CURSOR_PATH", "/var/lib/ispwatch-collector/log_cursors.json")
 	tailer := logs.NewCRILogsTailer(logsExp, cursorPath, hostID, exclude, log)
 
+	// Unified service tagging (igual Datadog): o service do log vem da label
+	// tags.datadoghq.com/service do pod (lida do kubelet /pods), pra bater com o
+	// service dos traces. Sem resolver/label, o tailer usa o nome do workload.
+	kubeletURL := getenvOr("ISPWATCH_KUBELET_URL", "https://localhost:10250")
+	tokenFile := getenvOr("ISPWATCH_KUBELET_TOKEN_FILE", "/var/run/secrets/kubernetes.io/serviceaccount/token")
+	caFile := getenvOr("ISPWATCH_KUBELET_CA_FILE", "")
+	insecure := getenvOr("ISPWATCH_KUBELET_INSECURE", "1") == "1"
+	if resolver, err := ebpf.NewPodResolver(kubeletURL, tokenFile, caFile, insecure, log); err != nil {
+		log.Warn("logs: service tagging por label desativado (usando nome do workload)", "err", err)
+	} else {
+		go resolver.Run(ctx)
+		tailer.SetServiceResolver(resolver)
+		log.Info("logs: unified service tagging ativo (label tags.datadoghq.com/service)")
+	}
+
 	go logsExp.Run(ctx)
 	go tailer.Run(ctx)
 	log.Info("pod logs habilitados (CRI tailer)", "cursor", cursorPath, "exclude_ns", strings.Join(exclude, ","))
