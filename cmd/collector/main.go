@@ -31,6 +31,7 @@ import (
 	"github.com/ispwatch/collector/internal/discovery/lldp"
 	"github.com/ispwatch/collector/internal/ebpf"
 	"github.com/ispwatch/collector/internal/ebpf/common"
+	"github.com/ispwatch/collector/internal/langdetect"
 	"github.com/ispwatch/collector/internal/logs"
 	"github.com/ispwatch/collector/internal/otlp"
 	"github.com/ispwatch/collector/internal/quarkus"
@@ -860,6 +861,16 @@ func runIngestMode(ingestURL string) {
 			go resolver.Run(ctx)
 			rec.SetPodResolver(resolver)
 			log.Info("otlp: carimbo de pod/namespace por IP de origem ativo (kubelet)")
+
+			// Detecção de linguagem por processo (estilo Datadog): olha /proc,
+			// mapeia pid→pod pelo mesmo resolver e reporta a linguagem por pod
+			// pro gateway. O backend usa pra mostrar o botão de auto-injeção
+			// (Java) em apps caixa-preta que ainda não emitem telemetria.
+			if getenvOr("ISPWATCH_LANG_DETECT", "1") != "0" {
+				det := langdetect.New(resolver, exporter, log)
+				go det.Run(ctx)
+				log.Info("langdetect: detecção de linguagem por processo ativa")
+			}
 		}
 	}
 
