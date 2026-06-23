@@ -22,6 +22,16 @@ set -eu
 
 LOG_LEVEL="${COLLECTOR_LOG_LEVEL:-info}"
 
+# Modo webhook (admission controller): roda como Deployment separado, não
+# DaemonSet. Tem precedência sobre o ingest mode (também usa ISPWATCH_INGEST_URL
+# pro Bearer). Repassa os args pro binário (--webhook).
+for a in "$@"; do
+  if [ "$a" = "--webhook" ] || [ "$a" = "-webhook" ]; then
+    echo "entrypoint: webhook mode (mutating admission controller)" >&2
+    exec /usr/local/bin/collector "$@"
+  fi
+done
+
 # Modo ingest certless (Datadog-style): manda OTLP+Bearer pro gateway, sem
 # enrollment/mTLS. O binário detecta ISPWATCH_INGEST_URL e roda esse modo.
 if [ -n "${ISPWATCH_INGEST_URL:-}" ]; then
