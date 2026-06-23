@@ -32,7 +32,6 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -50,24 +49,25 @@ const (
 )
 
 // Config bootstrap pro webhook server.
+//
+// Modelo certless (igual ao resto do agent ingest): a lista de workloads
+// marcados vem do gateway via Bearer token — sem mTLS. Ver scraper quarkus.
 type Config struct {
-	ListenAddr        string
-	CertDir           string
-	BackendURL        string // ex: https://quarkus:8444
-	TenantID          string
-	ClientCert        string // mTLS pra falar com backend
-	ClientKey         string
-	TrustBundle       string
-	AgentImage        string // imagem que o initContainer usa pra copiar o jar
-	OtlpEndpointEnv   string // valor de OTEL_EXPORTER_OTLP_ENDPOINT injetado
-	Log               *slog.Logger
+	ListenAddr      string
+	CertDir         string
+	IngestURL       string // ex: http://backend.ispwatch.svc.cluster.local:8080
+	Token           string // Bearer iwI_... (mesmo token do DaemonSet)
+	AgentImage      string // imagem que o initContainer usa pra copiar o jar
+	OtlpEndpointEnv string // valor de OTEL_EXPORTER_OTLP_ENDPOINT injetado
+	OtlpProtocol    string // valor de OTEL_EXPORTER_OTLP_PROTOCOL injetado
+	Log             *slog.Logger
 }
 
 // Server é o webhook HTTPS que responde AdmissionReview do api-server.
 type Server struct {
 	cfg    Config
 	mu     sync.RWMutex
-	enable map[string]struct{} // "ns/pod" → presente quando ativado em mode=java_javaagent
+	enable map[string]struct{} // "ns/workload" → ativado em mode=java_javaagent
 	client *http.Client
 }
 
@@ -79,10 +79,14 @@ func New(cfg Config) *Server {
 		cfg.CertDir = DefaultCertDir
 	}
 	if cfg.AgentImage == "" {
-		cfg.AgentImage = "ispwatch-agent:latest"
+		cfg.AgentImage = "localhost/telvyn-agent:local"
 	}
 	if cfg.OtlpEndpointEnv == "" {
-		cfg.OtlpEndpointEnv = "http://$(NODE_IP):4317"
+		// Em modo ingest o agent só sobe o receptor OTLP/HTTP na :4318.
+		cfg.OtlpEndpointEnv = "http://$(NODE_IP):4318"
+	}
+	if cfg.OtlpProtocol == "" {
+		cfg.OtlpProtocol = "http/protobuf"
 	}
 	return &Server{
 		cfg:    cfg,
@@ -151,6 +155,7 @@ func (s *Server) pollLoop(ctx context.Context) {
 type instrEntry struct {
 	Namespace string `json:"namespace"`
 	Pod       string `json:"pod"`
+	Workload  string `json:"workload"`
 	Mode      string `json:"mode"`
 }
 type instrResp struct {
@@ -158,15 +163,13 @@ type instrResp struct {
 }
 
 func (s *Server) poll(ctx context.Context) {
-	collectorID := os.Getenv("ISPWATCH_COLLECTOR_ID")
-	url := strings.TrimRight(s.cfg.BackendURL, "/") +
-		"/api/collector/v1/k8s/instrumentation?tenant_id=" + s.cfg.TenantID +
-		"&collector_id=" + collectorID
+	url := strings.TrimRight(s.cfg.IngestURL, "/") + "/api/ingest/v1/k8s/instrumentation"
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		s.cfg.Log.Warn("webhook poll: new req failed", "err", err)
 		return
 	}
+	req.Header.Set("Authorization", "Bearer "+s.cfg.Token)
 	resp, err := s.client.Do(req)
 	if err != nil {
 		s.cfg.Log.Debug("webhook poll: backend unreachable", "err", err)
@@ -183,11 +186,18 @@ func (s *Server) poll(ctx context.Context) {
 		s.cfg.Log.Warn("webhook poll: decode failed", "err", err)
 		return
 	}
+	// Chaveia por WORKLOAD (não pod): sobrevive a rollout/restart, igual ao
+	// scraper quarkus. O backend já devolve 'workload'; fallback deriva do pod.
 	next := make(map[string]struct{}, len(r.Entries))
 	for _, e := range r.Entries {
-		if e.Mode == "java_javaagent" {
-			next[e.Namespace+"/"+e.Pod] = struct{}{}
+		if e.Mode != "java_javaagent" {
+			continue
 		}
+		wl := e.Workload
+		if wl == "" {
+			wl = workloadOf(e.Pod)
+		}
+		next[e.Namespace+"/"+wl] = struct{}{}
 	}
 	s.mu.Lock()
 	s.enable = next
@@ -195,31 +205,8 @@ func (s *Server) poll(ctx context.Context) {
 	s.cfg.Log.Debug("webhook poll: list updated", "java_targets", len(next))
 }
 
+// setupClient — cliente HTTP simples (ingest é HTTP in-cluster + Bearer; sem mTLS).
 func (s *Server) setupClient() error {
-	cert, err := tls.LoadX509KeyPair(s.cfg.ClientCert, s.cfg.ClientKey)
-	if err != nil {
-		return fmt.Errorf("webhook backend client cert: %w", err)
-	}
-	caPool, err := loadCABundle(s.cfg.TrustBundle)
-	if err != nil {
-		return err
-	}
-	s.client = &http.Client{
-		Timeout: 10 * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				Certificates: []tls.Certificate{cert},
-				RootCAs:      caPool,
-			},
-		},
-	}
+	s.client = &http.Client{Timeout: 10 * time.Second}
 	return nil
-}
-
-// shouldInject — pod (ns, name) está no enable map?
-func (s *Server) shouldInject(ns, name string) bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	_, ok := s.enable[ns+"/"+name]
-	return ok
 }
