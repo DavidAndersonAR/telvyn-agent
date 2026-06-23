@@ -127,13 +127,11 @@ func main() {
 		cfg := webhook.Config{
 			ListenAddr:      getenvOr("ISPWATCH_WEBHOOK_ADDR", webhook.DefaultListenAddr),
 			CertDir:         getenvOr("ISPWATCH_WEBHOOK_CERT_DIR", webhook.DefaultCertDir),
-			BackendURL:      mustEnv("ISPWATCH_BACKEND_URL"),
-			TenantID:        mustEnv("ISPWATCH_TENANT_ID"),
-			ClientCert:      mustEnv("ISPWATCH_CLIENT_CERT"),
-			ClientKey:       mustEnv("ISPWATCH_CLIENT_KEY"),
-			TrustBundle:     mustEnv("ISPWATCH_TRUST_BUNDLE"),
-			AgentImage:      getenvOr("ISPWATCH_AGENT_IMAGE", "ispwatch-agent:latest"),
-			OtlpEndpointEnv: getenvOr("ISPWATCH_OTLP_ENDPOINT", "http://$(NODE_IP):4317"),
+			IngestURL:       mustEnv("ISPWATCH_INGEST_URL"),
+			Token:           mustEnv("ISPWATCH_INGEST_TOKEN"),
+			AgentImage:      getenvOr("ISPWATCH_AGENT_IMAGE", "localhost/telvyn-agent:local"),
+			OtlpEndpointEnv: getenvOr("ISPWATCH_OTLP_ENDPOINT", "http://$(NODE_IP):4318"),
+			OtlpProtocol:    getenvOr("ISPWATCH_OTLP_PROTOCOL", "http/protobuf"),
 			Log:             whLog,
 		}
 		srv := webhook.New(cfg)

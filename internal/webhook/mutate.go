@@ -36,10 +36,14 @@ type AdmissionRequest struct {
 }
 
 type AdmissionResponse struct {
-	UID       string          `json:"uid"`
-	Allowed   bool            `json:"allowed"`
-	Patch     json.RawMessage `json:"patch,omitempty"`
-	PatchType string          `json:"patchType,omitempty"`
+	UID     string `json:"uid"`
+	Allowed bool   `json:"allowed"`
+	// Patch é []byte de propósito: o k8s exige o JSONPatch BASE64-encoded no
+	// campo response.patch, e encoding/json serializa []byte como base64. Usar
+	// json.RawMessage mandaria o array cru → apiserver não decodifica e (com
+	// failurePolicy=Ignore) admite o pod SEM a injeção, silenciosamente.
+	Patch     []byte `json:"patch,omitempty"`
+	PatchType string `json:"patchType,omitempty"`
 }
 
 type podMeta struct {
@@ -137,16 +141,21 @@ func (s *Server) decide(req *AdmissionRequest) *AdmissionResponse {
 		s.cfg.Log.Warn("webhook decode pod failed", "err", err)
 		return out
 	}
-	if !s.matchEnabledPod(pod, req.Namespace) {
+	ns := req.Namespace
+	if ns == "" {
+		ns = pod.Metadata.Namespace
+	}
+	workload, ok := s.matchWorkload(pod, ns)
+	if !ok {
 		return out
 	}
 	javaContainers := findJavaContainers(pod.Spec.Containers)
 	if len(javaContainers) == 0 {
-		s.cfg.Log.Debug("webhook: pod marked but no Java container found", "ns", pod.Metadata.Namespace, "name", pod.Metadata.Name)
+		s.cfg.Log.Debug("webhook: workload marcado mas sem container Java", "ns", ns, "workload", workload)
 		return out
 	}
 
-	patch := buildPatch(pod, javaContainers, s.cfg.AgentImage, s.cfg.OtlpEndpointEnv)
+	patch := buildPatch(pod, javaContainers, s.cfg.AgentImage, s.cfg.OtlpEndpointEnv, s.cfg.OtlpProtocol, workload)
 	patchBytes, err := json.Marshal(patch)
 	if err != nil {
 		s.cfg.Log.Warn("webhook patch marshal failed", "err", err)
@@ -154,52 +163,57 @@ func (s *Server) decide(req *AdmissionRequest) *AdmissionResponse {
 	}
 	out.Patch = patchBytes
 	out.PatchType = "JSONPatch"
-	s.cfg.Log.Info("webhook: injected javaagent", "ns", pod.Metadata.Namespace, "name", podDisplayName(pod), "containers", len(javaContainers))
+	s.cfg.Log.Info("webhook: injetou javaagent", "ns", ns, "workload", workload, "pod", podDisplayName(pod), "containers", len(javaContainers))
 	return out
 }
 
-// matchEnabledPod tenta vários matchings:
-//   - exact namespace/name (pod já existe com nome)
-//   - namespace/generateName-prefix (pod sendo criado por ReplicaSet)
-//   - namespace/ownerReferences.name (deployment/statefulset name)
-//
-// Suficiente pra o caso comum de UI marcar "quarkus-demo-xxx" e pegar
-// novas instâncias quando o user faz rollout-restart.
-func (s *Server) matchEnabledPod(pod podMeta, ns string) bool {
-	if ns == "" {
-		ns = pod.Metadata.Namespace
-	}
+// matchWorkload deriva o(s) workload(s) candidato(s) do pod sendo criado e
+// confere contra o enable map (chaveado por "ns/workload"). Como o backend
+// marca por WORKLOAD, isto sobrevive a rollout (ReplicaSet novo) e restart —
+// ao contrário de casar por nome de pod. No CREATE o pod normalmente só tem
+// generateName + ownerReferences (o nome real ainda não existe), então
+// derivamos o workload dos três.
+func (s *Server) matchWorkload(pod podMeta, ns string) (string, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	if _, ok := s.enable[ns+"/"+pod.Metadata.Name]; ok {
-		return true
-	}
-	// Match por prefixo generateName (ex: pod "quarkus-demo-abc-xyz"
-	// vem de generateName "quarkus-demo-abc-").
-	gn := pod.Metadata.GenerateName
-	if gn != "" {
-		for k := range s.enable {
-			parts := strings.SplitN(k, "/", 2)
-			if len(parts) != 2 || parts[0] != ns {
-				continue
-			}
-			if strings.HasPrefix(parts[1], gn) {
-				return true
-			}
-			// Pod marcado "quarkus-demo-abc-xyz" cobre toda nova replica
-			// "quarkus-demo-abc-..." quando generateName == "quarkus-demo-abc-".
-			if strings.HasPrefix(parts[1], strings.TrimSuffix(gn, "-")) {
-				return true
-			}
+	for _, wl := range candidateWorkloads(pod) {
+		if _, ok := s.enable[ns+"/"+wl]; ok {
+			return wl, true
 		}
 	}
-	// Match por owner reference name (Deployment / StatefulSet).
+	return "", false
+}
+
+// candidateWorkloads gera os nomes de workload possíveis pro pod, cobrindo
+// Deployment (generateName "app-<rs>-" / ownerRef ReplicaSet "app-<rs>"),
+// StatefulSet/DaemonSet (ownerRef "app") e o caso de o nome já estar setado.
+// O sufixo "00000" finge um pod-hash pra reaproveitar workloadOf nos nomes
+// sem sufixo (generateName/ReplicaSet).
+func candidateWorkloads(pod podMeta) []string {
+	seen := map[string]struct{}{}
+	out := []string{}
+	add := func(w string) {
+		if w == "" {
+			return
+		}
+		if _, ok := seen[w]; ok {
+			return
+		}
+		seen[w] = struct{}{}
+		out = append(out, w)
+	}
+	if pod.Metadata.Name != "" {
+		add(workloadOf(pod.Metadata.Name))
+	}
+	if gn := pod.Metadata.GenerateName; gn != "" {
+		add(workloadOf(gn + "00000"))                // Deployment: "app-<rs>-" → "app"
+		add(workloadOf(strings.TrimSuffix(gn, "-"))) // StatefulSet generateName "app-"
+	}
 	for _, o := range pod.Metadata.OwnerReferences {
-		if _, ok := s.enable[ns+"/"+o.Name]; ok {
-			return true
-		}
+		add(workloadOf(o.Name))            // StatefulSet/DaemonSet name
+		add(workloadOf(o.Name + "-00000")) // ReplicaSet "app-<rs>" → "app"
 	}
-	return false
+	return out
 }
 
 // findJavaContainers heurística: image contém keyword Java ou env já
@@ -244,7 +258,7 @@ func podDisplayName(p podMeta) string {
 //  3. adiciona volumeMount nos containers Java
 //  4. adiciona env vars OTel + JAVA_TOOL_OPTIONS nos containers Java
 //     (sem sobrescrever se cliente já tem JAVA_TOOL_OPTIONS — append)
-func buildPatch(pod podMeta, javaIdx []int, agentImage, otlpEnvValue string) []patchOp {
+func buildPatch(pod podMeta, javaIdx []int, agentImage, otlpEnvValue, otlpProtocol, serviceName string) []patchOp {
 	ops := []patchOp{}
 
 	// Volume
@@ -298,37 +312,40 @@ func buildPatch(pod podMeta, javaIdx []int, agentImage, otlpEnvValue string) []p
 			})
 		}
 
-		// Env vars
+		// JAVA_TOOL_OPTIONS: se o container já define, faz REPLACE anexando o
+		// -javaagent (não sobrescreve o que o cliente pôs); senão entra no add.
+		const agentOpt = "-javaagent:/otel/javaagent.jar"
+		jtoIdx := -1
+		for i, e := range c.Env {
+			if e.Name == "JAVA_TOOL_OPTIONS" {
+				jtoIdx = i
+				break
+			}
+		}
+
+		// Env vars OTel (sem JAVA_TOOL_OPTIONS — tratado à parte acima).
 		envs := []envVar{
-			{Name: "JAVA_TOOL_OPTIONS", Value: "-javaagent:/otel/javaagent.jar"},
-			{Name: "NODE_IP", ValueFrom: &struct {
-				FieldRef *struct {
-					FieldPath string `json:"fieldPath"`
-				} `json:"fieldRef,omitempty"`
-			}{FieldRef: &struct {
-				FieldPath string `json:"fieldPath"`
-			}{FieldPath: "status.hostIP"}}},
-			{Name: "POD_NAME", ValueFrom: &struct {
-				FieldRef *struct {
-					FieldPath string `json:"fieldPath"`
-				} `json:"fieldRef,omitempty"`
-			}{FieldRef: &struct {
-				FieldPath string `json:"fieldPath"`
-			}{FieldPath: "metadata.name"}}},
-			{Name: "POD_NAMESPACE", ValueFrom: &struct {
-				FieldRef *struct {
-					FieldPath string `json:"fieldPath"`
-				} `json:"fieldRef,omitempty"`
-			}{FieldRef: &struct {
-				FieldPath string `json:"fieldPath"`
-			}{FieldPath: "metadata.namespace"}}},
+			{Name: "NODE_IP", ValueFrom: fieldRef("status.hostIP")},
+			{Name: "POD_NAME", ValueFrom: fieldRef("metadata.name")},
+			{Name: "POD_NAMESPACE", ValueFrom: fieldRef("metadata.namespace")},
 			{Name: "OTEL_EXPORTER_OTLP_ENDPOINT", Value: otlpEnvValue},
-			{Name: "OTEL_EXPORTER_OTLP_PROTOCOL", Value: "grpc"},
-			{Name: "OTEL_SERVICE_NAME", Value: "$(POD_NAMESPACE)/$(POD_NAME)"},
+			{Name: "OTEL_EXPORTER_OTLP_PROTOCOL", Value: otlpProtocol},
+			{Name: "OTEL_SERVICE_NAME", Value: serviceName},
 			{Name: "OTEL_RESOURCE_ATTRIBUTES", Value: "k8s.namespace.name=$(POD_NAMESPACE),k8s.pod.name=$(POD_NAME)"},
 			{Name: "OTEL_LOGS_EXPORTER", Value: "none"},
 			{Name: "OTEL_METRICS_EXPORTER", Value: "none"},
 			{Name: "OTEL_TRACES_EXPORTER", Value: "otlp"},
+		}
+
+		if jtoIdx >= 0 {
+			merged := strings.TrimSpace(c.Env[jtoIdx].Value + " " + agentOpt)
+			ops = append(ops, patchOp{
+				Op:    "replace",
+				Path:  containerPath(idx, "/env/"+itoa(jtoIdx)+"/value"),
+				Value: merged,
+			})
+		} else {
+			envs = append([]envVar{{Name: "JAVA_TOOL_OPTIONS", Value: agentOpt}}, envs...)
 		}
 
 		if c.Env == nil || len(c.Env) == 0 {
@@ -351,6 +368,21 @@ func buildPatch(pod podMeta, javaIdx []int, agentImage, otlpEnvValue string) []p
 	return ops
 }
 
+// fieldRef monta um envVar.ValueFrom apontando pro downward API.
+func fieldRef(path string) *struct {
+	FieldRef *struct {
+		FieldPath string `json:"fieldPath"`
+	} `json:"fieldRef,omitempty"`
+} {
+	return &struct {
+		FieldRef *struct {
+			FieldPath string `json:"fieldPath"`
+		} `json:"fieldRef,omitempty"`
+	}{FieldRef: &struct {
+		FieldPath string `json:"fieldPath"`
+	}{FieldPath: path}}
+}
+
 func containerPath(idx int, subpath string) string {
 	return "/spec/containers/" + itoa(idx) + subpath
 }
@@ -368,4 +400,69 @@ func itoa(i int) string {
 		i /= 10
 	}
 	return string(buf[pos:])
+}
+
+// workloadOf deriva o nome do workload (Deployment/StatefulSet/DaemonSet) a
+// partir do nome do pod. MESMA heurística do scraper quarkus e do frontend
+// (lib/workload.ts):
+//
+//	backend-7959f7697-z6psv → backend   (Deployment: -<rsHash>-<podHash>)
+//	postgres-0              → postgres   (StatefulSet: -<ordinal>)
+//
+// Idempotente pra nomes que já são workload.
+func workloadOf(pod string) string {
+	if pod == "" {
+		return pod
+	}
+	parts := strings.Split(pod, "-")
+	if len(parts) < 2 {
+		return pod
+	}
+	last := parts[len(parts)-1]
+	if !isPodSuffix(last) && !isAllDigits(last) {
+		return pod
+	}
+	end := len(parts) - 1
+	if end >= 2 && isReplicaSetHash(parts[end-1]) {
+		end--
+	}
+	return strings.Join(parts[:end], "-")
+}
+
+func isAlnumLower(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, c := range s {
+		if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+			return false
+		}
+	}
+	return true
+}
+
+func isAllDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func isPodSuffix(s string) bool { return len(s) == 5 && isAlnumLower(s) }
+
+func isReplicaSetHash(s string) bool {
+	if len(s) < 8 || len(s) > 10 || !isAlnumLower(s) {
+		return false
+	}
+	for _, c := range s {
+		if c >= '0' && c <= '9' {
+			return true
+		}
+	}
+	return false
 }

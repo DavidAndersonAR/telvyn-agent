@@ -113,10 +113,23 @@ webhook:
   # Default usa a mesma do DaemonSet.
   agentImageRef: ""
   # OTLP endpoint que o javaagent injetado vai usar. $(NODE_IP) é
-  # expandido pelo K8s downward API no pod alvo.
-  otlpEndpoint: "http://$(NODE_IP):4317"
-  # Pra dev/lab — pula nameSelector e instrumenta qualquer namespace.
-  # Em prod, defina namespaces explícitos via webhookNamespaceSelector.
-  namespaceSelector: {}
+  # expandido pelo K8s downward API no pod alvo. Em modo ingest o agent só
+  # sobe o receptor OTLP/HTTP na :4318 (gRPC :4317 só no modo server-driven).
+  otlpEndpoint: "http://$(NODE_IP):4318"
+  otlpProtocol: "http/protobuf"
+  # namespaceSelector: exclui namespaces de infra (o webhook intercepta TODO
+  # pod CREATE; com failurePolicy=Ignore é seguro, mas não há razão de tocar o
+  # control-plane). Apps do cliente (qualquer outro ns) seguem cobertas.
+  namespaceSelector:
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: NotIn
+        values:
+          - kube-system
+          - kube-public
+          - kube-node-lease
+          - cert-manager
+          - cattle-system
+          - telvyn
   service:
     port: 443
