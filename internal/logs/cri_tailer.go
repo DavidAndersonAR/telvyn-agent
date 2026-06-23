@@ -63,13 +63,21 @@ const (
 	criMaxLineBytes = 256 * 1024
 )
 
+// PodServiceResolver resolve o service "oficial" de um pod pelas labels (unified
+// service tagging, igual Datadog). Implementado pelo ebpf.PodResolverImpl. Sem
+// resolver ou sem label, o tailer cai no nome derivado do workload.
+type PodServiceResolver interface {
+	ServiceForPod(namespace, pod string) (service, version, env string, ok bool)
+}
+
 // CRILogsTailer coordena a descoberta de pods e seus readers de log.
 type CRILogsTailer struct {
-	exporter  *otlp.LogsExporter
-	cursors   *CursorStore
-	hostname  string
-	excludeNS map[string]bool
-	log       *slog.Logger
+	exporter    *otlp.LogsExporter
+	cursors     *CursorStore
+	hostname    string
+	excludeNS   map[string]bool
+	svcResolver PodServiceResolver
+	log         *slog.Logger
 
 	mu      sync.Mutex
 	readers map[string]*criReaderHandle // logfile path → handle
@@ -107,6 +115,11 @@ func NewCRILogsTailer(exporter *otlp.LogsExporter, cursorPath, hostname string, 
 		readers:   make(map[string]*criReaderHandle),
 	}
 }
+
+// SetServiceResolver liga a unified service tagging: o tailer passa a carimbar o
+// log com o service vindo da label do pod (mesmo dos traces). Sem isso, mantém o
+// comportamento atual (service = nome derivado do workload). nil é aceito.
+func (t *CRILogsTailer) SetServiceResolver(r PodServiceResolver) { t.svcResolver = r }
 
 // Run inicia o tailer. Bloqueia até ctx ser cancelado.
 func (t *CRILogsTailer) Run(ctx context.Context) {
@@ -202,7 +215,20 @@ func (t *CRILogsTailer) discover() {
 
 // runReader taila um arquivo de log de container até `done` fechar.
 func (t *CRILogsTailer) runReader(path string, meta criFileInfo, done chan struct{}) {
+	// service do log: prioriza a label do pod (unified service tagging — mesmo
+	// service dos traces, igual Datadog); fallback pro nome derivado do workload.
+	// Re-resolvido a cada poll: o resolver popula async (kubelet /pods a cada 30s),
+	// então um reader que começou ANTES do 1º refresh corrige o service sozinho
+	// assim que a label aparece — sem ficar preso no fallback nem reiniciar.
 	svc := deriveK8sServiceName(meta.pod)
+	resolveSvc := func() {
+		if t.svcResolver != nil {
+			if s, _, _, ok := t.svcResolver.ServiceForPod(meta.namespace, meta.pod); ok && s != "" {
+				svc = s
+			}
+		}
+	}
+	resolveSvc()
 
 	var offset int64
 	var inode uint64
@@ -216,6 +242,7 @@ func (t *CRILogsTailer) runReader(path string, meta criFileInfo, done chan struc
 	var partial strings.Builder
 
 	readOnce := func() {
+		resolveSvc() // re-resolve: corrige o service quando a label do pod aparece
 		fi, err := os.Stat(path)
 		if err != nil {
 			return
