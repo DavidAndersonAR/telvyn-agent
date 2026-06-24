@@ -27,6 +27,11 @@ const (
 	relativeAccuracy = 0.01
 )
 
+// SourceAttr é o atributo de span (interno) que carimba a origem da telemetria:
+// "ebpf" (zero-código, posto pelo sink do tracer) ou ausente → "otlp". Não é
+// encaminhado em span cru — só alimenta o concentrator.
+const SourceAttr = "telvyn.source"
+
 // GroupedStats é o snapshot de um grupo num bucket, pronto pro forwarder
 // converter em ApmGroupedStats (proto). Os sketches já vêm serializados.
 type GroupedStats struct {
@@ -41,6 +46,7 @@ type GroupedStats struct {
 	Errors              uint64
 	DurationSumNano     uint64
 	TopLevel            bool
+	Source              string // "otlp" (instrumentado) | "ebpf" (zero-código)
 	OkSummary           []byte // DDSketch (nanos) das latências OK; nil se vazio
 	ErrorSummary        []byte // DDSketch (nanos) das latências de erro; nil se vazio
 }
@@ -52,6 +58,7 @@ type bucketKey struct {
 	operation  string
 	spanKind   int32
 	httpStatus int32
+	source     string
 }
 
 type groupStats struct {
@@ -96,6 +103,7 @@ func (c *Concentrator) Add(s *collectorv1.Span) {
 		operation:  s.Name,
 		spanKind:   s.Kind,
 		httpStatus: httpStatusOf(s.Attributes),
+		source:     spanSource(s),
 	}
 	isErr := s.StatusCode == 2 // OTLP ERROR
 
@@ -148,6 +156,7 @@ func (c *Concentrator) Flush() []GroupedStats {
 				Errors:              g.errors,
 				DurationSumNano:     g.durationSumNano,
 				TopLevel:            g.topLevel,
+				Source:              k.source,
 				OkSummary:           encodeSketch(g.okSketch),
 				ErrorSummary:        encodeSketch(g.errSketch),
 			})
@@ -182,6 +191,16 @@ func resourceOf(s *collectorv1.Span) string {
 		return method + " " + route
 	}
 	return s.Name
+}
+
+// spanSource lê o carimbo de origem do span (estilo Datadog APM vs USM). O sink
+// do eBPF marca "telvyn.source"="ebpf"; spans OTLP instrumentados não têm o
+// atributo → "otlp". Vira coluna no backend e badge no catálogo.
+func spanSource(s *collectorv1.Span) string {
+	if v := s.Attributes[SourceAttr]; v != "" {
+		return v
+	}
+	return "otlp"
 }
 
 func httpStatusOf(attrs map[string]string) int32 {

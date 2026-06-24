@@ -225,9 +225,13 @@ func buildSpan(ev Event, parsers *parsersByConn, conns *connTracker, cfg BridgeC
 	start := end.Add(-r.Duration)
 
 	span := &collectorv1.Span{
-		TraceId:       traceID,
-		SpanId:        spanID,
-		ServiceName:   cfg.ServiceName,
+		TraceId: traceID,
+		SpanId:  spanID,
+		// ServiceName fica "" de propósito: a resolução por pod/container abaixo
+		// promove o nome real do serviço (serverPod/clientPod). cfg.ServiceName é
+		// só o ÚLTIMO fallback (aplicado no fim, se nada resolveu). Pré-preencher
+		// aqui fazia TODO span virar "ebpf-tracer" (o `if ServiceName==""` nunca
+		// disparava) — era por isso que a lente não distinguia os serviços.
 		Kind:          spanKindFor(r.IsInbound),
 		StartUnixNano: start.UnixNano(),
 		EndUnixNano:   end.UnixNano(),
@@ -348,7 +352,12 @@ func buildSpan(ev Event, parsers *parsersByConn, conns *connTracker, cfg BridgeC
 		span.ServiceName = cfg.FallbackHostname
 	}
 	if span.ServiceName == "" {
-		span.ServiceName = "ebpf-tracer"
+		// Último fallback: nada resolveu (sem pod, sem container, sem hostname).
+		svc := cfg.ServiceName
+		if svc == "" {
+			svc = "ebpf-tracer"
+		}
+		span.ServiceName = svc
 	}
 
 	// Status do span — OTel: 0 UNSET, 1 OK, 2 ERROR.
