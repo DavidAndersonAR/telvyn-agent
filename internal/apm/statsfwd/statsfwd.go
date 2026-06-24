@@ -89,6 +89,7 @@ func buildPayload(agentVersion string, groups []concentrator.GroupedStats) *coll
 			OkSummary:       g.OkSummary,
 			ErrorSummary:    g.ErrorSummary,
 			TopLevel:        g.TopLevel,
+			Source:          g.Source,
 		})
 	}
 	payload := &collectorv1.ApmStatsPayload{AgentVersion: agentVersion}
