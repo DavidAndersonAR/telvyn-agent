@@ -38,4 +38,5 @@ message ApmGroupedStats {
   bytes ok_summary = 10;
   bytes error_summary = 11;
   bool top_level = 12;
+  string source = 13;         // origem: "otlp" (instrumentado) | "ebpf" (zero-código). Default "otlp".
 }

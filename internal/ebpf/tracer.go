@@ -143,6 +143,7 @@ func (t *Tracer) Run(events chan<- Event) error {
 	if err := t.attachPrograms(); err != nil {
 		return err
 	}
+	klog.Infoln("ebpf: tracer up (collection loaded + programs attached)")
 	return nil
 }
 
@@ -317,9 +318,12 @@ func (t *Tracer) ebpf(ch chan<- Event) error {
 		return fmt.Errorf("failed to load collection spec: %w", err)
 	}
 	_ = unix.Setrlimit(unix.RLIMIT_MEMLOCK, &unix.Rlimit{Cur: unix.RLIM_INFINITY, Max: unix.RLIM_INFINITY})
-	c, err := ebpf.NewCollectionWithOptions(collectionSpec, ebpf.CollectionOptions{
-		//Programs: ebpf.ProgramOptions{LogLevel: 2, LogSize: 20 * 1024 * 1024},
-	})
+	// NÃO setar LogLevel aqui: o log "branch" (2) é o mais verboso e, em programa
+	// grande no kernel 6.8, faz o cilium/ebpf realocar o buffer e RE-RODAR a
+	// verificação várias vezes → 100% CPU + OOM (era isso que travava no step 2/4).
+	// Em caso de FALHA real, o cilium/ebpf re-tenta sozinho com o log ligado e
+	// devolve um *VerifierError com o detalhe — que capturamos abaixo.
+	c, err := ebpf.NewCollectionWithOptions(collectionSpec, ebpf.CollectionOptions{})
 	if err != nil {
 		var vErr *ebpf.VerifierError
 		if errors.As(err, &vErr) {
