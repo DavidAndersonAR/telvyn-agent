@@ -67,6 +67,24 @@ RUN apk add --no-cache --virtual .otel-build wget \
       "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OTEL_JAVAAGENT_VERSION}/opentelemetry-javaagent.jar" \
  && apk del .otel-build
 
+# Trivy — scanner de SBOM (vulnerabilidade de aplicação, camada 2/3). Embarcado
+# ao lado do binário do agent (decisão: binário leve, só GERAÇÃO de SBOM, SEM
+# banco de CVE — o casamento com o catálogo roda no backend). Apache-2.0. Só é
+# usado quando o toggle sbomScan está ligado. Versão fixa pra reprodutibilidade.
+ARG TRIVY_VERSION=0.71.2
+ARG TARGETARCH
+RUN apk add --no-cache --virtual .trivy-build wget tar \
+ && case "${TARGETARCH:-amd64}" in \
+      arm64) TRIVY_ARCH="Linux-ARM64" ;; \
+      *)     TRIVY_ARCH="Linux-64bit" ;; \
+    esac \
+ && wget -q -O /tmp/trivy.tar.gz \
+      "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_${TRIVY_ARCH}.tar.gz" \
+ && tar -xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy \
+ && chmod 755 /usr/local/bin/trivy \
+ && rm -f /tmp/trivy.tar.gz \
+ && apk del .trivy-build
+
 COPY --from=build /out/collector /usr/local/bin/collector
 COPY --chmod=755 docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 
