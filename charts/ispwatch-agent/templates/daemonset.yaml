@@ -123,6 +123,23 @@ spec:
             - name: ISPWATCH_KUBELET_INSECURE
               value: {{ .Values.ebpfTracing.kubeletInsecure | default "1" | quote }}
             {{- end }}
+            {{- if .Values.sbomScan.enabled }}
+            # Vulnerabilidade de aplicação (camada 2/3): Trivy gera o SBOM das
+            # imagens rodando e o agent manda a lista pro gateway (/sbom).
+            - name: ISPWATCH_SBOM_SCAN
+              value: "1"
+            - name: ISPWATCH_SBOM_INTERVAL
+              value: {{ .Values.sbomScan.interval | default "1h" | quote }}
+            - name: ISPWATCH_SBOM_CONTAINERD_ADDR
+              value: {{ .Values.sbomScan.containerdAddr | default "/run/containerd/containerd.sock" | quote }}
+            {{- with .Values.sbomScan.trivyArgs }}
+            - name: ISPWATCH_SBOM_TRIVY_ARGS
+              value: {{ . | quote }}
+            {{- end }}
+            # Trivy escreve cache em /tmp (emptyDir gravável; rootfs é RO no default).
+            - name: TRIVY_CACHE_DIR
+              value: "/tmp/trivy-cache"
+            {{- end }}
           volumeMounts:
             - name: proc
               mountPath: /host/proc
@@ -151,6 +168,12 @@ spec:
               mountPath: /sys/fs/bpf
               mountPropagation: HostToContainer
             {{- end }}
+            {{- if .Values.sbomScan.enabled }}
+            # Trivy lê o store de imagens via o socket do containerd do nó (RO).
+            - name: containerd-sock
+              mountPath: {{ .Values.sbomScan.containerdAddr | default "/run/containerd/containerd.sock" }}
+              readOnly: true
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           securityContext:
@@ -166,6 +189,13 @@ spec:
             runAsUser: 0
             runAsGroup: 0
             readOnlyRootFilesystem: false
+            {{- else if .Values.sbomScan.enabled }}
+            # Trivy precisa ler o socket do containerd (root:root) e escrever cache
+            # em /tmp. Roda como root SEM privileged — escopo só do store de imagens.
+            runAsUser: 0
+            runAsGroup: 0
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
             {{- else }}
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
@@ -197,4 +227,10 @@ spec:
           hostPath:
             path: /sys/fs/bpf
             type: DirectoryOrCreate
+        {{- end }}
+        {{- if .Values.sbomScan.enabled }}
+        - name: containerd-sock
+          hostPath:
+            path: {{ .Values.sbomScan.containerdAddr | default "/run/containerd/containerd.sock" }}
+            type: Socket
         {{- end }}
