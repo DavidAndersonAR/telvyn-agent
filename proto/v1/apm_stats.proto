@@ -39,4 +39,5 @@ message ApmGroupedStats {
   bytes error_summary = 11;
   bool top_level = 12;
   string source = 13;         // origem: "otlp" (instrumentado) | "ebpf" (zero-código). Default "otlp".
+  string db_system = 14;      // protocolo de datastore detectado pelo eBPF (postgresql/redis/…); "" se não-DB.
 }
