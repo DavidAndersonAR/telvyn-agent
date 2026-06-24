@@ -771,6 +771,31 @@ func (c *gosnmpClient) Close() {
 // apps locais e emite as métricas do próprio host, encaminhando tudo pro
 // gateway /api/ingest/v1 com Bearer token — sem enrollment, sem mTLS, sem
 // cert por agent. É o caminho simples; o modo gRPC mTLS (main) segue intacto.
+// ebpfStatsSink recebe os spans que o bridge eBPF gera a partir do tráfego de
+// fio (HTTP/gRPC/Postgres/Redis/…) e os despeja no MESMO concentrator dos spans
+// instrumentados, alimentando os golden signals (hits/erros/latência) que vão
+// pro /api/ingest/v1/apm/stats. Higieniza cada span (obfuscate) antes de contar,
+// igual o tap do receiver OTLP (rec.SetAPMTap). De propósito NÃO encaminha o
+// span cru: o caminho legado fazia isso sem sampling e inundava noc_span; os
+// golden signals já contam 100% do tráfego, então a lente de serviço acende pra
+// apps não-instrumentadas sem custo de armazenamento de rastro.
+type ebpfStatsSink struct{ conc *concentrator.Concentrator }
+
+func (s ebpfStatsSink) Push(spans []*collectorv1.Span) {
+	for _, sp := range spans {
+		obfuscate.Apply(sp)
+		// Carimba a origem ANTES do Add: o concentrator copia isso pro stat
+		// (source=ebpf), o backend grava a coluna e o catálogo mostra o badge
+		// "eBPF / sem instrumentação". Estilo Datadog USM. Posto depois do
+		// obfuscate pra não ser higienizado fora.
+		if sp.Attributes == nil {
+			sp.Attributes = map[string]string{}
+		}
+		sp.Attributes[concentrator.SourceAttr] = "ebpf"
+		s.conc.Add(sp)
+	}
+}
+
 func runIngestMode(ingestURL string) {
 	log := newLogger(getenvOr("COLLECTOR_LOG_LEVEL", "info"))
 	token := strings.TrimSpace(os.Getenv("ISPWATCH_INGEST_TOKEN"))
@@ -918,6 +943,23 @@ func runIngestMode(ingestURL string) {
 			}
 		}
 	}()
+
+	// eBPF L7 tracer no modo ingest (Frente 4 — observabilidade zero-código).
+	// Escuta o tráfego de fio (HTTP/gRPC/Postgres/Redis/…) de QUALQUER app sem
+	// instrumentar e alimenta o mesmo concentrator acima → a lente de serviço
+	// acende com golden signals pra apps não-instrumentadas. Histórico: o tracer
+	// só estava ligado no caminho legado gRPC (func main); aqui é o modo certless
+	// que roda em produção. Toggle ISPWATCH_EBPF_TRACING=1 (exige
+	// privileged+hostNetwork+hostPID no DaemonSet). Sem o toggle, no-op.
+	//
+	// Roda em goroutine de PROPÓSITO: tracer.Run() carrega ~14 programas BPF e
+	// pode demorar (ou travar em kernel novo) — NÃO pode bloquear o resto do
+	// startup, em especial o rec.Start() (receiver OTLP :4318) lá embaixo. É o
+	// mesmo padrão do caminho legado, onde os receivers sobem em goroutine ANTES
+	// do tracer. Best-effort: se o eBPF falhar, o agent segue normal.
+	if getenvOr("ISPWATCH_EBPF_TRACING", "0") == "1" {
+		go startEbpfTracer(ctx, log, ebpfStatsSink{conc: apmConc}, out, hostID)
+	}
 
 	// Coleta de logs (toggle, estilo Datadog): taila /var/log/pods (CRI) e
 	// encaminha cada linha como OTLP JSON + Bearer pro gateway /api/ingest/v1/logs.
@@ -1205,17 +1247,6 @@ func startEbpfTracer(ctx context.Context, log *slog.Logger, sink ebpf.SpanSink, 
 	tracer := ebpf.NewTracer(hostNs, hostNs, false)
 	events := make(chan ebpf.Event, 1000)
 
-	if err := tracer.Run(events); err != nil {
-		log.Warn("ebpf: tracer.Run failed, tracer disabled", "err", err)
-		return
-	}
-	log.Info("ebpf tracer started")
-
-	go func() {
-		<-ctx.Done()
-		tracer.Close()
-	}()
-
 	// Hostname do nó (bare-metal): preenchido no span quando o PodResolver
 	// não resolve nenhuma das pontas, permitindo o backend cruzar com
 	// noc_host.hostname e materializar noc_application.
@@ -1258,7 +1289,23 @@ func startEbpfTracer(ctx context.Context, log *slog.Logger, sink ebpf.SpanSink, 
 		}
 	}
 
+	// ORDEM IMPORTA: o consumidor (RunBridge) precisa estar drenando o canal
+	// ANTES de tracer.Run(), porque o step "init" do Run() despeja 1 evento por
+	// PID/fd/conexão no canal. Num nó k8s isso passa de 1000 (o buffer) → o init
+	// trava no envio e o Run() nunca retorna (era o "trava no step 3/4"). Com o
+	// bridge já consumindo, os eventos escoam e o Run() completa o attach.
 	go ebpf.RunBridge(ctx, events, sink, cfg)
+
+	if err := tracer.Run(events); err != nil {
+		log.Warn("ebpf: tracer.Run failed, tracer disabled", "err", err)
+		return
+	}
+	log.Info("ebpf tracer started")
+
+	go func() {
+		<-ctx.Done()
+		tracer.Close()
+	}()
 
 	// Self-metric publisher: every 30s, snapshot tracer.LostSamples() and
 	// publish agent_ebpf_lost_samples{map=...} via __self__=true so
