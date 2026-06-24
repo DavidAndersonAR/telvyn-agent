@@ -133,3 +133,19 @@ webhook:
           - telvyn
   service:
     port: 443
+
+# Scanner de vulnerabilidade de APLICAÇÃO (camada 2/3, toggle estilo Datadog).
+# Quando habilitado, o agent roda o Trivy embarcado pra GERAR o SBOM (lista de
+# bibliotecas) de cada imagem rodando no nó e manda só a lista pro gateway
+# (/api/ingest/v1/sbom). O casamento com o catálogo de advisory roda no backend.
+# Desligado por default — operador habilita explicitamente. Exige rodar como root
+# (acessar o socket do containerd) — sem privileged.
+sbomScan:
+  enabled: false
+  # Intervalo entre varreduras (imagem muda raro). Ex: "1h", "6h".
+  interval: "1h"
+  # Socket do containerd do nó. Padrão CRI: /run/containerd/containerd.sock.
+  # ⚠️ k3s usa /run/k3s/containerd/containerd.sock — ajuste aqui em k3s.
+  containerdAddr: "/run/containerd/containerd.sock"
+  # Args extras pro Trivy (sem rebuild). Ex: "--timeout 5m".
+  trivyArgs: ""

@@ -35,15 +35,16 @@ import (
 	"github.com/ispwatch/collector/internal/logs"
 	"github.com/ispwatch/collector/internal/otlp"
 	"github.com/ispwatch/collector/internal/quarkus"
+	"github.com/ispwatch/collector/internal/sbom"
 	"github.com/ispwatch/collector/internal/webhook"
 
-	"github.com/vishvananda/netns"
 	"github.com/ispwatch/collector/internal/scheduler"
 	"github.com/ispwatch/collector/internal/selfmetrics"
 	"github.com/ispwatch/collector/internal/tools"
 	"github.com/ispwatch/collector/internal/transport"
 	"github.com/ispwatch/collector/internal/transport/wal"
 	collectorv1 "github.com/ispwatch/collector/proto/v1"
+	"github.com/vishvananda/netns"
 
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -73,7 +74,9 @@ func deriveHttpEndpoint(grpcEndpoint string) string {
 
 func lastIndex(s, sep string) int {
 	for i := len(s) - 1; i >= 0; i-- {
-		if s[i] == sep[0] { return i }
+		if s[i] == sep[0] {
+			return i
+		}
 	}
 	return -1
 }
@@ -559,8 +562,8 @@ type adapterRuntime struct {
 
 	mu        sync.Mutex
 	cancel    context.CancelFunc // cancels current generation's ctx
-	wg        *sync.WaitGroup   // waits for current generation's goroutines
-	bootstrap bool              // true until first server-driven Reload
+	wg        *sync.WaitGroup    // waits for current generation's goroutines
+	bootstrap bool               // true until first server-driven Reload
 }
 
 func newAdapterRuntime(parent context.Context, log *slog.Logger, out chan<- []*collectorv1.Metric, cfg *config.Config) *adapterRuntime {
@@ -833,6 +836,14 @@ func runIngestMode(ingestURL string) {
 		} else {
 			log.Info("k8s node registrado", "host_id", nodeHostID, "node", hostID)
 			startKubeletCheck(ctx, log, out, nodeHostID)
+
+			// Vulnerabilidade de aplicação (camada 2/3, toggle): Trivy gera o SBOM
+			// das imagens rodando no nó e o agente manda só a lista pro gateway.
+			if getenvOr("ISPWATCH_SBOM_SCAN", "0") == "1" {
+				startSbomScan(ctx, log, exporter, nodeHostID)
+			} else {
+				log.Debug("sbom scan desativado (set ISPWATCH_SBOM_SCAN=1 pra habilitar)")
+			}
 		}
 	}
 
@@ -969,6 +980,49 @@ func startIngestPodLogs(ctx context.Context, log *slog.Logger, exporter *otlp.In
 	go logsExp.Run(ctx)
 	go tailer.Run(ctx)
 	log.Info("pod logs habilitados (CRI tailer)", "cursor", cursorPath, "exclude_ns", strings.Join(exclude, ","))
+}
+
+// startSbomScan liga o scanner de vulnerabilidade de aplicação (camada 2/3):
+// embute o Trivy (geração de SBOM, sem banco de CVE), lista as imagens rodando
+// no nó via kubelet /pods e manda a lista de componentes pro gateway (/sbom).
+// Tudo configurável por env (sem rebuild): intervalo, args do trivy, socket do
+// containerd. host_id = o do nó registrado (∈ tenant).
+func startSbomScan(ctx context.Context, log *slog.Logger, exporter *otlp.IngestExporter, hostID string) {
+	exclude := []string{}
+	if self := strings.TrimSpace(getenvOr("POD_NAMESPACE", "")); self != "" {
+		exclude = append(exclude, self)
+	}
+
+	interval := time.Hour
+	if v := strings.TrimSpace(getenvOr("ISPWATCH_SBOM_INTERVAL", "")); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			interval = d
+		}
+	}
+	var extraArgs []string
+	if v := strings.TrimSpace(getenvOr("ISPWATCH_SBOM_TRIVY_ARGS", "")); v != "" {
+		extraArgs = strings.Fields(v)
+	}
+
+	sc, err := sbom.New(sbom.Config{
+		HostID:            hostID,
+		KubeletURL:        getenvOr("ISPWATCH_KUBELET_URL", "https://localhost:10250"),
+		KubeletTokenFile:  getenvOr("ISPWATCH_KUBELET_TOKEN_FILE", "/var/run/secrets/kubernetes.io/serviceaccount/token"),
+		KubeletCAFile:     getenvOr("ISPWATCH_KUBELET_CA_FILE", ""),
+		KubeletInsecure:   getenvOr("ISPWATCH_KUBELET_INSECURE", "1") == "1",
+		TrivyPath:         getenvOr("ISPWATCH_SBOM_TRIVY_PATH", "trivy"),
+		ExtraTrivyArgs:    extraArgs,
+		ContainerdAddr:    getenvOr("ISPWATCH_SBOM_CONTAINERD_ADDR", "/run/containerd/containerd.sock"),
+		ContainerdNS:      getenvOr("ISPWATCH_SBOM_CONTAINERD_NS", "k8s.io"),
+		Interval:          interval,
+		ExcludeNamespaces: exclude,
+	}, exporter, log)
+	if err != nil {
+		log.Warn("sbom scan desativado (init falhou)", "err", err)
+		return
+	}
+	go sc.Run(ctx)
+	log.Info("sbom scan habilitado (Trivy → SBOM por imagem)", "interval", interval.String())
 }
 
 // startIngestChecks liga o config-pull no modo ingest: registra o collector
@@ -1449,7 +1503,7 @@ func startJournaldLogs(
 					},
 					{
 						Time: now, HostId: "self", MetricName: "logs_dropped_total",
-						Value: float64(rs.DroppedTotal + es.DroppedTotal),
+						Value:  float64(rs.DroppedTotal + es.DroppedTotal),
 						Source: "agent.self.logs",
 						Tags:   map[string]string{"__self__": "true", "reason": "ratelimit_or_overflow"},
 					},
@@ -1526,7 +1580,7 @@ func startDockerLogs(
 					},
 					{
 						Time: now, HostId: "self", MetricName: "logs_dropped_total",
-						Value: float64(ts.DroppedTotal + es.DroppedTotal),
+						Value:  float64(ts.DroppedTotal + es.DroppedTotal),
 						Source: "agent.self.logs",
 						Tags:   map[string]string{"__self__": "true", "source": "docker", "reason": "ratelimit_or_overflow"},
 					},
