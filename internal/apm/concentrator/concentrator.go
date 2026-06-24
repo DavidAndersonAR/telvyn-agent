@@ -47,6 +47,7 @@ type GroupedStats struct {
 	DurationSumNano     uint64
 	TopLevel            bool
 	Source              string // "otlp" (instrumentado) | "ebpf" (zero-código)
+	DbSystem            string // protocolo de datastore detectado (eBPF): postgresql/redis/… ou ""
 	OkSummary           []byte // DDSketch (nanos) das latências OK; nil se vazio
 	ErrorSummary        []byte // DDSketch (nanos) das latências de erro; nil se vazio
 }
@@ -59,6 +60,7 @@ type bucketKey struct {
 	spanKind   int32
 	httpStatus int32
 	source     string
+	dbSystem   string
 }
 
 type groupStats struct {
@@ -104,6 +106,7 @@ func (c *Concentrator) Add(s *collectorv1.Span) {
 		spanKind:   s.Kind,
 		httpStatus: httpStatusOf(s.Attributes),
 		source:     spanSource(s),
+		dbSystem:   s.Attributes["db.system"],
 	}
 	isErr := s.StatusCode == 2 // OTLP ERROR
 
@@ -157,6 +160,7 @@ func (c *Concentrator) Flush() []GroupedStats {
 				DurationSumNano:     g.durationSumNano,
 				TopLevel:            g.topLevel,
 				Source:              k.source,
+				DbSystem:            k.dbSystem,
 				OkSummary:           encodeSketch(g.okSketch),
 				ErrorSummary:        encodeSketch(g.errSketch),
 			})
