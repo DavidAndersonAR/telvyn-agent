@@ -81,6 +81,7 @@ type Profiler struct {
 	stacks  *ebpf.Map
 	perfFDs []int
 	ksyms   *kallsyms
+	sym     *symbolizer
 }
 
 // sampleKey espelha `struct sample_key` do cpuprofile.c (layout C, 40 bytes:
@@ -119,6 +120,7 @@ func (p *Profiler) Run(ctx context.Context) error {
 		return fmt.Errorf("perf_event attach: %w", err)
 	}
 	p.ksyms = loadKallsyms() // best-effort; nil se kptr_restrict
+	p.sym = newSymbolizer()  // simboliza frames de user (ELF por processo)
 
 	klog.Infof("cpuprofiler: ligado — %d Hz, flush a cada %s, %d CPUs anexadas",
 		p.hz, p.interval, len(p.perfFDs))
@@ -256,6 +258,9 @@ func (p *Profiler) Close() {
 // flush drena o histograma da janela, dobra por serviço e emite. Depois zera a
 // janela (apaga as chaves drenadas e os stackids lidos).
 func (p *Profiler) flush(ctx context.Context, windowStart time.Time) {
+	if p.sym != nil {
+		p.sym.resetWindow() // novo cache de /proc/<pid>/maps por janela
+	}
 	type svc struct{ service, namespace, pod string }
 	agg := map[svc]map[string]int64{}
 	var drained []sampleKey
@@ -343,7 +348,11 @@ func (p *Profiler) foldLine(key sampleKey, comm string) string {
 	if key.UserStackID >= 0 {
 		user := p.readStack(uint32(key.UserStackID))
 		for i := len(user) - 1; i >= 0; i-- {
-			frames = append(frames, "0x"+strconv.FormatUint(user[i], 16))
+			if p.sym != nil {
+				frames = append(frames, p.sym.user(key.Pid, user[i]))
+			} else {
+				frames = append(frames, "0x"+strconv.FormatUint(user[i], 16))
+			}
 		}
 	}
 	if key.KernStackID >= 0 {
