@@ -915,7 +915,7 @@ func runIngestMode(ingestURL string) {
 			// tocado. source="ebpf"; o JFR cobre Java. Exige privileged+hostPID (já
 			// requeridos pelo L7). No S1, só loga o resumo por serviço.
 			if getenvOr("ISPWATCH_PROFILING_ENABLED", "0") == "1" {
-				startEbpfProfiler(ctx, log, resolver)
+				startEbpfProfiler(ctx, log, exporter, resolver)
 				log.Info("cpuprofiler: profiling de CPU eBPF ativo")
 			} else {
 				log.Debug("cpuprofiler desativado (set ISPWATCH_PROFILING_ENABLED=1 pra habilitar)")
