@@ -3,6 +3,7 @@ package cpuprofiler
 import (
 	"bufio"
 	"debug/elf"
+	"debug/gosym"
 	"os"
 	"path/filepath"
 	"sort"
@@ -22,10 +23,11 @@ import (
 // via a região do maps (ip - regiao.start + regiao.offset). Assim PIE, .so e
 // não-PIE caem todos no mesmo espaço sem calcular load-bias.
 //
-// Limitações conhecidas (v1): binário stripped sem .symtab/.dynsym → cai no nome
-// do módulo; Go stripped (símbolos no .gopclntab) idem; JVM (JIT) não tem símbolo
-// ELF → o JFR cobre Java. Frames sem frame-pointer saem truncados (limite do
-// unwinder do kernel, não da simbolização).
+// Go stripped (-s -w) NÃO tem .symtab/.dynsym, mas Go SEMPRE carrega o .gopclntab
+// (usado pelo runtime p/ stack trace) — então caímos no debug/gosym e simbolizamos
+// igual. Limitações que sobram: binário C/Rust stripped → nome do módulo; JVM (JIT)
+// não tem símbolo ELF → o JFR cobre Java; frames sem frame-pointer saem truncados
+// (limite do unwinder do kernel, não da simbolização).
 type symbolizer struct {
 	modCache  map[string]*modSyms   // chave dev:inode → símbolos (nil = parseado, sem símbolo)
 	mapsCache map[uint32][]procMap  // por flush; limpo no resetWindow
@@ -141,14 +143,25 @@ func parseProcMaps(pid uint32) []procMap {
 	return out
 }
 
-// modSyms = símbolos STT_FUNC de um módulo, por FILE OFFSET, ordenados.
+// elfLoad = um segmento PT_LOAD executável (pra traduzir vaddr → file-offset).
+type elfLoad struct{ off, vaddr, memsz uint64 }
+
+// symEntry = uma função {file-offset, tamanho, nome}.
+type symEntry struct {
+	off, size uint64
+	name      string
+}
+
+// modSyms = funções de um módulo, por FILE OFFSET, ordenadas (busca binária).
+// LEVE por design (só nome+endereço) — vem do .symtab/.dynsym OU, em binário Go
+// stripped, do .gopclntab (extraído e DESCARTADO; o cache guarda só este índice).
 type modSyms struct {
 	offs  []uint64
 	sizes []uint64
 	names []string
 }
 
-// resolve devolve o nome do símbolo cujo [off, off+size) contém fileOff ("" se nenhum).
+// resolve devolve o nome da função que contém fileOff ("" se nenhuma).
 func (m *modSyms) resolve(fileOff uint64) string {
 	i := sort.Search(len(m.offs), func(i int) bool { return m.offs[i] > fileOff }) - 1
 	if i < 0 {
@@ -161,7 +174,7 @@ func (m *modSyms) resolve(fileOff uint64) string {
 }
 
 // buildModSyms abre o ELF e indexa as funções por file-offset. Retorna nil se o
-// arquivo não abre ou não tem símbolo de função.
+// arquivo não abre ou não tem nem símbolo ELF nem .gopclntab utilizável.
 func buildModSyms(path string) *modSyms {
 	f, err := elf.Open(path)
 	if err != nil {
@@ -169,42 +182,42 @@ func buildModSyms(path string) *modSyms {
 	}
 	defer f.Close()
 
-	// segmentos PT_LOAD executáveis: pra traduzir vaddr do símbolo → file offset.
-	type seg struct{ vaddr, memsz, off uint64 }
-	var loads []seg
+	// segmentos PT_LOAD executáveis: pra traduzir vaddr → file offset.
+	var loads []elfLoad
 	for _, p := range f.Progs {
 		if p.Type == elf.PT_LOAD && p.Flags&elf.PF_X != 0 {
-			loads = append(loads, seg{p.Vaddr, p.Memsz, p.Off})
+			loads = append(loads, elfLoad{off: p.Off, vaddr: p.Vaddr, memsz: p.Memsz})
 		}
+	}
+	vaddrToOff := func(v uint64) uint64 {
+		for _, l := range loads {
+			if l.vaddr <= v && v < l.vaddr+l.memsz {
+				return v - l.vaddr + l.off
+			}
+		}
+		return v
 	}
 
 	syms, _ := f.Symbols()
 	dyn, _ := f.DynamicSymbols()
-	type entry struct {
-		off, size uint64
-		name      string
-	}
-	var entries []entry
+	var entries []symEntry
 	add := func(list []elf.Symbol) {
 		for i := range list {
 			s := &list[i]
 			if elf.ST_TYPE(s.Info) != elf.STT_FUNC || s.Size == 0 || s.Value == 0 {
 				continue
 			}
-			off := s.Value
-			for _, l := range loads {
-				if l.vaddr <= s.Value && s.Value < l.vaddr+l.memsz {
-					off = s.Value - l.vaddr + l.off
-					break
-				}
-			}
-			entries = append(entries, entry{off: off, size: s.Size, name: s.Name})
+			entries = append(entries, symEntry{off: vaddrToOff(s.Value), size: s.Size, name: s.Name})
 		}
 	}
 	add(syms)
 	add(dyn)
 	if len(entries) == 0 {
-		return nil
+		// Sem .symtab/.dynsym (stripped). Se for Go, os nomes estão no .gopclntab.
+		entries = goSymEntries(f, vaddrToOff)
+		if len(entries) == 0 {
+			return nil
+		}
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].off < entries[j].off })
 
@@ -217,4 +230,52 @@ func buildModSyms(path string) *modSyms {
 		m.offs[i], m.sizes[i], m.names[i] = e.off, e.size, e.name
 	}
 	return m
+}
+
+// maxPclnSize: teto do .gopclntab pra extrair via gosym. Só serviços-pod chegam
+// aqui (o flush pula host/kernel antes de simbolizar), então é generoso o
+// suficiente pra cobrir até um traefik. A Table é construída e DESCARTADA (só o
+// índice leve fica), então o custo é transitório; o teto é só uma rede de
+// segurança contra um binário patológico. Acima dele: cai no nome do módulo.
+const maxPclnSize = 32 << 20 // 32 MiB
+
+// goSymEntries extrai {off,size,name} do .gopclntab de um binário Go (presente
+// até em stripped). Constrói a gosym.Table SÓ pra ler a lista de funções e a
+// DESCARTA — o que sobra/cacheia é o índice leve, não a Table. Recover porque o
+// debug/gosym pode dar panic em pcln malformado (um panic na goroutine do
+// profiler derrubaria o agente inteiro).
+func goSymEntries(f *elf.File, vaddrToOff func(uint64) uint64) (entries []symEntry) {
+	defer func() {
+		if recover() != nil {
+			entries = nil
+		}
+	}()
+	sec := f.Section(".gopclntab")
+	if sec == nil || sec.Size == 0 || sec.Size > maxPclnSize {
+		return nil
+	}
+	data, err := sec.Data()
+	if err != nil || len(data) == 0 {
+		return nil
+	}
+	var textAddr uint64
+	if t := f.Section(".text"); t != nil {
+		textAddr = t.Addr
+	}
+	tab, err := gosym.NewTable(nil, gosym.NewLineTable(data, textAddr))
+	if err != nil || tab == nil {
+		return nil
+	}
+	for i := range tab.Funcs {
+		fn := &tab.Funcs[i]
+		if fn.Sym == nil || fn.Entry == 0 || fn.Name == "" {
+			continue
+		}
+		var size uint64
+		if fn.End > fn.Entry {
+			size = fn.End - fn.Entry
+		}
+		entries = append(entries, symEntry{off: vaddrToOff(fn.Entry), size: size, name: fn.Name})
+	}
+	return entries
 }

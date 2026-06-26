@@ -258,6 +258,14 @@ func (p *Profiler) Close() {
 // flush drena o histograma da janela, dobra por serviço e emite. Depois zera a
 // janela (apaga as chaves drenadas e os stackids lidos).
 func (p *Profiler) flush(ctx context.Context, windowStart time.Time) {
+	// Best-effort blindado: simbolização (debug/elf, debug/gosym) processa binários
+	// arbitrários do nó; um panic aqui rodaria na goroutine do profiler e derrubaria
+	// o agente INTEIRO (Go: panic não-recuperado mata o processo). Recupera e segue.
+	defer func() {
+		if r := recover(); r != nil {
+			klog.Warningf("cpuprofiler: flush panic recuperado (janela descartada): %v", r)
+		}
+	}()
 	if p.sym != nil {
 		p.sym.resetWindow() // novo cache de /proc/<pid>/maps por janela
 	}
@@ -280,11 +288,17 @@ func (p *Profiler) flush(ctx context.Context, windowStart time.Time) {
 		if count == 0 {
 			continue
 		}
-		comm := nulString(key.Comm[:])
 		service, namespace, pod := "", "", ""
 		if p.resolver != nil {
 			service, namespace, pod = p.resolver.ResolveProfile(key.Pid)
 		}
+		// Processo de host/kernel (sem pod resolvido) NÃO é enviado (o emit já o
+		// dropava) — então nem simbolizamos: poupa o parse caro do .gopclntab de
+		// binário gigante (k3s, containerd) e mantém a memória sob controle.
+		if namespace == "" || pod == "" {
+			continue
+		}
+		comm := nulString(key.Comm[:])
 		if service == "" {
 			service = comm // fallback: agrupa pelo nome do processo
 		}
