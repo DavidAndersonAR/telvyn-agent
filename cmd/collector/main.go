@@ -907,6 +907,19 @@ func runIngestMode(ingestURL string) {
 				go det.Run(ctx)
 				log.Info("langdetect: detecção de linguagem por processo ativa")
 			}
+
+			// Profiler de CPU eBPF (Opção B, toggle): amostra a pilha de CPU de
+			// TODOS os processos do nó (perf_event + stack traces) e atribui ao
+			// serviço pelo mesmo resolver. Coleção eBPF SEPARADA do tracer L7 — se
+			// o verifier rejeitar num kernel, só o profiler fica off; o L7 nunca é
+			// tocado. source="ebpf"; o JFR cobre Java. Exige privileged+hostPID (já
+			// requeridos pelo L7). No S1, só loga o resumo por serviço.
+			if getenvOr("ISPWATCH_PROFILING_ENABLED", "0") == "1" {
+				startEbpfProfiler(ctx, log, resolver)
+				log.Info("cpuprofiler: profiling de CPU eBPF ativo")
+			} else {
+				log.Debug("cpuprofiler desativado (set ISPWATCH_PROFILING_ENABLED=1 pra habilitar)")
+			}
 		}
 	}
 
