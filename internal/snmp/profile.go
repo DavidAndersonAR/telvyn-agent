@@ -355,7 +355,7 @@ func (p *Profile) Collect(ctx context.Context, c *Client, hostID string, staticT
 				continue
 			}
 			scalarSuccess++
-			out = append(out, newMetric(now, hostID, m.Symbol.Name, applyScale(val, m.Symbol.Scale), mergeTags(staticTags, profileTags, nil)))
+			out = append(out, newMetric(now, hostID, canonMetricName(m.Symbol.OID, m.Symbol.Name), applyScale(val, m.Symbol.Scale), mergeTags(staticTags, profileTags, nil)))
 
 		case m.Table != nil:
 			rows, err := WalkTable(ctx, c, m.Table.OID)
@@ -371,6 +371,7 @@ func (p *Profile) Collect(ctx context.Context, c *Client, hostID string, staticT
 				if m.Filter != nil && !m.Filter.keep(rowTags) {
 					continue
 				}
+				seen := make(map[string]bool, len(m.Symbols))
 				for _, sym := range m.Symbols {
 					pdu, ok := findRowPDU(row, sym.OID)
 					if !ok {
@@ -380,7 +381,12 @@ func (p *Profile) Collect(ctx context.Context, c *Client, hostID string, staticT
 					if !ok {
 						continue
 					}
-					out = append(out, newMetric(now, hostID, sym.Name, applyScale(val, sym.Scale), mergeTags(staticTags, profileTags, rowTags)))
+					name := canonMetricName(sym.OID, sym.Name)
+					if seen[name] {
+						continue // HC vs 32-bit colidem no mesmo canônico — 1 por row
+					}
+					seen[name] = true
+					out = append(out, newMetric(now, hostID, name, applyScale(val, sym.Scale), mergeTags(staticTags, profileTags, rowTags)))
 				}
 			}
 		}
@@ -472,11 +478,17 @@ func executeDiscoveryRule(
 	}
 
 	// 2) items: cada PDU vira 1 métrica. Labels = keys da row + static_tags.
+	// O nome é normalizado pelo OID (canonMetricName) — perfis importados batizam
+	// as colunas IF-MIB como community.<vendor>.net_if_*; viram snmp.if.* canônico.
+	// emitted dedup por (nome canônico, row): se o perfil trouxer HC e 32-bit da
+	// mesma coluna, fica só a 1ª (evita série duplicada).
 	var out []*collectorv1.Metric
+	emitted := make(map[string]bool)
 	for _, item := range rule.Items {
 		if item.Name == "" || item.OID == "" {
 			continue
 		}
+		name := canonMetricName(item.OID, item.Name)
 		pdus, err := c.WalkAll(ctx, item.OID)
 		if err != nil {
 			continue
@@ -487,6 +499,10 @@ func executeDiscoveryRule(
 				continue
 			}
 			suffix := oidSuffix(pdu.Name, item.OID)
+			if emitted[name+"\x00"+suffix] {
+				continue
+			}
+			emitted[name+"\x00"+suffix] = true
 			rowTags := make(map[string]string, len(rule.StaticTags)+8)
 			for k, v := range rule.StaticTags {
 				rowTags[k] = v
@@ -499,7 +515,7 @@ func executeDiscoveryRule(
 					rowTags[lbl] = v
 				}
 			}
-			out = append(out, newMetric(now, hostID, item.Name, applyScale(val, item.Scale), mergeTags(staticTags, profileTags, rowTags)))
+			out = append(out, newMetric(now, hostID, name, applyScale(val, item.Scale), mergeTags(staticTags, profileTags, rowTags)))
 		}
 	}
 	return out
@@ -619,4 +635,37 @@ func newMetric(ts *timestamppb.Timestamp, hostID, name string, val float64, tags
 		Tags:       tags,
 		Source:     "snmp",
 	}
+}
+
+// ifMibCanonical mapeia colunas IF-MIB conhecidas (pelo OID) ao nome CANÔNICO
+// snmp.if.* que o backend Telvyn consulta (IfaceMetricsReader, InterfaceRegistryJob,
+// DeviceLensService). Os perfis importados do Datadog batizam essas colunas como
+// community.<vendor>.net_if_* — nome que o backend NÃO lê, então tráfego/erros/
+// status de interface saíam vazios em ~169 perfis. Normalizar por OID (não por
+// texto) conserta todos de uma vez e é no-op pros perfis bundled, que já emitem
+// snmp.if.*. Octets de 32 e 64 bits (HC) mapeiam pro mesmo canônico; o dedup
+// por-row evita série duplicada quando o perfil traz os dois.
+var ifMibCanonical = map[string]string{
+	"1.3.6.1.2.1.2.2.1.10":    "snmp.if.in_octets",    // ifInOctets (32-bit)
+	"1.3.6.1.2.1.31.1.1.1.6":  "snmp.if.in_octets",    // ifHCInOctets (64-bit)
+	"1.3.6.1.2.1.2.2.1.16":    "snmp.if.out_octets",   // ifOutOctets
+	"1.3.6.1.2.1.31.1.1.1.10": "snmp.if.out_octets",   // ifHCOutOctets
+	"1.3.6.1.2.1.2.2.1.14":    "snmp.if.in_errors",    // ifInErrors
+	"1.3.6.1.2.1.2.2.1.20":    "snmp.if.out_errors",   // ifOutErrors
+	"1.3.6.1.2.1.2.2.1.13":    "snmp.if.in_discards",  // ifInDiscards
+	"1.3.6.1.2.1.2.2.1.19":    "snmp.if.out_discards", // ifOutDiscards
+	"1.3.6.1.2.1.2.2.1.8":     "snmp.if.oper_status",  // ifOperStatus
+	"1.3.6.1.2.1.2.2.1.7":     "snmp.if.admin_status", // ifAdminStatus
+	"1.3.6.1.2.1.2.2.1.3":     "snmp.if.type",         // ifType
+	"1.3.6.1.2.1.31.1.1.1.15": "snmp.if.high_speed",   // ifHighSpeed
+	"1.3.6.1.2.1.2.2.1.5":     "snmp.if.speed",        // ifSpeed
+}
+
+// canonMetricName devolve o nome canônico snmp.if.* quando o OID é uma coluna
+// IF-MIB conhecida; senão devolve o nome do perfil inalterado.
+func canonMetricName(oid, fallback string) string {
+	if c, ok := ifMibCanonical[strings.TrimPrefix(oid, ".")]; ok {
+		return c
+	}
+	return fallback
 }
