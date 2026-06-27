@@ -274,6 +274,23 @@ func (e *IngestExporter) PostLogs(ctx context.Context, records []LogRecord) erro
 	return e.PostRaw(ctx, "logs", "application/json", body)
 }
 
+// PostDeviceMetadata envia a identidade do device (metadata.device) pro gateway,
+// que faz upsert no noc_device. Fiel ao Datadog (metadata.device).
+func (e *IngestExporter) PostDeviceMetadata(ctx context.Context, hostID string, device map[string]string) error {
+	if len(device) == 0 {
+		return nil
+	}
+	payload := map[string]any{
+		"host_id": hostID,
+		"device":  device,
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	return e.PostRaw(ctx, "device-metadata", "application/json", body)
+}
+
 // RegisterK8sNode registra o nó no backend (POST /k8s/register, Bearer) →
 // cria o noc_host + check k8s.kubelet (faz o nó aparecer em "Aplicações").
 // Devolve o host_id (bigint como string) pra taggear as métricas de pod.
