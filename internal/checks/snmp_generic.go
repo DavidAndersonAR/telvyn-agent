@@ -31,6 +31,17 @@ import (
 	"github.com/ispwatch/collector/internal/snmp"
 )
 
+// DeviceMetadataPusher emite a identidade do device (metadata.device) pro gateway.
+// Implementado por *otlp.IngestExporter. Injetado uma vez pelo runtime de ingest.
+type DeviceMetadataPusher interface {
+	PostDeviceMetadata(ctx context.Context, hostID string, device map[string]string) error
+}
+
+var deviceMetaPusher DeviceMetadataPusher
+
+// SetDeviceMetadataPusher liga o emit de metadata.device (chamado no startIngestChecks).
+func SetDeviceMetadataPusher(p DeviceMetadataPusher) { deviceMetaPusher = p }
+
 // snmpClientFactory cria um Client conectavel. Em prod aponta para
 // snmp.NewClient; testes injetam fake que ignora UDP.
 type snmpClientFactory func(p snmp.Params) (snmpGenericRunner, error)
@@ -43,6 +54,7 @@ type snmpClientFactory func(p snmp.Params) (snmpGenericRunner, error)
 type snmpGenericRunner interface {
 	GetSysObjectID(ctx context.Context) (string, error)
 	Collect(ctx context.Context, profile *snmp.Profile, hostID string, staticTags map[string]string) ([]*collectorv1.Metric, error)
+	CollectDeviceMetadata(ctx context.Context, profile *snmp.Profile) map[string]string
 	Close() error
 }
 
@@ -63,6 +75,10 @@ func (r *realRunner) GetSysObjectID(ctx context.Context) (string, error) {
 
 func (r *realRunner) Collect(ctx context.Context, profile *snmp.Profile, hostID string, staticTags map[string]string) ([]*collectorv1.Metric, error) {
 	return profile.Collect(ctx, r.c, hostID, staticTags)
+}
+
+func (r *realRunner) CollectDeviceMetadata(ctx context.Context, profile *snmp.Profile) map[string]string {
+	return profile.CollectDeviceMetadata(ctx, r.c)
 }
 
 func (r *realRunner) Close() error {
@@ -96,6 +112,7 @@ type snmpGenericCheck struct {
 	mu             sync.Mutex
 	resolved       *snmp.Profile // populado lazy quando profileID="auto"
 	resolveAttempt bool          // ja tentamos auto-detect (sucesso ou fallback)
+	lastMetaEmit   time.Time     // throttle do emit de metadata.device (15min)
 }
 
 // newSnmpGenericCheck e a Factory registrada em init() para "snmp.generic".
@@ -203,7 +220,36 @@ func (c *snmpGenericCheck) Run(ctx context.Context) ([]*collectorv1.Metric, erro
 		metrics = filtered
 	}
 
+	// Side-channel: emite a identidade do device (metadata.device) pro gateway,
+	// no máximo a cada 15min. Fail-soft — nunca afeta a coleta de métricas.
+	c.maybeEmitDeviceMetadata(ctx, runner, profile)
+
 	return metrics, nil
+}
+
+// maybeEmitDeviceMetadata coleta e emite metadata.device no máximo a cada 15min
+// (e na primeira execução). Fail-soft: nunca afeta a coleta de métricas.
+func (c *snmpGenericCheck) maybeEmitDeviceMetadata(ctx context.Context, runner snmpGenericRunner, profile *snmp.Profile) {
+	if deviceMetaPusher == nil || profile == nil || profile.Metadata == nil {
+		return
+	}
+	c.mu.Lock()
+	due := c.lastMetaEmit.IsZero() || time.Since(c.lastMetaEmit) >= 15*time.Minute
+	if due {
+		c.lastMetaEmit = time.Now()
+	}
+	c.mu.Unlock()
+	if !due {
+		return
+	}
+	dev := runner.CollectDeviceMetadata(ctx, profile)
+	if len(dev) == 0 {
+		return
+	}
+	if err := deviceMetaPusher.PostDeviceMetadata(ctx, c.hostID, dev); err != nil {
+		// fail-soft: só loga em nível baixo se houver logger; senão ignora.
+		_ = err
+	}
 }
 
 // resolveProfile retorna o perfil ativo. Caso profile=auto, faz GET
