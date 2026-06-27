@@ -1099,6 +1099,25 @@ func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.Ing
 		return
 	}
 
+	// Heartbeat: re-registra o collector a cada 60s pra manter o last_seen fresco.
+	// O backend deriva online/offline de noc_collector.last_seen, e SÓ o
+	// /collector/register o atualiza (config-pull e POST de métricas não tocam).
+	// Sem isso o collector vira "offline" após ~120s mesmo coletando normalmente.
+	go func() {
+		t := time.NewTicker(60 * time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+				if _, _, err := exporter.RegisterCollector(ctx, name, []string{"metrics", "checks"}); err != nil {
+					log.Debug("heartbeat: re-registro do collector falhou", "err", err)
+				}
+			}
+		}
+	}()
+
 	// Base raiz do servidor (config-pull fica em /api/collector/v1/config, fora
 	// do /api/ingest/v1).
 	base := strings.TrimRight(strings.TrimSpace(ingestURL), "/")
