@@ -1105,6 +1105,7 @@ func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.Ing
 	base = strings.TrimRight(strings.TrimSuffix(base, "/api/ingest/v1"), "/")
 
 	runtime := checks.New(ctx, log, checks.Default, out)
+	checks.SetDeviceMetadataPusher(exporter)
 	runtime.SetWorkerPools(5, 10)
 	runtime.SetJitter(1000)
 	runtime.SetTagger(checks.NewTagger(config.DefaultTaggerBudget, log))
