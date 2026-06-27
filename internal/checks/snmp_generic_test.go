@@ -47,6 +47,10 @@ func (s *stubRunner) Collect(ctx context.Context, profile *snmp.Profile, hostID 
 	}}, nil
 }
 
+func (s *stubRunner) CollectDeviceMetadata(ctx context.Context, profile *snmp.Profile) map[string]string {
+	return map[string]string{}
+}
+
 func (s *stubRunner) Close() error { s.closed = true; return nil }
 
 func newStubSnmpClientFactory(r *stubRunner, err error) snmpClientFactory {

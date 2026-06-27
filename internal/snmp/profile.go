@@ -63,6 +63,21 @@ type Profile struct {
 	// medições), e emite metric por (row_index × item) com labels herdados
 	// das keys + static_tags. Co-existe com Metrics; ambos rodam em Collect.
 	DiscoveryRules []ProfileDiscoveryRule `yaml:"discovery_rules,omitempty"`
+
+	// Metadata é o bloco "metadata:" (estilo Datadog NDM) — identidade do
+	// device (vendor/model/serial/version...) emitida pro noc_device.
+	Metadata *ProfileMetadata `yaml:"metadata,omitempty"`
+}
+
+// ProfileMetadata é o bloco "metadata:" do profile (estilo Datadog NDM).
+type ProfileMetadata struct {
+	Device map[string]ProfileMetaField `yaml:"device"`
+}
+
+// ProfileMetaField: um campo de identidade do device — valor estático OU de um OID.
+type ProfileMetaField struct {
+	Value  string         `yaml:"value,omitempty"`
+	Symbol *ProfileSymbol `yaml:"symbol,omitempty"`
 }
 
 // ProfileDiscoveryRule é um "discovery rule + item prototypes":
@@ -388,6 +403,37 @@ func (p *Profile) Collect(ctx context.Context, c *Client, hostID string, staticT
 	}
 
 	return out, nil
+}
+
+// CollectDeviceMetadata resolve os campos de metadata.device: valor estático
+// direto, ou GET do OID convertido para string. Fail-soft: campo que falhar é
+// omitido. Devolve mapa vazio se não houver bloco metadata.
+func (p *Profile) CollectDeviceMetadata(ctx context.Context, c *Client) map[string]string {
+	out := make(map[string]string)
+	if p.Metadata == nil {
+		return out
+	}
+	for field, mf := range p.Metadata.Device {
+		if field == "" {
+			continue
+		}
+		if mf.Value != "" && mf.Symbol == nil {
+			out[field] = mf.Value
+			continue
+		}
+		if mf.Symbol == nil || mf.Symbol.OID == "" {
+			continue
+		}
+		pdus, err := c.Get(ctx, []string{mf.Symbol.OID})
+		if err != nil || len(pdus) == 0 {
+			continue
+		}
+		s := strings.TrimSpace(pduString(pdus[0]))
+		if s != "" {
+			out[field] = s
+		}
+	}
+	return out
 }
 
 // executeDiscoveryRule walks keys, walks items, joins por rowSuffix e devolve

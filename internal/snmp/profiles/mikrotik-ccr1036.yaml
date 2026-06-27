@@ -23,6 +23,16 @@ sysobjectid:
 # específico de CCR1036 e deve ser escolhido manualmente no host/check.
 auto_detect: false
 
+metadata:
+  device:
+    vendor:        { value: mikrotik }
+    type:          { value: router }
+    model:         { value: CCR1036 }
+    os_name:       { value: RouterOS }
+    serial_number: { symbol: { oid: 1.3.6.1.4.1.14988.1.1.7.3.0, name: mtxrSerialNumber } }
+    version:       { symbol: { oid: 1.3.6.1.4.1.14988.1.1.7.4.0, name: mtxrFirmwareVersion } }
+    sys_object_id: { symbol: { oid: 1.3.6.1.2.1.1.2.0, name: sysObjectID } }
+
 metrics:
   # ---- Sistema ----
   # Subárvore MIKROTIK-MIB Health/System (alguns devices restringem via ACL).
