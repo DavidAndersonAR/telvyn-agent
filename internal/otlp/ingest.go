@@ -152,6 +152,19 @@ func (e *IngestExporter) PostMetrics(ctx context.Context, metrics []*collectorv1
 	return e.PostRaw(ctx, "metrics", "application/json", body)
 }
 
+// PostSnmpTrap encaminha um SNMP trap já parseado pro backend (noc_device_event).
+// O backend mapeia source_ip→host e classifica o trap_oid (severity + mensagem).
+func (e *IngestExporter) PostSnmpTrap(ctx context.Context, trap map[string]any) error {
+	if len(trap) == 0 {
+		return nil
+	}
+	body, err := json.Marshal(trap)
+	if err != nil {
+		return err
+	}
+	return e.PostRaw(ctx, "snmptrap", "application/json", body)
+}
+
 // ---- Logs (OTLP JSON) -------------------------------------------------
 
 // Shapes JSON do OTLP logs export (resourceLogs → scopeLogs → logRecords).
