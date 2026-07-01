@@ -982,6 +982,14 @@ func runIngestMode(ingestURL string) {
 		log.Debug("pod logs desativados (set ISPWATCH_LOGS_ENABLED=1 pra habilitar)")
 	}
 
+	// SNMP traps (toggle, B2): receptor UDP/162 que encaminha traps do device pro
+	// backend (/api/ingest/v1/snmptrap) — o device avisa na hora, sem esperar o poll.
+	if getenvOr("ISPWATCH_SNMP_TRAPS_ENABLED", "0") == "1" {
+		startSnmpTrapListener(ctx, log, exporter)
+	} else {
+		log.Debug("snmp traps desativados (set ISPWATCH_SNMP_TRAPS_ENABLED=1 pra habilitar)")
+	}
+
 	// Checagens agendadas (config-pull): registra o collector e puxa os checks
 	// que o usuário criou no painel, executando cada um no intervalo. O resultado
 	// vai pelo mesmo canal `out` (PostMetrics entrega). Reusa a máquina mTLS.
