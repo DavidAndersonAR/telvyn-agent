@@ -22,25 +22,30 @@ metrics:
 - mib: SNMPv2-MIB
   symbol: { oid: 1.3.6.1.2.1.1.3.0, name: snmp.sys.uptime }
 
-# ---- Health: voltagens (mV), temperaturas (deci-Celsius), fans (RPM) ----
+# ---- Health (MIKROTIK-MIB mtxrHealth, escalares legados RouterOS 6) ----
+# CORRIGIDO 2026-06-30: o template importado vinha com .8-.14 TODOS trocados —
+# rotulava .10/.11 (mtxrHlTemperature/ProcessorTemperature) como "tensão 5V/12V" e
+# .14 (mtxrHlProcessorFrequency) como "temp board" → a tela mostrava 1200°C (que é
+# 1200 MHz da CPU). Remapeado contra a MIKROTIK-MIB oficial. Temperaturas vêm em
+# deci-Celsius → scale 0.1. (.8/.12/.13 voltam vazios no CCR1036/ROS6, mas ficam
+# mapeados certo p/ outros modelos.) Ver nota: profiles importados têm a mesma
+# armadilha — conferir OID contra a MIB ao criar/importar novos.
 - mib: MIKROTIK-MIB
-  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.8.0,  name: mikrotik.health.voltage_core_mv }
+  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.10.0, name: mikrotik.health.temp_board, scale: 0.1 }      # mtxrHlTemperature (°C)
 - mib: MIKROTIK-MIB
-  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.9.0,  name: mikrotik.health.voltage_3v3_mv }
+  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.11.0, name: mikrotik.health.temp_cpu, scale: 0.1 }         # mtxrHlProcessorTemperature (°C)
 - mib: MIKROTIK-MIB
-  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.10.0, name: mikrotik.health.voltage_5v_mv }
+  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.14.0, name: mikrotik.health.cpu_frequency_mhz }            # mtxrHlProcessorFrequency (MHz) — NÃO é temperatura
 - mib: MIKROTIK-MIB
-  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.11.0, name: mikrotik.health.voltage_12v_mv }
+  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.17.0, name: mikrotik.health.fan_1_rpm }                     # mtxrHlFanSpeed1 (RPM)
 - mib: MIKROTIK-MIB
-  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.12.0, name: mikrotik.health.temp_sensor_dc }
+  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.18.0, name: mikrotik.health.fan_2_rpm }                     # mtxrHlFanSpeed2 (RPM)
 - mib: MIKROTIK-MIB
-  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.13.0, name: mikrotik.health.temp_cpu_dc }
+  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.8.0,  name: mikrotik.health.voltage_v, scale: 0.1 }         # mtxrHlVoltage (deci-V)
 - mib: MIKROTIK-MIB
-  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.14.0, name: mikrotik.health.temp_board_dc }
+  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.12.0, name: mikrotik.health.power_w }                        # mtxrHlPower (W)
 - mib: MIKROTIK-MIB
-  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.17.0, name: mikrotik.health.fan_1_rpm }
-- mib: MIKROTIK-MIB
-  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.18.0, name: mikrotik.health.fan_2_rpm }
+  symbol: { oid: 1.3.6.1.4.1.14988.1.1.3.13.0, name: mikrotik.health.current_ma }                     # mtxrHlCurrent (mA)
 
 discovery_rules:
 # CPU por core — HOST-RESOURCES-MIB::hrProcessorTable

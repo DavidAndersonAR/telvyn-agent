@@ -152,6 +152,38 @@ func (e *IngestExporter) PostMetrics(ctx context.Context, metrics []*collectorv1
 	return e.PostRaw(ctx, "metrics", "application/json", body)
 }
 
+// ---- Device (NDM): inventário + SNMP traps ----------------------------
+
+// PostDeviceMetadata reporta o inventário do device (sysDescr/sysObjectID/serial/
+// modelo/versão) pro backend, que grava em noc_device. hostID é o id do host no
+// backend — o mesmo carimbado nas métricas SNMP (label host_id). Fail-soft.
+func (e *IngestExporter) PostDeviceMetadata(ctx context.Context, hostID string, device map[string]string) error {
+	if hostID == "" || len(device) == 0 {
+		return nil
+	}
+	body, err := json.Marshal(map[string]any{
+		"host_id": hostID,
+		"device":  device,
+	})
+	if err != nil {
+		return err
+	}
+	return e.PostRaw(ctx, "device-metadata", "application/json", body)
+}
+
+// PostSnmpTrap encaminha um SNMP trap já parseado pro backend (noc_device_event).
+// O backend mapeia source_ip→host e classifica o trap_oid (severity + mensagem).
+func (e *IngestExporter) PostSnmpTrap(ctx context.Context, trap map[string]any) error {
+	if len(trap) == 0 {
+		return nil
+	}
+	body, err := json.Marshal(trap)
+	if err != nil {
+		return err
+	}
+	return e.PostRaw(ctx, "snmptrap", "application/json", body)
+}
+
 // ---- Logs (OTLP JSON) -------------------------------------------------
 
 // Shapes JSON do OTLP logs export (resourceLogs → scopeLogs → logRecords).

@@ -982,6 +982,14 @@ func runIngestMode(ingestURL string) {
 		log.Debug("pod logs desativados (set ISPWATCH_LOGS_ENABLED=1 pra habilitar)")
 	}
 
+	// SNMP traps (toggle, B2): receptor UDP/162 que encaminha traps do device pro
+	// backend (/api/ingest/v1/snmptrap) — o device avisa na hora, sem esperar o poll.
+	if getenvOr("ISPWATCH_SNMP_TRAPS_ENABLED", "0") == "1" {
+		startSnmpTrapListener(ctx, log, exporter)
+	} else {
+		log.Debug("snmp traps desativados (set ISPWATCH_SNMP_TRAPS_ENABLED=1 pra habilitar)")
+	}
+
 	// Checagens agendadas (config-pull): registra o collector e puxa os checks
 	// que o usuário criou no painel, executando cada um no intervalo. O resultado
 	// vai pelo mesmo canal `out` (PostMetrics entrega). Reusa a máquina mTLS.
@@ -1099,6 +1107,24 @@ func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.Ing
 		return
 	}
 
+	// Heartbeat: o backend deriva "monitorado" de noc_collector.last_seen_at, que
+	// SÓ é atualizado no POST /collector/register. Sem re-registro periódico o
+	// collector vira "não monitorado" após 120s. Re-registra a cada 60s (fail-soft).
+	go func() {
+		t := time.NewTicker(60 * time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+				if _, _, err := exporter.RegisterCollector(ctx, name, []string{"metrics", "checks"}); err != nil {
+					log.Debug("heartbeat: re-registro do collector falhou", "err", err)
+				}
+			}
+		}
+	}()
+
 	// Base raiz do servidor (config-pull fica em /api/collector/v1/config, fora
 	// do /api/ingest/v1).
 	base := strings.TrimRight(strings.TrimSpace(ingestURL), "/")
@@ -1108,6 +1134,17 @@ func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.Ing
 	runtime.SetWorkerPools(5, 10)
 	runtime.SetJitter(1000)
 	runtime.SetTagger(checks.NewTagger(config.DefaultTaggerBudget, log))
+
+	// B3: reporta o inventário dos devices SNMP (model/OS/serial/sysObjectID) pro
+	// backend (/device-metadata → noc_device → aba Information). Default ligado
+	// (barato, throttled a cada 10min por device); desliga com =0.
+	if getenvOr("ISPWATCH_SNMP_INVENTORY_ENABLED", "1") != "0" {
+		checks.SetDeviceMetadataSink(func(mctx context.Context, hid string, meta map[string]string) {
+			if err := exporter.PostDeviceMetadata(mctx, hid, meta); err != nil {
+				log.Debug("device-metadata post falhou", "err", err, "host", hid)
+			}
+		})
+	}
 
 	pollSecs := 15
 	if v := strings.TrimSpace(getenvOr("ISPWATCH_CHECKS_POLL_SECONDS", "")); v != "" {

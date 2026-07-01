@@ -46,6 +46,24 @@ type snmpGenericRunner interface {
 	Close() error
 }
 
+// identityCollector é opcional: runners que sabem coletar o inventário do device
+// (B3). Só o realRunner implementa — o stub de teste não, então a coleta é pulada.
+type identityCollector interface {
+	CollectIdentity(ctx context.Context) (map[string]string, error)
+}
+
+// deviceMetadataSink recebe o inventário coletado (host_id + campos) pra reportar
+// pro backend. nil = desligado. metaInterval limita a coleta (inventário é ~estático).
+var deviceMetadataSink func(ctx context.Context, hostID string, meta map[string]string)
+
+const metaInterval = 10 * time.Minute
+
+// SetDeviceMetadataSink liga o envio de inventário de device (B3). O modo ingest
+// passa um closure que faz POST /api/ingest/v1/device-metadata.
+func SetDeviceMetadataSink(fn func(ctx context.Context, hostID string, meta map[string]string)) {
+	deviceMetadataSink = fn
+}
+
 // realRunner conecta o snmp.Client real a snmpGenericRunner.
 type realRunner struct{ c *snmp.Client }
 
@@ -63,6 +81,11 @@ func (r *realRunner) GetSysObjectID(ctx context.Context) (string, error) {
 
 func (r *realRunner) Collect(ctx context.Context, profile *snmp.Profile, hostID string, staticTags map[string]string) ([]*collectorv1.Metric, error) {
 	return profile.Collect(ctx, r.c, hostID, staticTags)
+}
+
+// CollectIdentity coleta o inventário do device (B3) via OIDs padrão.
+func (r *realRunner) CollectIdentity(ctx context.Context) (map[string]string, error) {
+	return snmp.CollectIdentity(ctx, r.c)
 }
 
 func (r *realRunner) Close() error {
@@ -96,6 +119,7 @@ type snmpGenericCheck struct {
 	mu             sync.Mutex
 	resolved       *snmp.Profile // populado lazy quando profileID="auto"
 	resolveAttempt bool          // ja tentamos auto-detect (sucesso ou fallback)
+	lastMetaAt     time.Time     // último envio de inventário (B3, throttle metaInterval)
 }
 
 // newSnmpGenericCheck e a Factory registrada em init() para "snmp.generic".
@@ -203,7 +227,36 @@ func (c *snmpGenericCheck) Run(ctx context.Context) ([]*collectorv1.Metric, erro
 		metrics = filtered
 	}
 
+	// B3: reporta o inventário do device (throttled) — fail-soft, não afeta métricas.
+	c.maybeCollectMetadata(ctx, runner)
+
 	return metrics, nil
+}
+
+// maybeCollectMetadata coleta+reporta o inventário do device no máximo a cada
+// metaInterval (B3). Só roda se o modo ingest ligou o sink e o runner sabe coletar.
+func (c *snmpGenericCheck) maybeCollectMetadata(ctx context.Context, runner snmpGenericRunner) {
+	if deviceMetadataSink == nil {
+		return
+	}
+	ic, ok := runner.(identityCollector)
+	if !ok {
+		return
+	}
+	c.mu.Lock()
+	due := c.lastMetaAt.IsZero() || time.Since(c.lastMetaAt) >= metaInterval
+	if due {
+		c.lastMetaAt = time.Now()
+	}
+	c.mu.Unlock()
+	if !due {
+		return
+	}
+	meta, err := ic.CollectIdentity(ctx)
+	if err != nil || len(meta) == 0 {
+		return
+	}
+	deviceMetadataSink(ctx, c.hostID, meta)
 }
 
 // resolveProfile retorna o perfil ativo. Caso profile=auto, faz GET
