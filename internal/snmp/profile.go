@@ -637,15 +637,25 @@ func newMetric(ts *timestamppb.Timestamp, hostID, name string, val float64, tags
 	}
 }
 
-// ifMibCanonical mapeia colunas IF-MIB conhecidas (pelo OID) ao nome CANÔNICO
-// snmp.if.* que o backend Telvyn consulta (IfaceMetricsReader, InterfaceRegistryJob,
-// DeviceLensService). Os perfis importados do Datadog batizam essas colunas como
-// community.<vendor>.net_if_* — nome que o backend NÃO lê, então tráfego/erros/
-// status de interface saíam vazios em ~169 perfis. Normalizar por OID (não por
-// texto) conserta todos de uma vez e é no-op pros perfis bundled, que já emitem
-// snmp.if.*. Octets de 32 e 64 bits (HC) mapeiam pro mesmo canônico; o dedup
-// por-row evita série duplicada quando o perfil traz os dois.
-var ifMibCanonical = map[string]string{
+// oidCanonical mapeia OIDs padrão (universais entre fabricantes) ao nome CANÔNICO
+// snmp.* que o backend Telvyn consulta. Normalizar por OID (não por texto) faz o
+// sinal acender em QUALQUER perfil que ande no OID certo — independente de como o
+// perfil batizou a métrica.
+//
+//   - IF-MIB (tráfego/erros/status): IfaceMetricsReader, InterfaceRegistryJob,
+//     DeviceLensService leem snmp.if.*. Perfis importados batizavam como
+//     community.<vendor>.net_if_* (backend NÃO lia) — a normalização conserta.
+//   - HOST-RESOURCES / UCD / SNMPv2 (CPU/memória/uptime): DeviceMetricsTab e o
+//     MonitorDrawer leem snmp.hr.processor_load, snmp.hr.storage_used,
+//     snmp.mem.avail_kb, snmp.sys.uptime. Os ~167 perfis do Datadog andam nesses
+//     mesmos OIDs padrão mas batizam como hrProcessorLoad/cpu.usage/memory.free —
+//     normalizar faz CPU/memória/uptime acenderem em todo fabricante.
+//
+// É no-op pros perfis hand-curated, que já emitem o canônico nesses mesmos OIDs.
+// Octets de 32 e 64 bits (HC) mapeiam pro mesmo canônico; o dedup por-row evita
+// série duplicada quando o perfil traz os dois.
+var oidCanonical = map[string]string{
+	// --- IF-MIB (interface) ---
 	"1.3.6.1.2.1.2.2.1.10":    "snmp.if.in_octets",    // ifInOctets (32-bit)
 	"1.3.6.1.2.1.31.1.1.1.6":  "snmp.if.in_octets",    // ifHCInOctets (64-bit)
 	"1.3.6.1.2.1.2.2.1.16":    "snmp.if.out_octets",   // ifOutOctets
@@ -659,12 +669,24 @@ var ifMibCanonical = map[string]string{
 	"1.3.6.1.2.1.2.2.1.3":     "snmp.if.type",         // ifType
 	"1.3.6.1.2.1.31.1.1.1.15": "snmp.if.high_speed",   // ifHighSpeed
 	"1.3.6.1.2.1.2.2.1.5":     "snmp.if.speed",        // ifSpeed
+
+	// --- HOST-RESOURCES-MIB (CPU + armazenamento, universal) ---
+	"1.3.6.1.2.1.25.3.3.1.2": "snmp.hr.processor_load", // hrProcessorLoad (% por core)
+	"1.3.6.1.2.1.25.2.3.1.5": "snmp.hr.storage_size",   // hrStorageSize (alloc units)
+	"1.3.6.1.2.1.25.2.3.1.6": "snmp.hr.storage_used",   // hrStorageUsed (alloc units)
+
+	// --- UCD-SNMP-MIB (memória real, em KB) ---
+	"1.3.6.1.4.1.2021.4.5.0": "snmp.mem.total_kb", // memTotalReal
+	"1.3.6.1.4.1.2021.4.6.0": "snmp.mem.avail_kb", // memAvailReal
+
+	// --- SNMPv2-MIB (uptime) ---
+	"1.3.6.1.2.1.1.3.0": "snmp.sys.uptime", // sysUpTime (centésimos de s)
 }
 
-// canonMetricName devolve o nome canônico snmp.if.* quando o OID é uma coluna
-// IF-MIB conhecida; senão devolve o nome do perfil inalterado.
+// canonMetricName devolve o nome canônico snmp.* quando o OID é conhecido
+// (IF-MIB, HOST-RESOURCES, UCD, SNMPv2); senão devolve o nome do perfil inalterado.
 func canonMetricName(oid, fallback string) string {
-	if c, ok := ifMibCanonical[strings.TrimPrefix(oid, ".")]; ok {
+	if c, ok := oidCanonical[strings.TrimPrefix(oid, ".")]; ok {
 		return c
 	}
 	return fallback

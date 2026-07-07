@@ -30,3 +30,35 @@ func TestCanonMetricName_IfMib(t *testing.T) {
 		}
 	}
 }
+
+// Normalização CPU/memória/uptime: os perfis do Datadog andam nos OIDs padrão
+// (HOST-RESOURCES/UCD/SNMPv2) mas batizam como hrProcessorLoad/cpu.usage/memory.free.
+// O DeviceMetricsTab e o MonitorDrawer leem snmp.hr.processor_load / snmp.hr.storage_used
+// / snmp.mem.avail_kb / snmp.sys.uptime — normalizar por OID faz acender em todo fabricante.
+func TestCanonMetricName_CpuMemUptime(t *testing.T) {
+	cases := []struct {
+		oid, in, want string
+	}{
+		// CPU (HOST-RESOURCES hrProcessorLoad) — Datadog batiza cpu.usage/hrProcessorLoad
+		{"1.3.6.1.2.1.25.3.3.1.2", "cpu.usage", "snmp.hr.processor_load"},
+		{"1.3.6.1.2.1.25.3.3.1.2", "hrProcessorLoad", "snmp.hr.processor_load"},
+		// Armazenamento (HOST-RESOURCES hrStorage)
+		{"1.3.6.1.2.1.25.2.3.1.5", "hrStorageSize", "snmp.hr.storage_size"},
+		{"1.3.6.1.2.1.25.2.3.1.6", "memory.used", "snmp.hr.storage_used"},
+		// Memória real (UCD)
+		{"1.3.6.1.4.1.2021.4.5.0", "memory.total", "snmp.mem.total_kb"},
+		{"1.3.6.1.4.1.2021.4.6.0", "memory.free", "snmp.mem.avail_kb"},
+		// Uptime (SNMPv2 sysUpTime), tolera leading dot
+		{"1.3.6.1.2.1.1.3.0", "sysUpTimeInstance", "snmp.sys.uptime"},
+		{".1.3.6.1.2.1.1.3.0", "uptime", "snmp.sys.uptime"},
+		// no-op pros hand-curated que já emitem o canônico no mesmo OID
+		{"1.3.6.1.2.1.25.3.3.1.2", "snmp.hr.processor_load", "snmp.hr.processor_load"},
+		// OID de CPU vendor-específico (MIKROTIK-MIB) NÃO é normalizado — mantém o nome
+		{"1.3.6.1.4.1.14988.1.1.3.1.0", "mikrotik.cpu.load", "mikrotik.cpu.load"},
+	}
+	for _, c := range cases {
+		if got := canonMetricName(c.oid, c.in); got != c.want {
+			t.Errorf("canonMetricName(%q, %q) = %q; want %q", c.oid, c.in, got, c.want)
+		}
+	}
+}
