@@ -1,0 +1,46 @@
+# Telvyn SNMP profile — brother-net-printer
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/brother-net-printer.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.2435.2.3.9.1
+metrics:
+- mib: BROTHER-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2435.2.3.9.1.1.2.9.0
+    name: brJamPlace
+- mib: BROTHER-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2435.2.3.9.1.1.2.10.1.0
+    name: brToner1Low
+- mib: BROTHER-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2435.2.3.9.1.1.2.10.2.0
+    name: brToner2Low
+- mib: BROTHER-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2435.2.3.9.1.1.2.10.3.0
+    name: brToner3Low
+- mib: BROTHER-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2435.2.3.9.1.1.2.10.4.0
+    name: brToner4Low
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: br_info_serial_number
+  symbol:
+    oid: 1.3.6.1.4.1.2435.2.3.9.4.2.1.5.5.1.0
+    name: brInfoSerialNumber
+- tag: vendor
+  value: brother
+- tag: profile
+  value: brother-net-printer

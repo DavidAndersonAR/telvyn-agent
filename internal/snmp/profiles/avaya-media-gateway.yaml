@@ -1,0 +1,331 @@
+# Telvyn SNMP profile — avaya-media-gateway
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/avaya-media-gateway.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.6889.1.45.103.8
+- 1.3.6.1.4.1.6889.1.45.103.41
+metrics:
+- mib: ENTITY-SENSOR-MIB
+  table:
+    oid: 1.3.6.1.2.1.99.1.1
+    name: entPhySensorTable
+  symbols:
+  - oid: 1.3.6.1.2.1.99.1.1.1.4
+    name: entPhySensorValue
+  metric_tags:
+  - tag: ent_phy_sensor_type
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.1
+      name: entPhySensorType
+  - tag: ent_phy_sensor_scale
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.2
+      name: entPhySensorScale
+  - tag: ent_phy_sensor_precision
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.3
+      name: entPhySensorPrecision
+  - tag: ent_phy_sensor_units_display
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.6
+      name: entPhySensorUnitsDisplay
+  - tag: ent_phy_sensor_oper_status
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.5
+      name: entPhySensorOperStatus
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.10
+    name: ospfNbrTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.10.1.6
+    name: ospfNbrState
+  - oid: 1.3.6.1.2.1.14.10.1.7
+    name: ospfNbrEvents
+  - oid: 1.3.6.1.2.1.14.10.1.8
+    name: ospfNbrLsRetransQLen
+  metric_tags:
+  - tag: neighbor_id
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.3
+      name: ospfNbrRtrId
+  - tag: neighbor_ip
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.1
+      name: ospfNbrIpAddr
+  - tag: neighbor_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.6
+      name: ospfNbrState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.11
+    name: ospfVirtNbrTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.11.1.5
+    name: ospfVirtNbrState
+  - oid: 1.3.6.1.2.1.14.11.1.6
+    name: ospfVirtNbrEvents
+  - oid: 1.3.6.1.2.1.14.11.1.7
+    name: ospfVirtNbrLsRetransQLen
+  metric_tags:
+  - tag: neighbor_ip
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.3
+      name: ospfVirtNbrIpAddr
+  - tag: neighbor_id
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.2
+      name: ospfVirtNbrRtrId
+  - tag: neighbor_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.5
+      name: ospfVirtNbrState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.7
+    name: ospfIfTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.7.1.8
+    name: ospfIfRetransInterval
+  - oid: 1.3.6.1.2.1.14.7.1.12
+    name: ospfIfState
+  - oid: 1.3.6.1.2.1.14.7.1.21
+    name: ospfIfLsaCount
+  metric_tags:
+  - tag: ospf_ip_addr
+    symbol:
+      oid: 1.3.6.1.2.1.14.7.1.1
+      name: ospfIfIpAddress
+  - tag: if_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.7.1.12
+      name: ospfIfState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.9
+    name: ospfVirtIfTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.9.1.4
+    name: ospfVirtIfRetransInterval
+  - oid: 1.3.6.1.2.1.14.9.1.7
+    name: ospfVirtIfState
+  - oid: 1.3.6.1.2.1.14.9.1.12
+    name: ospfVirtIfLsaCount
+  metric_tags:
+  - tag: if_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.9.1.7
+      name: ospfVirtIfState
+- mib: UTILIZATION-MANAGEMENT-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.6889.2.1.11.1.1.1.1.5.10
+    name: cpu.usage
+- mib: UTILIZATION-MANAGEMENT-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.6889.2.1.11.1.2.6.1.3.10
+    name: memory.usage
+- mib: G700-MG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.6889.2.9.1.2.2.2.0
+    name: avaya.cmgRemoteSigDscp
+- mib: G700-MG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.6889.2.9.1.2.2.3.0
+    name: avaya.cmgRemoteSig802Priority
+- mib: G700-MG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.6889.2.9.1.2.2.4.0
+    name: avaya.cmgLocalSigDscp
+- mib: G700-MG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.6889.2.9.1.2.2.5.0
+    name: avaya.cmgLocalSig802Priority
+- mib: G700-MG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.6889.2.9.1.2.2.7.0
+    name: avaya.cmgCurrent802Vlan
+- mib: G700-MG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.6889.2.9.1.3.4.0
+    name: avaya.cmgH248LinkErrorCode
+- mib: G700-MG-MIB
+  table:
+    oid: 1.3.6.1.4.1.6889.2.9.1.4.5
+    name: cmgVoipEngineTable
+  symbols:
+  - oid: 1.3.6.1.4.1.6889.2.9.1.4.5.1.6
+    name: avaya.cmgVoipTotalChannels
+  - oid: 1.3.6.1.4.1.6889.2.9.1.4.5.1.7
+    name: avaya.cmgVoipChannelsInUse
+  - oid: 1.3.6.1.4.1.6889.2.9.1.4.5.1.8
+    name: avaya.cmgVoipAverageOccupancy
+  metric_tags:
+  - tag: avaya_cmg_voip_current_ip_address
+    symbol:
+      oid: 1.3.6.1.4.1.6889.2.9.1.4.5.1.4
+      name: avaya.cmgVoipCurrentIpAddress
+  - tag: avaya_cmg_voip_hyperactivity
+    symbol:
+      oid: 1.3.6.1.4.1.6889.2.9.1.4.5.1.9
+      name: avaya.cmgVoipHyperactivity
+  - tag: avaya_cmg_voip_admin_state
+    symbol:
+      oid: 1.3.6.1.4.1.6889.2.9.1.4.5.1.10
+      name: avaya.cmgVoipAdminState
+  - tag: avaya_cmg_voip_dsp_status
+    symbol:
+      oid: 1.3.6.1.4.1.6889.2.9.1.4.5.1.12
+      name: avaya.cmgVoipDspStatus
+- mib: G700-MG-MIB
+  table:
+    oid: 1.3.6.1.4.1.6889.2.9.1.4.6
+    name: cmgVoipDSPCoreTable
+  symbols:
+  - oid: 1.3.6.1.4.1.6889.2.9.1.4.6.1.2
+    name: avaya.cmgDSPCoreTotalChannels
+  - oid: 1.3.6.1.4.1.6889.2.9.1.4.6.1.3
+    name: avaya.cmgDSPCoreChannelsInUse
+  metric_tags:
+  - tag: avaya_cmg_dsp_core_admin_state
+    symbol:
+      oid: 1.3.6.1.4.1.6889.2.9.1.4.6.1.4
+      name: avaya.cmgDSPCoreAdminState
+  - tag: avaya_cmg_dsp_core_status
+    symbol:
+      oid: 1.3.6.1.4.1.6889.2.9.1.4.6.1.5
+      name: avaya.cmgDSPCoreStatus
+  - tag: avaya_cmg_dsp_core_demand_test_result
+    symbol:
+      oid: 1.3.6.1.4.1.6889.2.9.1.4.6.1.7
+      name: avaya.cmgDSPCoreDemandTestResult
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: avaya_cmg_hw_type
+  symbol:
+    oid: 1.3.6.1.4.1.6889.2.9.1.1.1.0
+    name: cmgHWType
+- tag: avaya_cmg_model_number
+  symbol:
+    oid: 1.3.6.1.4.1.6889.2.9.1.1.2.0
+    name: cmgModelNumber
+- tag: avaya_cmg_serial_number
+  symbol:
+    oid: 1.3.6.1.4.1.6889.2.9.1.1.4.0
+    name: cmgSerialNumber
+- tag: avaya_cmg_active_controller_address
+  symbol:
+    oid: 1.3.6.1.4.1.6889.2.9.1.3.2.0
+    name: cmgActiveControllerAddress
+- tag: vendor
+  value: avaya
+- tag: profile
+  value: avaya-media-gateway

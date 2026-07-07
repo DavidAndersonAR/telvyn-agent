@@ -1,0 +1,202 @@
+# Telvyn SNMP profile — hpe-nimble
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/hpe-nimble.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.37447.3.1
+metrics:
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: NIMBLE-MIB
+  table:
+    oid: 1.3.6.1.4.1.37447.1.2
+    name: volTable
+  symbols:
+  - oid: 1.3.6.1.4.1.37447.1.2.1.4
+    name: nimble.volSizeLow
+  - oid: 1.3.6.1.4.1.37447.1.2.1.5
+    name: nimble.volSizeHigh
+  - oid: 1.3.6.1.4.1.37447.1.2.1.6
+    name: nimble.volUsageLow
+  - oid: 1.3.6.1.4.1.37447.1.2.1.7
+    name: nimble.volUsageHigh
+  - oid: 1.3.6.1.4.1.37447.1.2.1.8
+    name: nimble.volReserveLow
+  - oid: 1.3.6.1.4.1.37447.1.2.1.9
+    name: nimble.volReserveHigh
+  - oid: 1.3.6.1.4.1.37447.1.2.1.13
+    name: nimble.volIoReads
+  - oid: 1.3.6.1.4.1.37447.1.2.1.34
+    name: nimble.volIoWrites
+  metric_tags:
+  - tag: nimble_vol_name
+    symbol:
+      oid: 1.3.6.1.4.1.37447.1.2.1.3
+      name: nimble.volName
+  - tag: nimble_vol_online
+    symbol:
+      oid: 1.3.6.1.4.1.37447.1.2.1.10
+      name: nimble.volOnline
+- mib: NIMBLE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.37447.1.3.2.0
+    name: nimble.ioReads
+- mib: NIMBLE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.37447.1.3.4.0
+    name: nimble.ioWrites
+- mib: NIMBLE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.37447.1.3.6.0
+    name: nimble.ioReadTimeMicrosec
+- mib: NIMBLE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.37447.1.3.7.0
+    name: nimble.ioWriteTimeMicrosec
+- mib: NIMBLE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.37447.1.3.8.0
+    name: nimble.ioReadBytes
+- mib: NIMBLE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.37447.1.3.9.0
+    name: nimble.ioSeqReadBytes
+- mib: NIMBLE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.37447.1.3.10.0
+    name: nimble.ioWriteBytes
+- mib: NIMBLE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.37447.1.3.11.0
+    name: nimble.ioSeqWriteBytes
+- mib: NIMBLE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.37447.1.3.12.0
+    name: nimble.diskVolBytesUsedLow
+- mib: NIMBLE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.37447.1.3.13.0
+    name: nimble.diskVolBytesUsedHigh
+- mib: NIMBLE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.37447.1.3.14.0
+    name: nimble.diskSnapBytesUsedLow
+- mib: NIMBLE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.37447.1.3.15.0
+    name: nimble.diskSnapBytesUsedHigh
+- mib: NIMBLE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.37447.1.3.16.0
+    name: nimble.ioNonseqReadHits
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: hp
+- tag: profile
+  value: hpe-nimble

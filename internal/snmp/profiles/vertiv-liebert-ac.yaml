@@ -1,0 +1,92 @@
+# Telvyn SNMP profile — vertiv-liebert-ac
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/vertiv-liebert-ac.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.476.1.42
+metrics:
+- mib: LIEBERT-GP-ENVIRONMENTAL-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.476.1.42.3.4.1.2.1.0
+    name: lgpEnvTemperatureSettingDegF
+- mib: LIEBERT-GP-ENVIRONMENTAL-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.476.1.42.3.4.1.2.2.0
+    name: lgpEnvTemperatureToleranceDegF
+- mib: LIEBERT-GP-ENVIRONMENTAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.476.1.42.3.4.1.2.3
+    name: lgpEnvTemperatureTableDegF
+  symbols:
+  - oid: 1.3.6.1.4.1.476.1.42.3.4.1.2.3.1.3
+    name: lgpEnvTemperatureMeasurementDegF
+  metric_tags:
+  - tag: lgp_env_temperature_descr_deg_f
+    symbol:
+      oid: 1.3.6.1.4.1.476.1.42.3.4.1.2.3.1.2
+      name: lgpEnvTemperatureDescrDegF
+- mib: LIEBERT-GP-ENVIRONMENTAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.476.1.42.3.4.1.3.3
+    name: lgpEnvTemperatureTableDegC
+  symbols:
+  - oid: 1.3.6.1.4.1.476.1.42.3.4.1.3.3.1.3
+    name: lgpEnvTemperatureMeasurementDegC
+- mib: LIEBERT-GP-ENVIRONMENTAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.476.1.42.3.4.2.2.3
+    name: lgpEnvHumidityTableRel
+  symbols:
+  - oid: 1.3.6.1.4.1.476.1.42.3.4.2.2.3.1.3
+    name: lgpEnvHumidityMeasurementRel
+- mib: LIEBERT-GP-ENVIRONMENTAL-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.476.1.42.3.4.6.1.0
+    name: lgpEnvStatisticsComp1RunHr
+- mib: LIEBERT-GP-ENVIRONMENTAL-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.476.1.42.3.4.6.2.0
+    name: lgpEnvStatisticsComp2RunHr
+- mib: LIEBERT-GP-ENVIRONMENTAL-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.476.1.42.3.4.6.3.0
+    name: lgpEnvStatisticsFanRunHr
+- mib: LIEBERT-GP-ENVIRONMENTAL-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.476.1.42.3.4.6.4.0
+    name: lgpEnvStatisticsHumRunHr
+- mib: LIEBERT-GP-ENVIRONMENTAL-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.476.1.42.3.4.6.7.0
+    name: lgpEnvStatisticsReheat1RunHr
+- mib: LIEBERT-GP-ENVIRONMENTAL-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.476.1.42.3.4.6.8.0
+    name: lgpEnvStatisticsReheat2RunHr
+- mib: LIEBERT-GP-ENVIRONMENTAL-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.476.1.42.3.4.6.9.0
+    name: lgpEnvStatisticsReheat3RunHr
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: lgp_agent_ident_model
+  symbol:
+    oid: 1.3.6.1.4.1.476.1.42.2.1.2.0
+    name: lgpAgentIdentModel
+- tag: lgp_agent_ident_serial_number
+  symbol:
+    oid: 1.3.6.1.4.1.476.1.42.2.1.4.0
+    name: lgpAgentIdentSerialNumber
+- tag: vendor
+  value: vertiv
+- tag: profile
+  value: vertiv-liebert-ac

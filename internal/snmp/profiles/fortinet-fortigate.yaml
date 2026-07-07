@@ -1,0 +1,277 @@
+# Telvyn SNMP profile — fortinet-fortigate
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/fortinet-fortigate.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.12356.101.1.*
+metrics:
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.4.1.3.0
+    name: cpu.usage
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.4.1.4.0
+    name: memory.usage
+- mib: FORTINET-FORTIGATE-MIB
+  table:
+    oid: 1.3.6.1.4.1.12356.101.12.2.2
+    name: fgVpnTunTable
+  symbols:
+  - oid: 1.3.6.1.4.1.12356.101.12.2.2.1.18
+    name: fgVpnTunEntInOctets
+  - oid: 1.3.6.1.4.1.12356.101.12.2.2.1.19
+    name: fgVpnTunEntOutOctets
+  - oid: 1.3.6.1.4.1.12356.101.12.2.2.1.20
+    name: fgVpnTunEntStatus
+  metric_tags:
+  - tag: vpn_tunnel
+    symbol:
+      oid: 1.3.6.1.4.1.12356.101.12.2.2.1.2
+      name: fgVpnTunEntPhase1Name
+- mib: FORTINET-FORTIGATE-MIB
+  table:
+    oid: 1.3.6.1.4.1.12356.101.4.4.2
+    name: fgProcessorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.12356.101.4.4.2.1.6
+    name: fgProcessorPktRxCount
+  - oid: 1.3.6.1.4.1.12356.101.4.4.2.1.7
+    name: fgProcessorPktTxCount
+  - oid: 1.3.6.1.4.1.12356.101.4.4.2.1.8
+    name: fgProcessorPktDroppedCount
+  metric_tags:
+  - tag: processor_index
+    symbol:
+      oid: 1.3.6.1.4.1.12356.101.4.4.2.1.1
+      name: fgProcessorEntIndex
+- mib: FORTINET-FORTIGATE-MIB
+  table:
+    oid: 1.3.6.1.4.1.12356.101.4.4.2
+    name: fgProcessorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.12356.101.4.4.2.1.2
+    name: fgProcessorUsage
+  - oid: 1.3.6.1.4.1.12356.101.4.4.2.1.10
+    name: fgProcessorSysUsage
+  metric_tags:
+  - tag: processor_index
+    symbol:
+      oid: 1.3.6.1.4.1.12356.101.4.4.2.1.1
+      name: fgProcessorEntIndex
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.4.1.5.0
+    name: fgSysMemCapacity
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.4.1.9.0
+    name: fgSysLowMemUsage
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.4.1.10.0
+    name: fgSysLowMemCapacity
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.4.1.6.0
+    name: fgSysDiskUsage
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.4.1.7.0
+    name: fgSysDiskCapacity
+- mib: FORTINET-FORTIGATE-MIB
+  table:
+    oid: 1.3.6.1.4.1.12356.101.3.2.1
+    name: fgVdTable
+  symbols:
+  - oid: 1.3.6.1.4.1.12356.101.3.2.1.1.3
+    name: fgVdEntOpMode
+  - oid: 1.3.6.1.4.1.12356.101.3.2.1.1.4
+    name: fgVdEntHaState
+  - oid: 1.3.6.1.4.1.12356.101.3.2.1.1.5
+    name: fgVdEntCpuUsage
+  - oid: 1.3.6.1.4.1.12356.101.3.2.1.1.6
+    name: fgVdEntMemUsage
+  - oid: 1.3.6.1.4.1.12356.101.3.2.1.1.7
+    name: fgVdEntSesCount
+  - oid: 1.3.6.1.4.1.12356.101.3.2.1.1.8
+    name: fgVdEntSesRate
+  metric_tags:
+  - tag: virtualdomain_index
+    symbol:
+      oid: 1.3.6.1.4.1.12356.101.3.2.1.1.1
+      name: fgVdEntIndex
+  - tag: virtualdomain_name
+    symbol:
+      oid: 1.3.6.1.4.1.12356.101.3.2.1.1.2
+      name: fgVdEntName
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.3.1.1.0
+    name: fgVdNumber
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.3.1.2.0
+    name: fgVdMaxVdoms
+- mib: FORTINET-FORTIGATE-MIB
+  table:
+    oid: 1.3.6.1.4.1.12356.101.7.2.1
+    name: fgIntfTable
+  symbols:
+  - oid: 1.3.6.1.4.1.12356.101.7.2.1.1.1
+    name: fgIntfEntVdom
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.4.1.8.0
+    name: fgSysSesCount
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.4.1.11.0
+    name: fgSysSesRate1
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.4.1.15.0
+    name: fgSysSes6Count
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.4.1.16.0
+    name: fgSysSes6Rate1
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.10.100.4.0
+    name: fgApHTTPConnections
+- mib: FORTINET-FORTIGATE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.12356.101.10.100.5.0
+    name: fgApHTTPMaxConnections
+- mib: FORTINET-FORTIGATE-MIB
+  table:
+    oid: 1.3.6.1.4.1.12356.101.5.1.2.1
+    name: fgFwPolStatsTable
+  symbols:
+  - oid: 1.3.6.1.4.1.12356.101.5.1.2.1.1.2
+    name: fgFwPolPktCount
+  - oid: 1.3.6.1.4.1.12356.101.5.1.2.1.1.3
+    name: fgFwPolByteCount
+- mib: FORTINET-FORTIGATE-MIB
+  table:
+    oid: 1.3.6.1.4.1.12356.101.5.1.2.2
+    name: fgFwPol6StatsTable
+  symbols:
+  - oid: 1.3.6.1.4.1.12356.101.5.1.2.2.1.2
+    name: fgFwPol6PktCount
+  - oid: 1.3.6.1.4.1.12356.101.5.1.2.2.1.3
+    name: fgFwPol6ByteCount
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: fortinet
+- tag: profile
+  value: fortinet-fortigate

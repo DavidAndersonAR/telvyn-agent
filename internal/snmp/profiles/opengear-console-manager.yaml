@@ -1,0 +1,418 @@
+# Telvyn SNMP profile — opengear-console-manager
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/opengear-console-manager.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.25049.1.*
+- 1.3.6.1.4.1.25049.1.10
+- 1.3.6.1.4.1.25049.1.11
+metrics:
+- mib: ENTITY-SENSOR-MIB
+  table:
+    oid: 1.3.6.1.2.1.99.1.1
+    name: entPhySensorTable
+  symbols:
+  - oid: 1.3.6.1.2.1.99.1.1.1.4
+    name: entPhySensorValue
+  metric_tags:
+  - tag: ent_phy_sensor_type
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.1
+      name: entPhySensorType
+  - tag: ent_phy_sensor_scale
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.2
+      name: entPhySensorScale
+  - tag: ent_phy_sensor_precision
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.3
+      name: entPhySensorPrecision
+  - tag: ent_phy_sensor_units_display
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.6
+      name: entPhySensorUnitsDisplay
+  - tag: ent_phy_sensor_oper_status
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.5
+      name: entPhySensorOperStatus
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.1.0
+    name: hrSystemUptime
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.5.0
+    name: hrSystemNumUsers
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.6.0
+    name: hrSystemProcesses
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.7.0
+    name: hrSystemMaxProcesses
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.2.3
+    name: hrStorageTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.2.3.1.4
+    name: hrStorageAllocationUnits
+  - oid: 1.3.6.1.2.1.25.2.3.1.5
+    name: hrStorageSize
+  - oid: 1.3.6.1.2.1.25.2.3.1.6
+    name: hrStorageUsed
+  - oid: 1.3.6.1.2.1.25.2.3.1.7
+    name: hrStorageAllocationFailures
+  metric_tags:
+  - tag: storagedesc
+    symbol:
+      oid: 1.3.6.1.2.1.25.2.3.1.3
+      name: hrStorageDescr
+  - tag: storagetype
+    symbol:
+      oid: 1.3.6.1.2.1.25.2.3.1.2
+      name: hrStorageType
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.3.3
+    name: hrProcessorTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.3.3.1.2
+    name: hrProcessorLoad
+  metric_tags:
+  - tag: processorid
+    symbol:
+      oid: 1.3.6.1.2.1.25.3.3.1.1
+      name: hrProcessorFrwID
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.10.1.5.1
+    name: cpu.usage
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.5.0
+    name: memory.total
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.6.0
+    name: memory.free
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.3.0
+    name: ucd.memTotalSwap
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.4.0
+    name: ucd.memAvailSwap
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.11.0
+    name: ucd.memTotalFree
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.12.0
+    name: ucd.memMinimumSwap
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.13.0
+    name: ucd.memShared
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.14.0
+    name: ucd.memBuffer
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.15.0
+    name: ucd.memCached
+- mib: UCD-SNMP-MIB
+  table:
+    oid: 1.3.6.1.4.1.2021.9
+    name: dskTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2021.9.1.6
+    name: ucd.dskTotal
+  - oid: 1.3.6.1.4.1.2021.9.1.7
+    name: ucd.dskAvail
+  - oid: 1.3.6.1.4.1.2021.9.1.8
+    name: ucd.dskUsed
+  - oid: 1.3.6.1.4.1.2021.9.1.9
+    name: ucd.dskPercent
+  - oid: 1.3.6.1.4.1.2021.9.1.10
+    name: ucd.dskPercentNode
+  metric_tags:
+  - tag: ucd_dsk_path
+    symbol:
+      oid: 1.3.6.1.4.1.2021.9.1.2
+      name: ucd.dskPath
+  - tag: ucd_dsk_device
+    symbol:
+      oid: 1.3.6.1.4.1.2021.9.1.3
+      name: ucd.dskDevice
+  - tag: ucd_dsk_error_flag
+    symbol:
+      oid: 1.3.6.1.4.1.2021.9.1.100
+      name: ucd.dskErrorFlag
+- mib: UCD-DISKIO-MIB
+  table:
+    oid: 1.3.6.1.4.1.2021.13.15.1.1
+    name: diskIOTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.5
+    name: ucd.diskIOReads
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.6
+    name: ucd.diskIOWrites
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.9
+    name: ucd.diskIOLA1
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.10
+    name: ucd.diskIOLA5
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.11
+    name: ucd.diskIOLA15
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.12
+    name: ucd.diskIONReadX
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.13
+    name: ucd.diskIONWrittenX
+  metric_tags:
+  - tag: ucd_disk_io_device
+    symbol:
+      oid: 1.3.6.1.4.1.2021.13.15.1.1.2
+      name: ucd.diskIODevice
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.9.0
+    name: ucd.ssCpuUser
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.10.0
+    name: ucd.ssCpuSystem
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.11.0
+    name: ucd.ssCpuIdle
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.50.0
+    name: ucd.ssCpuRawUser
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.51.0
+    name: ucd.ssCpuRawNice
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.52.0
+    name: ucd.ssCpuRawSystem
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.53.0
+    name: ucd.ssCpuRawIdle
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.54.0
+    name: ucd.ssCpuRawWait
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.55.0
+    name: ucd.ssCpuRawKernel
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.56.0
+    name: ucd.ssCpuRawInterrupt
+- mib: OG-STATUSv2-MIB
+  table:
+    oid: 1.3.6.1.4.1.25049.17.2
+    name: ogSerialPortTable
+  symbols:
+  - oid: 1.3.6.1.4.1.25049.17.2.1.10
+    name: ogSerialPortRxBytes
+  - oid: 1.3.6.1.4.1.25049.17.2.1.11
+    name: ogSerialPortTxBytes
+  metric_tags:
+  - tag: og_serial_port_label
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.2.1.2
+      name: ogSerialPortLabel
+  - tag: og_serial_port_speed
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.2.1.3
+      name: ogSerialPortSpeed
+  - tag: og_serial_port_data_bits
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.2.1.4
+      name: ogSerialPortDataBits
+  - tag: og_serial_port_parity
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.2.1.5
+      name: ogSerialPortParity
+  - tag: og_serial_port_stop_bits
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.2.1.6
+      name: ogSerialPortStopBits
+  - tag: og_serial_port_flow_control
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.2.1.7
+      name: ogSerialPortFlowControl
+  - tag: og_serial_port_mode
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.2.1.8
+      name: ogSerialPortMode
+  - tag: og_serial_port_log_level
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.2.1.9
+      name: ogSerialPortLogLevel
+  - tag: og_serial_port_dcd
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.2.1.16
+      name: ogSerialPortDCD
+  - tag: og_serial_port_dtr
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.2.1.17
+      name: ogSerialPortDTR
+  - tag: og_serial_port_dsr
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.2.1.18
+      name: ogSerialPortDSR
+  - tag: og_serial_port_cts
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.2.1.19
+      name: ogSerialPortCTS
+  - tag: og_serial_port_rts
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.2.1.20
+      name: ogSerialPortRTS
+- mib: OG-STATUSv2-MIB
+  table:
+    oid: 1.3.6.1.4.1.25049.17.17
+    name: ogCellModemTable
+  symbols:
+  - oid: 1.3.6.1.4.1.25049.17.17.1.16
+    name: ogCellModemCounter
+  metric_tags:
+  - tag: og_cell_modem_vendor
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.17.1.2
+      name: ogCellModemVendor
+  - tag: og_cell_modem_model
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.17.1.3
+      name: ogCellModemModel
+  - tag: og_cell_modem_enabled
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.17.1.4
+      name: ogCellModemEnabled
+  - tag: og_cell_modem_connected
+    symbol:
+      oid: 1.3.6.1.4.1.25049.17.17.1.5
+      name: ogCellModemConnected
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: opengear
+- tag: profile
+  value: opengear-console-manager

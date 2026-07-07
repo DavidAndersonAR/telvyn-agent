@@ -1,0 +1,280 @@
+# Telvyn SNMP profile — synology-disk-station
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/synology-disk-station.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.6574.*
+metrics:
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.10.1.5.1
+    name: cpu.usage
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.2.3.1.6.1
+    name: memory.total
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.2.3.1.6.6
+    name: hrMemoryBuffers
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.2.3.1.6.7
+    name: hrCachedMemory
+- mib: SYNOLOGY-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.6574.1.2.0
+    name: synology.system.temperature
+- mib: SYNOLOGY-DISK-MIB
+  table:
+    oid: 1.3.6.1.4.1.6574.2.1
+    name: diskTable
+  symbols:
+  - oid: 1.3.6.1.4.1.6574.2.1.1.6
+    name: synology.diskTemperature
+  metric_tags:
+  - tag: synology_disk_id
+    symbol:
+      oid: 1.3.6.1.4.1.6574.2.1.1.2
+      name: synology.diskID
+  - tag: synology_disk_model
+    symbol:
+      oid: 1.3.6.1.4.1.6574.2.1.1.3
+      name: synology.diskModel
+  - tag: synology_disk_type
+    symbol:
+      oid: 1.3.6.1.4.1.6574.2.1.1.4
+      name: synology.diskType
+  - tag: synology_disk_status
+    symbol:
+      oid: 1.3.6.1.4.1.6574.2.1.1.5
+      name: synology.diskStatus
+- mib: SYNOLOGY-RAID-MIB
+  table:
+    oid: 1.3.6.1.4.1.6574.3.1
+    name: raidTable
+  symbols:
+  - oid: 1.3.6.1.4.1.6574.3.1.1.4
+    name: synology.raidFreeSize
+  - oid: 1.3.6.1.4.1.6574.3.1.1.5
+    name: synology.raidTotalSize
+  metric_tags:
+  - tag: synology_raid_name
+    symbol:
+      oid: 1.3.6.1.4.1.6574.3.1.1.2
+      name: synology.raid.raidName
+  - tag: synology_raid_status
+    symbol:
+      oid: 1.3.6.1.4.1.6574.3.1.1.3
+      name: synology.raid.raidStatus
+- mib: SYNOLOGY-SMART-MIB
+  table:
+    oid: 1.3.6.1.4.1.6574.5.1
+    name: diskSMARTTable
+  symbols:
+  - oid: 1.3.6.1.4.1.6574.5.1.1.5
+    name: synology.diskSMARTAttrCurrent
+  - oid: 1.3.6.1.4.1.6574.5.1.1.7
+    name: synology.diskSMARTAttrThreshold
+  metric_tags:
+  - tag: synology_disk_smart_info_dev_name
+    symbol:
+      oid: 1.3.6.1.4.1.6574.5.1.1.2
+      name: synology.diskSMARTInfoDevName
+  - tag: synology_disk_smart_attr_name
+    symbol:
+      oid: 1.3.6.1.4.1.6574.5.1.1.3
+      name: synology.diskSMARTAttrName
+  - tag: synology_disk_smart_attr_id
+    symbol:
+      oid: 1.3.6.1.4.1.6574.5.1.1.4
+      name: synology.diskSMARTAttrId
+  - tag: synology_disk_smart_attr_status
+    symbol:
+      oid: 1.3.6.1.4.1.6574.5.1.1.9
+      name: synology.diskSMARTAttrStatus
+- mib: SYNOLOGY-SERVICES-MIB
+  table:
+    oid: 1.3.6.1.4.1.6574.6.1
+    name: serviceTable
+  symbols:
+  - oid: 1.3.6.1.4.1.6574.6.1.1.3
+    name: synology.serviceUsers
+  metric_tags:
+  - tag: synology_service_name
+    symbol:
+      oid: 1.3.6.1.4.1.6574.6.1.1.2
+      name: synology.serviceName
+- mib: SYNOLOGY-STORAGEIO-MIB
+  table:
+    oid: 1.3.6.1.4.1.6574.101.1
+    name: storageIOTable
+  symbols:
+  - oid: 1.3.6.1.4.1.6574.101.1.1.5
+    name: synology.storageIOReads
+  - oid: 1.3.6.1.4.1.6574.101.1.1.6
+    name: synology.storageIOWrites
+  - oid: 1.3.6.1.4.1.6574.101.1.1.8
+    name: synology.storageIOLA
+  - oid: 1.3.6.1.4.1.6574.101.1.1.12
+    name: synology.storageIONReadX
+  - oid: 1.3.6.1.4.1.6574.101.1.1.13
+    name: synology.storageIONWrittenX
+  metric_tags:
+  - tag: synology_storage_io_device
+    symbol:
+      oid: 1.3.6.1.4.1.6574.101.1.1.2
+      name: synology.storageIODevice
+- mib: SYNOLOGY-SPACEIO-MIB
+  table:
+    oid: 1.3.6.1.4.1.6574.102.1
+    name: spaceIOTable
+  symbols:
+  - oid: 1.3.6.1.4.1.6574.102.1.1.5
+    name: synology.spaceIOReads
+  - oid: 1.3.6.1.4.1.6574.102.1.1.6
+    name: synology.spaceIOWrites
+  - oid: 1.3.6.1.4.1.6574.102.1.1.8
+    name: synology.spaceIOLA
+  - oid: 1.3.6.1.4.1.6574.102.1.1.12
+    name: synology.spaceIONReadX
+  - oid: 1.3.6.1.4.1.6574.102.1.1.13
+    name: synology.spaceIONWrittenX
+  metric_tags:
+  - tag: synology_space_io_device
+    symbol:
+      oid: 1.3.6.1.4.1.6574.102.1.1.2
+      name: synology.spaceIODevice
+- mib: SYNOLOGY-GPUINFO-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.6574.108.2.0
+    name: synology.gpuUtilization
+- mib: SYNOLOGY-GPUINFO-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.6574.108.3.0
+    name: synology.gpuMemoryUtilization
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: synology_model_name
+  symbol:
+    oid: 1.3.6.1.4.1.6574.1.5.1.0
+    name: modelName
+- tag: synology_serial_number
+  symbol:
+    oid: 1.3.6.1.4.1.6574.1.5.2.0
+    name: serialNumber
+- tag: synology_version
+  symbol:
+    oid: 1.3.6.1.4.1.6574.1.5.3.0
+    name: version
+- tag: vendor
+  value: synology
+- tag: profile
+  value: synology-disk-station

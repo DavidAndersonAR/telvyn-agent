@@ -1,0 +1,320 @@
+# Telvyn SNMP profile — mcafee-web-gateway
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/mcafee-web-gateway.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.1230.2.7.1.1
+metrics:
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.5.1.0
+    name: cpu.usage
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.5.15.0
+    name: memory.usage
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.1.2.0
+    name: mcafee.mwg.stMalwareDetected
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.1.3.0
+    name: mcafee.mwg.stConnectionsLegitimate
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.1.4.0
+    name: mcafee.mwg.stBlockedByAntiMalware
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.1.5.0
+    name: mcafee.mwg.stConnectionsBlocked
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.1.6.0
+    name: mcafee.mwg.stBlockedByMediaFilter
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.1.7.0
+    name: mcafee.mwg.stBlockedByURLFilter
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.1.8.0
+    name: mcafee.mwg.stMimeType
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.1.9.0
+    name: mcafee.mwg.stCategories
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.2.1.0
+    name: mcafee.mwg.stHttpRequests
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.2.2.0
+    name: mcafee.mwg.stHttpTraffic
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.2.3.0
+    name: mcafee.mwg.stHttpBytesFromClient
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.2.4.0
+    name: mcafee.mwg.stHttpBytesFromServer
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.2.5.0
+    name: mcafee.mwg.stHttpBytesToClient
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.2.6.0
+    name: mcafee.mwg.stHttpBytesToServer
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.3.1.0
+    name: mcafee.mwg.stHttpsRequests
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.3.2.0
+    name: mcafee.mwg.stHttpsTraffic
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.3.3.0
+    name: mcafee.mwg.stHttpsBytesFromClient
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.3.4.0
+    name: mcafee.mwg.stHttpsBytesFromServer
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.3.5.0
+    name: mcafee.mwg.stHttpsBytesToClient
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.3.6.0
+    name: mcafee.mwg.stHttpsBytesToServer
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.4.1.0
+    name: mcafee.mwg.stFtpTraffic
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.4.2.0
+    name: mcafee.mwg.stFtpBytesFromClient
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.4.3.0
+    name: mcafee.mwg.stFtpBytesFromServer
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.4.4.0
+    name: mcafee.mwg.stFtpBytesToClient
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.4.5.0
+    name: mcafee.mwg.stFtpBytesToServer
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.5.2.0
+    name: mcafee.mwg.stClientCount
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.5.3.0
+    name: mcafee.mwg.stConnectedSockets
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.5.6.0
+    name: mcafee.mwg.stResolveHostViaDNS
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.5.7.0
+    name: mcafee.mwg.stTimeConsumedByRuleEngine
+- mib: MCAFEE-MWG-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.2.5.8.0
+    name: mcafee.mwg.stTimeForTransaction
+- mib: MCAFEE-MWG-MIB
+  table:
+    oid: 1.3.6.1.4.1.1230.2.7.2.1.10
+    name: stCategoriesTable
+  symbols:
+  - oid: 1.3.6.1.4.1.1230.2.7.2.1.10.1.2
+    name: mcafee.mwg.stCategoryCount
+  metric_tags:
+  - tag: mcafee_mwg_st_category_name
+    symbol:
+      oid: 1.3.6.1.4.1.1230.2.7.2.1.10.1.1
+      name: mcafee.mwg.stCategoryName
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: mcafee_mwg_k_product_name
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.1.0
+    name: kProductName
+- tag: mcafee_mwg_k_company_name
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.2.0
+    name: kCompanyName
+- tag: mcafee_mwg_k_product_version
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.3.0
+    name: kProductVersion
+- tag: mcafee_mwg_k_major_version
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.4.0
+    name: kMajorVersion
+- tag: mcafee_mwg_k_minor_version
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.5.0
+    name: kMinorVersion
+- tag: mcafee_mwg_k_micro_version
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.6.0
+    name: kMicroVersion
+- tag: mcafee_mwg_k_hotfix_version
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.7.0
+    name: kHotfixVersion
+- tag: mcafee_mwg_k_custom_version
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.8.0
+    name: kCustomVersion
+- tag: mcafee_mwg_k_revision
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.9.0
+    name: kRevision
+- tag: mcafee_mwg_k_build_number
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.10.0
+    name: kBuildNumber
+- tag: mcafee_mwg_p_am_engine_version
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.20.1.0
+    name: pAMEngineVersion
+- tag: mcafee_mwg_p_mfe_engine_version
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.20.3.0
+    name: pMFEEngineVersion
+- tag: mcafee_mwg_p_mfedat_version
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.20.4.0
+    name: pMFEDATVersion
+- tag: mcafee_mwg_p_am_proactive_version
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.20.5.0
+    name: pAMProactiveVersion
+- tag: mcafee_mwg_p_tsdb_version
+  symbol:
+    oid: 1.3.6.1.4.1.1230.2.7.1.20.6.0
+    name: pTSDBVersion
+- tag: vendor
+  value: mcafee
+- tag: profile
+  value: mcafee-web-gateway
