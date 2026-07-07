@@ -1,0 +1,203 @@
+# Telvyn SNMP profile — mikrotik-router
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/mikrotik-router.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.14988.1.*
+metrics:
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: MIKROTIK-MIB
+  table:
+    oid: 1.3.6.1.4.1.14988.1.1.19.1
+    name: mtxrOpticalTable
+  symbols:
+  - oid: 1.3.6.1.4.1.14988.1.1.19.1.1.6
+    name: mtxrOpticalTemperature
+  - oid: 1.3.6.1.4.1.14988.1.1.19.1.1.10
+    name: mtxrOpticalRxPower
+  - oid: 1.3.6.1.4.1.14988.1.1.19.1.1.7
+    name: mtxrOpticalSupplyVoltage
+  - oid: 1.3.6.1.4.1.14988.1.1.19.1.1.8
+    name: mtxrOpticalTxBiasCurrent
+  - oid: 1.3.6.1.4.1.14988.1.1.19.1.1.5
+    name: mtxrOpticalWavelength
+  - oid: 1.3.6.1.4.1.14988.1.1.19.1.1.9
+    name: mtxrOpticalTxPower
+  metric_tags:
+  - tag: mtxr_optical_index
+    symbol:
+      oid: 1.3.6.1.4.1.14988.1.1.19.1.1.1
+      name: mtxrOpticalIndex
+  - tag: mtxr_optical_name
+    symbol:
+      oid: 1.3.6.1.4.1.14988.1.1.19.1.1.2
+      name: mtxrOpticalName
+  - tag: mtxr_optical_tx_fault
+    symbol:
+      oid: 1.3.6.1.4.1.14988.1.1.19.1.1.4
+      name: mtxrOpticalTxFault
+  - tag: mtxr_optical_rx_loss
+    symbol:
+      oid: 1.3.6.1.4.1.14988.1.1.19.1.1.3
+      name: mtxrOpticalRxLoss
+- mib: MIKROTIK-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14988.1.1.3.6
+    name: mtxrHlCpuTemperature
+- mib: MIKROTIK-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14988.1.1.3.10
+    name: mtxrHlTemperature
+- mib: MIKROTIK-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14988.1.1.3.8
+    name: mtxrHlVoltage
+- mib: MIKROTIK-MIB
+  table:
+    oid: 1.3.6.1.4.1.14988.1.1.15.1
+    name: mtxrPOETable
+  symbols:
+  - oid: 1.3.6.1.4.1.14988.1.1.15.1.1.6
+    name: mtxrPOEPower
+  - oid: 1.3.6.1.4.1.14988.1.1.15.1.1.4
+    name: mtxrPOEVoltage
+  - oid: 1.3.6.1.4.1.14988.1.1.15.1.1.5
+    name: mtxrPOECurrent
+  metric_tags:
+  - tag: mtxr_poe_interface_index
+    symbol:
+      oid: 1.3.6.1.4.1.14988.1.1.15.1.1.1
+      name: mtxrPOEInterfaceIndex
+  - tag: mtxr_poe_name
+    symbol:
+      oid: 1.3.6.1.4.1.14988.1.1.15.1.1.2
+      name: mtxrPOEName
+  - tag: mtxr_poe_status
+    symbol:
+      oid: 1.3.6.1.4.1.14988.1.1.15.1.1.3
+      name: mtxrPOEStatus
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.3.3.1.2.1
+    name: cpu.usage
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.2.3
+    name: hrStorageTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.2.3.1.5
+    name: memory.total
+  - oid: 1.3.6.1.2.1.25.2.3.1.6
+    name: memory.used
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: mikrotik
+- tag: profile
+  value: mikrotik-router

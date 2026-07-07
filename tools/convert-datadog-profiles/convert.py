@@ -24,7 +24,8 @@ DEFAULT_OWN = [
     "1.3.6.1.4.1.9.1",            # cisco-ios (catch-all IOS)
     "1.3.6.1.4.1.9.12.3.1.3",     # cisco-nx-os
     "1.3.6.1.4.1.2636.1.1.1",     # juniper-junos
-    "1.3.6.1.4.1.14988.1",        # mikrotik-routeros
+    # mikrotik-routeros/ccr1036 (nossos) REMOVIDOS: os OIDs de saúde estavam errados
+    # (temp lia power/corrente/freq). Adotamos o mikrotik-router do Datadog (OIDs certos).
     "1.3.6.1.4.1.8072.3.2.10",    # linux-net-snmp
     "1.3.6.1.4.1.5875",           # fiberhome-an5516
 ]

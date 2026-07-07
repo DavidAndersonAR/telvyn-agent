@@ -97,9 +97,9 @@ func TestMatchSysObjectID_Table(t *testing.T) {
 		{"1.3.6.1.4.1.9.1.99999999", "cisco-ios", true, "IOS nao listado pelo Datadog cai no nosso cisco-ios (prefix 9.1.*)"},
 		{"1.3.6.1.4.1.9.12.3.1.3.1234", "cisco-nx-os", true, "Cisco Nexus — NX-OS prefix mais especifico vence sobre IOS"},
 		{"1.3.6.1.4.1.2636.1.1.1.99", "juniper-junos", true, "Juniper MX"},
-		{"1.3.6.1.4.1.14988.1", "mikrotik-routeros", true, "Mikrotik exact"},
-		{"1.3.6.1.4.1.14988.1.2.3", "mikrotik-routeros", true, "Mikrotik subtree"},
-		{".1.3.6.1.4.1.14988.1", "mikrotik-routeros", true, "leading dot tolerado"},
+		{"1.3.6.1.4.1.14988.1", "mikrotik-router", true, "Mikrotik exact (perfil do Datadog)"},
+		{"1.3.6.1.4.1.14988.1.2.3", "mikrotik-router", true, "Mikrotik subtree"},
+		{".1.3.6.1.4.1.14988.1", "mikrotik-router", true, "leading dot tolerado"},
 		{"1.3.6.1.4.1.99999.1", "", false, "vendor desconhecido — nao casa"},
 		{"", "", false, "string vazia"},
 	}
@@ -126,28 +126,28 @@ func TestMatchSysObjectID_SkipsManualOnlyProfiles(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ccr, err := LoadProfile("mikrotik-ccr1036")
+	// generic-device (Datadog) casa 1.3.6.1.4.* (árvore enterprises inteira) mas é
+	// manual-only (auto_detect:false) — nunca deve ser sugerido pelo auto-match;
+	// o fallback de device desconhecido fica a cargo do generic-snmpv2 (via código).
+	gd, err := LoadProfile("generic-device")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if ccr.autoDetectEnabled() {
-		t.Fatal("mikrotik-ccr1036 deve ser manual-only para nao capturar todo RouterOS")
+	if gd.autoDetectEnabled() {
+		t.Fatal("generic-device deve ser manual-only (auto_detect:false) pra nao roubar o auto-match")
 	}
 
-	got, ok := MatchSysObjectID(all, "1.3.6.1.4.1.14988.1")
-	if !ok {
-		t.Fatal("MatchSysObjectID deveria encontrar fallback RouterOS")
-	}
-	if got.Name != "mikrotik-routeros" {
-		t.Fatalf("MatchSysObjectID escolheu %q, want mikrotik-routeros", got.Name)
+	// Um enterprise OID que nenhum perfil específico cobre NÃO deve casar — se
+	// generic-device auto-matchasse, ele engoliria qualquer device desconhecido.
+	if got, ok := MatchSysObjectID(all, "1.3.6.1.4.1.99999.7"); ok {
+		t.Fatalf("MatchSysObjectID casou %q num OID desconhecido — generic-device nao devia auto-matchar", got.Name)
 	}
 }
 
-// Teste CHECK-05 reinterpretado: perfil mikrotik deve carregar OIDs da
-// MIKROTIK-MIB (.1.3.6.1.4.1.14988.*). Sem isso o plan nao fechou a
-// reinterpretacao do requirement.
+// Perfil mikrotik (mikrotik-router, adotado do Datadog) deve carregar OIDs da
+// MIKROTIK-MIB (.1.3.6.1.4.1.14988.*) — incl. temperatura em .3.6/.3.10.
 func TestMikrotikProfile_ContainsMikrotikMIB(t *testing.T) {
-	p, err := LoadProfile("mikrotik-routeros")
+	p, err := LoadProfile("mikrotik-router")
 	if err != nil {
 		t.Fatal(err)
 	}
