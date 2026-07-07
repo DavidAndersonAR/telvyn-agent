@@ -1,0 +1,224 @@
+# Telvyn SNMP profile — ibm-datapower-gateway
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/ibm-datapower-gateway.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.14685.1.8
+metrics:
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.14.2.0
+    name: cpu.usage
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.5.1.0
+    name: memory.usage
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.52.2.0
+    name: ibm.dpStatusSystemUsageLoad
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.12.1.0
+    name: ibm.dpStatusTCPSummaryestablished
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.12.2.0
+    name: ibm.dpStatusTCPSummarysynsent
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.12.3.0
+    name: ibm.dpStatusTCPSummarysynreceived
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.12.4.0
+    name: ibm.dpStatusTCPSummaryfinwait1
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.12.5.0
+    name: ibm.dpStatusTCPSummaryfinwait2
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.12.6.0
+    name: ibm.dpStatusTCPSummarytimewait
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.12.7.0
+    name: ibm.dpStatusTCPSummaryclosed
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.12.8.0
+    name: ibm.dpStatusTCPSummaryclosewait
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.12.9.0
+    name: ibm.dpStatusTCPSummarylastack
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.12.10.0
+    name: ibm.dpStatusTCPSummarylisten
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.12.11.0
+    name: ibm.dpStatusTCPSummaryclosing
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.13.1.0
+    name: ibm.dpStatusConnectionsAcceptedtenSeconds
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.13.2.0
+    name: ibm.dpStatusConnectionsAcceptedoneMinute
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.13.3.0
+    name: ibm.dpStatusConnectionsAcceptedtenMinutes
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.13.4.0
+    name: ibm.dpStatusConnectionsAcceptedoneHour
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.13.5.0
+    name: ibm.dpStatusConnectionsAcceptedoneDay
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.29.1.0
+    name: ibm.dpStatusFilesystemStatusFreeEncrypted
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.29.2.0
+    name: ibm.dpStatusFilesystemStatusTotalEncrypted
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.29.5.0
+    name: ibm.dpStatusFilesystemStatusFreeTemporary
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.29.6.0
+    name: ibm.dpStatusFilesystemStatusTotalTemporary
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.29.7.0
+    name: ibm.dpStatusFilesystemStatusFreeInternal
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.29.8.0
+    name: ibm.dpStatusFilesystemStatusTotalInternal
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.55.1.0
+    name: ibm.dpStatusEnvironmentalSensorssystemTemp
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.55.2.0
+    name: ibm.dpStatusEnvironmentalSensorscpu1Temp
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.55.3.0
+    name: ibm.dpStatusEnvironmentalSensorscpu2Temp
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.55.4.0
+    name: ibm.dpStatusEnvironmentalSensorscpu1rpm
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.55.5.0
+    name: ibm.dpStatusEnvironmentalSensorscpu2rpm
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.55.6.0
+    name: ibm.dpStatusEnvironmentalSensorschassis1rpm
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.55.7.0
+    name: ibm.dpStatusEnvironmentalSensorschassis2rpm
+- mib: DATAPOWER-STATUS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.14685.3.1.55.8.0
+    name: ibm.dpStatusEnvironmentalSensorschassis3rpm
+- mib: DATAPOWER-STATUS-MIB
+  table:
+    oid: 1.3.6.1.4.1.14685.3.1.28
+    name: dpStatusLogTargetStatusTable
+  symbols:
+  - oid: 1.3.6.1.4.1.14685.3.1.28.1.3
+    name: ibm.dpStatusLogTargetStatusEventsProcessed
+  - oid: 1.3.6.1.4.1.14685.3.1.28.1.4
+    name: ibm.dpStatusLogTargetStatusEventsDropped
+  - oid: 1.3.6.1.4.1.14685.3.1.28.1.5
+    name: ibm.dpStatusLogTargetStatusEventsPending
+  metric_tags:
+  - tag: ibm_dp_status_log_target_status_log_target
+    symbol:
+      oid: 1.3.6.1.4.1.14685.3.1.28.1.1
+      name: ibm.dpStatusLogTargetStatusLogTarget
+  - tag: ibm_dp_status_log_target_status_status
+    symbol:
+      oid: 1.3.6.1.4.1.14685.3.1.28.1.2
+      name: ibm.dpStatusLogTargetStatusStatus
+- mib: DATAPOWER-STATUS-MIB
+  table:
+    oid: 1.3.6.1.4.1.14685.3.1.124
+    name: dpStatusNetworkInterfaceStatusTable
+  symbols:
+  - oid: 1.3.6.1.4.1.14685.3.1.124.1.19
+    name: ibm.dpStatusNetworkInterfaceStatusRxHCBytes
+  - oid: 1.3.6.1.4.1.14685.3.1.124.1.20
+    name: ibm.dpStatusNetworkInterfaceStatusRxHCPackets
+  - oid: 1.3.6.1.4.1.14685.3.1.124.1.21
+    name: ibm.dpStatusNetworkInterfaceStatusRxErrors2
+  - oid: 1.3.6.1.4.1.14685.3.1.124.1.22
+    name: ibm.dpStatusNetworkInterfaceStatusRxDrops2
+  - oid: 1.3.6.1.4.1.14685.3.1.124.1.23
+    name: ibm.dpStatusNetworkInterfaceStatusTxHCBytes
+  - oid: 1.3.6.1.4.1.14685.3.1.124.1.24
+    name: ibm.dpStatusNetworkInterfaceStatusTxHCPackets
+  - oid: 1.3.6.1.4.1.14685.3.1.124.1.25
+    name: ibm.dpStatusNetworkInterfaceStatusTxErrors2
+  - oid: 1.3.6.1.4.1.14685.3.1.124.1.26
+    name: ibm.dpStatusNetworkInterfaceStatusTxDrops2
+  metric_tags:
+  - tag: ibm_dp_status_network_interface_status_interface_type
+    symbol:
+      oid: 1.3.6.1.4.1.14685.3.1.124.1.2
+      name: ibm.dpStatusNetworkInterfaceStatusInterfaceType
+  - tag: ibm_dp_status_network_interface_status_name
+    symbol:
+      oid: 1.3.6.1.4.1.14685.3.1.124.1.3
+      name: ibm.dpStatusNetworkInterfaceStatusName
+  - tag: ibm_dp_status_network_interface_status_ip_type
+    symbol:
+      oid: 1.3.6.1.4.1.14685.3.1.124.1.6
+      name: ibm.dpStatusNetworkInterfaceStatusIPType
+  - tag: ibm_dp_status_network_interface_status_ip
+    symbol:
+      oid: 1.3.6.1.4.1.14685.3.1.124.1.7
+      name: ibm.dpStatusNetworkInterfaceStatusIP
+  - tag: ibm_dp_status_network_interface_status_mac_address
+    symbol:
+      oid: 1.3.6.1.4.1.14685.3.1.124.1.9
+      name: ibm.dpStatusNetworkInterfaceStatusMACAddress
+  - tag: ibm_dp_status_network_interface_status_admin_status
+    symbol:
+      oid: 1.3.6.1.4.1.14685.3.1.124.1.4
+      name: ibm.dpStatusNetworkInterfaceStatusAdminStatus
+  - tag: ibm_dp_status_network_interface_status_oper_status
+    symbol:
+      oid: 1.3.6.1.4.1.14685.3.1.124.1.5
+      name: ibm.dpStatusNetworkInterfaceStatusOperStatus
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: ibm
+- tag: profile
+  value: ibm-datapower-gateway

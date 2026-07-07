@@ -27,11 +27,19 @@ func TestLoadProfile_AllParseable(t *testing.T) {
 			if p.Name != name {
 				t.Fatalf("LoadProfile(%q): Name=%q want %q", name, p.Name, name)
 			}
-			if len(p.SysObjectID) == 0 {
-				t.Fatalf("LoadProfile(%q): sysobjectid vazio", name)
+			// Todo perfil precisa ser util: OU casa por sysObjectID OU coleta
+			// metrica. Profiles do Datadog trazem duas categorias legitimas que
+			// nao tem os dois: "manual-only" (metrica, sem sysObjectID — operador
+			// escolhe pelo nome, ex. brocade/a10) e "so-identificacao"
+			// (sysObjectID, sem metrica — ex. tripplite/zebra-printer, fiel ao DD).
+			if len(p.SysObjectID) == 0 && len(p.Metrics) == 0 {
+				t.Fatalf("LoadProfile(%q): sem sysobjectid E sem metrics (perfil inutil)", name)
 			}
-			if len(p.Metrics) == 0 {
-				t.Fatalf("LoadProfile(%q): sem metrics", name)
+			// Metricas presentes tem que ser bem formadas (symbol OU table).
+			for _, m := range p.Metrics {
+				if m.Symbol == nil && m.Table == nil {
+					t.Fatalf("LoadProfile(%q): metric sem symbol nem table", name)
+				}
 			}
 		})
 	}
@@ -85,7 +93,8 @@ func TestMatchSysObjectID_Table(t *testing.T) {
 		descricao  string
 	}{
 		{"1.3.6.1.4.1.8072.3.2.10", "linux-net-snmp", true, "exact match Linux net-snmp"},
-		{"1.3.6.1.4.1.9.1.617", "cisco-ios", true, "Cisco Catalyst 3850 (prefix 1.3.6.1.4.1.9.1.*)"},
+		{"1.3.6.1.4.1.9.1.617", "cisco-catalyst", true, "Catalyst 3560G48TS — perfil Datadog especifico vence o cisco-ios generico"},
+		{"1.3.6.1.4.1.9.1.99999999", "cisco-ios", true, "IOS nao listado pelo Datadog cai no nosso cisco-ios (prefix 9.1.*)"},
 		{"1.3.6.1.4.1.9.12.3.1.3.1234", "cisco-nx-os", true, "Cisco Nexus — NX-OS prefix mais especifico vence sobre IOS"},
 		{"1.3.6.1.4.1.2636.1.1.1.99", "juniper-junos", true, "Juniper MX"},
 		{"1.3.6.1.4.1.14988.1", "mikrotik-routeros", true, "Mikrotik exact"},
@@ -165,6 +174,49 @@ func TestMikrotikProfile_ContainsMikrotikMIB(t *testing.T) {
 	}
 	if !found {
 		t.Fatal("perfil mikrotik-routeros nao referencia OIDs MIKROTIK-MIB (.1.3.6.1.4.1.14988.*)")
+	}
+}
+
+// Catalogo Datadog importado (Fase 2 da adocao NDM): o conversor traz a
+// biblioteca oficial BSD-3 alem dos nossos hand-curated. Guarda contra
+// regressao que esvazie o import ou quebre as categorias novas.
+func TestCatalog_DatadogLibraryImported(t *testing.T) {
+	all, err := AllProfiles()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(all) < 150 {
+		t.Fatalf("catalogo tem %d perfis, esperado >=150 (biblioteca Datadog + hand-curated)", len(all))
+	}
+	// Perfis Datadog representativos existem e carregam.
+	for _, name := range []string{"cisco-catalyst", "fortinet-fortigate", "apc_ups", "aruba-switch"} {
+		if _, err := LoadProfile(name); err != nil {
+			t.Fatalf("perfil Datadog %q ausente/ilegivel: %v", name, err)
+		}
+	}
+	// Manual-only: tem metrica de interface mas nenhum sysObjectID (nunca auto-matcha).
+	man, err := LoadProfile("brocade")
+	if err != nil {
+		t.Fatalf("manual-only brocade ausente: %v", err)
+	}
+	if len(man.SysObjectID) != 0 {
+		t.Fatalf("brocade deveria ser manual-only (sem sysObjectID), tem %d", len(man.SysObjectID))
+	}
+	if len(man.Metrics) == 0 {
+		t.Fatal("brocade manual-only deveria ter metricas de interface")
+	}
+	// Nenhum resquicio dos community-templates (nomenclatura community.*).
+	for _, p := range all {
+		for _, m := range p.Metrics {
+			if m.Symbol != nil && strings.HasPrefix(m.Symbol.Name, "community.") {
+				t.Fatalf("perfil %q ainda emite metrica community.* (lixo Zabbix): %s", p.Name, m.Symbol.Name)
+			}
+			for _, s := range m.Symbols {
+				if strings.HasPrefix(s.Name, "community.") {
+					t.Fatalf("perfil %q ainda emite metrica community.* (lixo Zabbix): %s", p.Name, s.Name)
+				}
+			}
+		}
 	}
 }
 

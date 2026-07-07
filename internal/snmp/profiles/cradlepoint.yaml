@@ -1,0 +1,216 @@
+# Telvyn SNMP profile — cradlepoint
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/cradlepoint.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.20992.2.*
+- 1.3.6.1.4.1.20992.2.1
+- 1.3.6.1.4.1.20992.2.2
+- 1.3.6.1.4.1.20992.2.3
+- 1.3.6.1.4.1.20992.2.4
+- 1.3.6.1.4.1.20992.2.5
+- 1.3.6.1.4.1.20992.2.6
+- 1.3.6.1.4.1.20992.2.7
+- 1.3.6.1.4.1.20992.2.8
+- 1.3.6.1.4.1.20992.2.9
+- 1.3.6.1.4.1.20992.2.10
+- 1.3.6.1.4.1.20992.2.11
+- 1.3.6.1.4.1.20992.2.12
+- 1.3.6.1.4.1.20992.2.13
+- 1.3.6.1.4.1.20992.2.14
+- 1.3.6.1.4.1.20992.2.15
+- 1.3.6.1.4.1.20992.2.16
+- 1.3.6.1.4.1.20992.2.17
+- 1.3.6.1.4.1.20992.2.18
+- 1.3.6.1.4.1.20992.2.19
+- 1.3.6.1.4.1.20992.2.20
+- 1.3.6.1.4.1.20992.2.21
+- 1.3.6.1.4.1.20992.2.22
+- 1.3.6.1.4.1.20992.2.23
+- 1.3.6.1.4.1.20992.2.24
+- 1.3.6.1.4.1.20992.2.25
+- 1.3.6.1.4.1.20992.2.26
+- 1.3.6.1.4.1.20992.2.27
+- 1.3.6.1.4.1.20992.2.28
+- 1.3.6.1.4.1.20992.2.29
+- 1.3.6.1.4.1.20992.2.30
+- 1.3.6.1.4.1.20992.2.31
+- 1.3.6.1.4.1.20992.2.32
+- 1.3.6.1.4.1.20992.2.33
+- 1.3.6.1.4.1.20992.2.34
+- 1.3.6.1.4.1.20992.2.35
+- 1.3.6.1.4.1.20992.2.36
+- 1.3.6.1.4.1.20992.2.37
+- 1.3.6.1.4.1.20992.2.38
+- 1.3.6.1.4.1.20992.2.39
+- 1.3.6.1.4.1.20992.2.40
+- 1.3.6.1.4.1.20992.2.41
+- 1.3.6.1.4.1.20992.2.42
+- 1.3.6.1.4.1.20992.2.43
+- 1.3.6.1.4.1.20992.2.44
+- 1.3.6.1.4.1.20992.2.45
+- 1.3.6.1.4.1.20992.2.46
+metrics:
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: WIPIPE-MIB
+  table:
+    oid: 1.3.6.1.4.1.20992.1.2.2
+    name: mdmTable
+  symbols:
+  - oid: 1.3.6.1.4.1.20992.1.2.2.1.4
+    name: cradlepoint.mdmSignalStrength
+  - oid: 1.3.6.1.4.1.20992.1.2.2.1.6
+    name: cradlepoint.mdmECIO
+  - oid: 1.3.6.1.4.1.20992.1.2.2.1.12
+    name: cradlepoint.mdmCINR
+  - oid: 1.3.6.1.4.1.20992.1.2.2.1.13
+    name: cradlepoint.mdmSINR
+  - oid: 1.3.6.1.4.1.20992.1.2.2.1.14
+    name: cradlepoint.mdmRSRP
+  - oid: 1.3.6.1.4.1.20992.1.2.2.1.15
+    name: cradlepoint.mdmRSRQ
+  metric_tags:
+  - tag: cradlepoint_mdm_descr
+    symbol:
+      oid: 1.3.6.1.4.1.20992.1.2.2.1.2
+      name: cradlepoint.mdmDescr
+  - tag: cradlepoint_mdm_port
+    symbol:
+      oid: 1.3.6.1.4.1.20992.1.2.2.1.3
+      name: cradlepoint.mdmPort
+  - tag: cradlepoint_mdm_rfband
+    symbol:
+      oid: 1.3.6.1.4.1.20992.1.2.2.1.17
+      name: cradlepoint.mdmRFBAND
+  - tag: cradlepoint_mdm_homecarrier
+    symbol:
+      oid: 1.3.6.1.4.1.20992.1.2.2.1.18
+      name: cradlepoint.mdmHOMECARRIER
+  - tag: cradlepoint_mdm_apn
+    symbol:
+      oid: 1.3.6.1.4.1.20992.1.2.2.1.21
+      name: cradlepoint.mdmAPN
+  - tag: cradlepoint_mdm_rfchannel
+    symbol:
+      oid: 1.3.6.1.4.1.20992.1.2.2.1.22
+      name: cradlepoint.mdmRFCHANNEL
+  - tag: cradlepoint_mdm_status
+    symbol:
+      oid: 1.3.6.1.4.1.20992.1.2.2.1.5
+      name: cradlepoint.mdmStatus
+  - tag: cradlepoint_mdm_roam
+    symbol:
+      oid: 1.3.6.1.4.1.20992.1.2.2.1.16
+      name: cradlepoint.mdmROAM
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: cradlepoint
+- tag: profile
+  value: cradlepoint

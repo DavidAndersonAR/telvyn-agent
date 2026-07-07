@@ -1,0 +1,423 @@
+# Telvyn SNMP profile — infoblox-ipam
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/infoblox-ipam.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.7779.1.1004
+- 1.3.6.1.4.1.7779.1.1204
+- 1.3.6.1.4.1.7779.1.1301
+- 1.3.6.1.4.1.7779.1.1302
+- 1.3.6.1.4.1.7779.1.1303
+- 1.3.6.1.4.1.7779.1.1401
+- 1.3.6.1.4.1.7779.1.1402
+- 1.3.6.1.4.1.7779.1.1403
+- 1.3.6.1.4.1.7779.1.1404
+- 1.3.6.1.4.1.7779.1.1405
+- 1.3.6.1.4.1.7779.1.1406
+- 1.3.6.1.4.1.7779.1.1407
+- 1.3.6.1.4.1.7779.1.1411
+- 1.3.6.1.4.1.7779.1.1412
+- 1.3.6.1.4.1.7779.1.1413
+- 1.3.6.1.4.1.7779.1.1414
+- 1.3.6.1.4.1.7779.1.1421
+- 1.3.6.1.4.1.7779.1.1422
+- 1.3.6.1.4.1.7779.1.1423
+- 1.3.6.1.4.1.7779.1.1424
+- 1.3.6.1.4.1.7779.1.1425
+- 1.3.6.1.4.1.7779.1.1431
+- 1.3.6.1.4.1.7779.1.1441
+- 1.3.6.1.4.1.7779.1.1442
+- 1.3.6.1.4.1.7779.1.1443
+- 1.3.6.1.4.1.7779.1.1444
+- 1.3.6.1.4.1.7779.1.1501
+- 1.3.6.1.4.1.7779.1.1502
+- 1.3.6.1.4.1.7779.1.1503
+- 1.3.6.1.4.1.7779.1.1504
+- 1.3.6.1.4.1.7779.1.1505
+- 1.3.6.1.4.1.7779.1.1506
+- 1.3.6.1.4.1.7779.1.1507
+- 1.3.6.1.4.1.7779.1.1511
+- 1.3.6.1.4.1.7779.1.1512
+- 1.3.6.1.4.1.7779.1.1513
+- 1.3.6.1.4.1.7779.1.1514
+- 1.3.6.1.4.1.7779.1.1521
+- 1.3.6.1.4.1.7779.1.1522
+- 1.3.6.1.4.1.7779.1.1523
+- 1.3.6.1.4.1.7779.1.1524
+- 1.3.6.1.4.1.7779.1.1525
+- 1.3.6.1.4.1.7779.1.1541
+- 1.3.6.1.4.1.7779.1.1542
+- 1.3.6.1.4.1.7779.1.1543
+- 1.3.6.1.4.1.7779.1.1544
+- 1.3.6.1.4.1.7779.2.2
+- 1.3.6.1.4.1.7779.2.4
+- 1.3.6.1.4.1.7779.3.4
+- 1.3.6.1.4.1.7779.3.7
+metrics:
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.1.0
+    name: hrSystemUptime
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.5.0
+    name: hrSystemNumUsers
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.6.0
+    name: hrSystemProcesses
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.7.0
+    name: hrSystemMaxProcesses
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.2.3
+    name: hrStorageTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.2.3.1.4
+    name: hrStorageAllocationUnits
+  - oid: 1.3.6.1.2.1.25.2.3.1.5
+    name: hrStorageSize
+  - oid: 1.3.6.1.2.1.25.2.3.1.6
+    name: hrStorageUsed
+  - oid: 1.3.6.1.2.1.25.2.3.1.7
+    name: hrStorageAllocationFailures
+  metric_tags:
+  - tag: storagedesc
+    symbol:
+      oid: 1.3.6.1.2.1.25.2.3.1.3
+      name: hrStorageDescr
+  - tag: storagetype
+    symbol:
+      oid: 1.3.6.1.2.1.25.2.3.1.2
+      name: hrStorageType
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.3.3
+    name: hrProcessorTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.3.3.1.2
+    name: hrProcessorLoad
+  metric_tags:
+  - tag: processorid
+    symbol:
+      oid: 1.3.6.1.2.1.25.3.3.1.1
+      name: hrProcessorFrwID
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.3.0
+    name: ucd.memTotalSwap
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.4.0
+    name: ucd.memAvailSwap
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.11.0
+    name: ucd.memTotalFree
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.12.0
+    name: ucd.memMinimumSwap
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.13.0
+    name: ucd.memShared
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.14.0
+    name: ucd.memBuffer
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.15.0
+    name: ucd.memCached
+- mib: UCD-SNMP-MIB
+  table:
+    oid: 1.3.6.1.4.1.2021.9
+    name: dskTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2021.9.1.6
+    name: ucd.dskTotal
+  - oid: 1.3.6.1.4.1.2021.9.1.7
+    name: ucd.dskAvail
+  - oid: 1.3.6.1.4.1.2021.9.1.8
+    name: ucd.dskUsed
+  - oid: 1.3.6.1.4.1.2021.9.1.9
+    name: ucd.dskPercent
+  - oid: 1.3.6.1.4.1.2021.9.1.10
+    name: ucd.dskPercentNode
+  metric_tags:
+  - tag: ucd_dsk_path
+    symbol:
+      oid: 1.3.6.1.4.1.2021.9.1.2
+      name: ucd.dskPath
+  - tag: ucd_dsk_device
+    symbol:
+      oid: 1.3.6.1.4.1.2021.9.1.3
+      name: ucd.dskDevice
+  - tag: ucd_dsk_error_flag
+    symbol:
+      oid: 1.3.6.1.4.1.2021.9.1.100
+      name: ucd.dskErrorFlag
+- mib: UCD-DISKIO-MIB
+  table:
+    oid: 1.3.6.1.4.1.2021.13.15.1.1
+    name: diskIOTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.5
+    name: ucd.diskIOReads
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.6
+    name: ucd.diskIOWrites
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.9
+    name: ucd.diskIOLA1
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.10
+    name: ucd.diskIOLA5
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.11
+    name: ucd.diskIOLA15
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.12
+    name: ucd.diskIONReadX
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.13
+    name: ucd.diskIONWrittenX
+  metric_tags:
+  - tag: ucd_disk_io_device
+    symbol:
+      oid: 1.3.6.1.4.1.2021.13.15.1.1.2
+      name: ucd.diskIODevice
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.9.0
+    name: ucd.ssCpuUser
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.10.0
+    name: ucd.ssCpuSystem
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.11.0
+    name: ucd.ssCpuIdle
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.50.0
+    name: ucd.ssCpuRawUser
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.51.0
+    name: ucd.ssCpuRawNice
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.52.0
+    name: ucd.ssCpuRawSystem
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.53.0
+    name: ucd.ssCpuRawIdle
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.54.0
+    name: ucd.ssCpuRawWait
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.55.0
+    name: ucd.ssCpuRawKernel
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.56.0
+    name: ucd.ssCpuRawInterrupt
+- mib: IB-PLATFORMONE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.7779.3.1.1.2.1.8.1.1.0
+    name: cpu.usage
+- mib: IB-PLATFORMONE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.7779.3.1.1.2.1.8.2.1.0
+    name: memory.usage
+- mib: IB-DHCPONE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.7779.3.1.1.4.1.4.0
+    name: ibDhcpDeferredQueueSize
+- mib: IB-DNSONE-MIB
+  table:
+    oid: 1.3.6.1.4.1.7779.3.1.1.3.1.1
+    name: ibZoneStatisticsTable
+  symbols:
+  - oid: 1.3.6.1.4.1.7779.3.1.1.3.1.1.1.2
+    name: ibBindZoneSuccess
+  - oid: 1.3.6.1.4.1.7779.3.1.1.3.1.1.1.3
+    name: ibBindZoneReferral
+  - oid: 1.3.6.1.4.1.7779.3.1.1.3.1.1.1.4
+    name: ibBindZoneNxRRset
+  - oid: 1.3.6.1.4.1.7779.3.1.1.3.1.1.1.5
+    name: ibBindZoneNxDomain
+  - oid: 1.3.6.1.4.1.7779.3.1.1.3.1.1.1.6
+    name: ibBindZoneRecursion
+  - oid: 1.3.6.1.4.1.7779.3.1.1.3.1.1.1.7
+    name: ibBindZoneFailure
+  metric_tags:
+  - tag: ib_bind_zone_name
+    symbol:
+      oid: 1.3.6.1.4.1.7779.3.1.1.3.1.1.1.1
+      name: ibBindZoneName
+- mib: IB-DNSONE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.7779.3.1.1.3.1.3.1.0
+    name: ibDDNSUpdateSuccess
+- mib: IB-DNSONE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.7779.3.1.1.3.1.3.2.0
+    name: ibDDNSUpdateFailure
+- mib: IB-DNSONE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.7779.3.1.1.3.1.3.3.0
+    name: ibDDNSUpdateReject
+- mib: IB-DNSONE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.7779.3.1.1.3.1.3.4.0
+    name: ibDDNSUpdatePrerequisiteReject
+- mib: IB-DNSONE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.7779.3.1.1.3.1.6.0
+    name: ibDnsQueryRate
+- mib: IB-PLATFORMONE-MIB
+  table:
+    oid: 1.3.6.1.4.1.7779.3.1.1.2.1.2
+    name: ibClusterReplicationStatusTable
+  symbols:
+  - oid: 1.3.6.1.4.1.7779.3.1.1.2.1.2.1.3
+    name: ibNodeQueueFromMaster
+  - oid: 1.3.6.1.4.1.7779.3.1.1.2.1.2.1.5
+    name: ibNodeQueueToMaster
+  metric_tags:
+  - tag: ib_node_ip_address
+    symbol:
+      oid: 1.3.6.1.4.1.7779.3.1.1.2.1.2.1.1
+      name: ibNodeIPAddress
+  - tag: ib_node_replication_status
+    symbol:
+      oid: 1.3.6.1.4.1.7779.3.1.1.2.1.2.1.2
+      name: ibNodeReplicationStatus
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: ib_hardware_type
+  symbol:
+    oid: 1.3.6.1.4.1.7779.3.1.1.2.1.4.0
+    name: ibHardwareType
+- tag: ib_serial_number
+  symbol:
+    oid: 1.3.6.1.4.1.7779.3.1.1.2.1.6.0
+    name: ibSerialNumber
+- tag: ib_nios_version
+  symbol:
+    oid: 1.3.6.1.4.1.7779.3.1.1.2.1.7.0
+    name: ibNiosVersion
+- tag: vendor
+  value: infoblox
+- tag: profile
+  value: infoblox-ipam

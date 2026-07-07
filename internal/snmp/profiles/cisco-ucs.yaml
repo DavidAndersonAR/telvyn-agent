@@ -1,0 +1,346 @@
+# Telvyn SNMP profile — cisco-ucs
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/cisco-ucs.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.9.1.1683
+- 1.3.6.1.4.1.9.1.2178
+- 1.3.6.1.4.1.9.1.2492
+- 1.3.6.1.4.1.9.12.3.1.3.1062
+metrics:
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: CISCO-UNIFIED-COMPUTING-COMPUTE-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.719.1.9.14
+    name: cucsComputeMbPowerStatsTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.719.1.9.14.1.4
+    name: cucsComputeMbPowerStatsConsumedPower
+  - oid: 1.3.6.1.4.1.9.9.719.1.9.14.1.8
+    name: cucsComputeMbPowerStatsInputCurrent
+  - oid: 1.3.6.1.4.1.9.9.719.1.9.14.1.12
+    name: cucsComputeMbPowerStatsInputVoltage
+  metric_tags:
+  - tag: cucs_compute_mb_power_stats_dn
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.9.14.1.2
+      name: cucsComputeMbPowerStatsDn
+- mib: CISCO-UNIFIED-COMPUTING-COMPUTE-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.719.1.9.35
+    name: cucsComputeRackUnitTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.719.1.9.35.1.9
+    name: memory.free
+  - oid: 1.3.6.1.4.1.9.9.719.1.9.35.1.49
+    name: memory.total
+- mib: CISCO-UNIFIED-COMPUTING-COMPUTE-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.719.1.9.44
+    name: cucsComputeRackUnitMbTempStatsTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.719.1.9.44.1.4
+    name: cucsComputeRackUnitMbTempStatsAmbientTemp
+  - oid: 1.3.6.1.4.1.9.9.719.1.9.44.1.8
+    name: cucsComputeRackUnitMbTempStatsFrontTemp
+  - oid: 1.3.6.1.4.1.9.9.719.1.9.44.1.13
+    name: cucsComputeRackUnitMbTempStatsIoh1Temp
+  - oid: 1.3.6.1.4.1.9.9.719.1.9.44.1.21
+    name: cucsComputeRackUnitMbTempStatsRearTemp
+  metric_tags:
+  - tag: cucs_compute_rack_unit_mb_temp_stats_dn
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.9.44.1.2
+      name: cucsComputeRackUnitMbTempStatsDn
+- mib: CISCO-UNIFIED-COMPUTING-MEMORY-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.719.1.30.11
+    name: cucsMemoryUnitTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.719.1.30.11.1.6
+    name: cucsMemoryUnitCapacity
+  metric_tags:
+  - tag: cucs_memory_unit_dn
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.30.11.1.2
+      name: cucsMemoryUnitDn
+  - tag: cucs_memory_unit_location
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.30.11.1.11
+      name: cucsMemoryUnitLocation
+  - tag: cucs_memory_unit_type
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.30.11.1.23
+      name: cucsMemoryUnitType
+  - tag: cucs_memory_unit_oper_state
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.30.11.1.13
+      name: cucsMemoryUnitOperState
+  - tag: cucs_memory_unit_operability
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.30.11.1.14
+      name: cucsMemoryUnitOperability
+  - tag: cucs_memory_unit_perf
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.30.11.1.15
+      name: cucsMemoryUnitPerf
+  - tag: cucs_memory_unit_power
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.30.11.1.16
+      name: cucsMemoryUnitPower
+  - tag: cucs_memory_unit_presence
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.30.11.1.17
+      name: cucsMemoryUnitPresence
+- mib: CISCO-UNIFIED-COMPUTING-MEMORY-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.719.1.30.12
+    name: cucsMemoryUnitEnvStatsTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.719.1.30.12.1.6
+    name: cucsMemoryUnitEnvStatsTemperature
+  metric_tags:
+  - tag: cucs_memory_unit_env_stats_dn
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.30.12.1.2
+      name: cucsMemoryUnitEnvStatsDn
+- mib: CISCO-UNIFIED-COMPUTING-PROCESSOR-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.719.1.41.2
+    name: cucsProcessorEnvStatsTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.719.1.41.2.1.10
+    name: cucsProcessorEnvStatsTemperature
+  metric_tags:
+  - tag: cucs_processor_env_stats_dn
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.41.2.1.2
+      name: cucsProcessorEnvStatsDn
+- mib: CISCO-UNIFIED-COMPUTING-STORAGE-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.719.1.45.34
+    name: cucsStorageFlexFlashCardTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.19
+    name: cucsStorageFlexFlashCardReadIOErrorCount
+  - oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.22
+    name: cucsStorageFlexFlashCardSize
+  - oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.26
+    name: cucsStorageFlexFlashCardWriteIOErrorCount
+  metric_tags:
+  - tag: cucs_storage_flex_flash_card_dn
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.2
+      name: cucsStorageFlexFlashCardDn
+  - tag: cucs_storage_flex_flash_card_mode
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.6
+      name: cucsStorageFlexFlashCardCardMode
+  - tag: cucs_storage_flex_flash_card_card_type
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.7
+      name: cucsStorageFlexFlashCardCardType
+  - tag: cucs_storage_flex_flash_card_connection_protocol
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.8
+      name: cucsStorageFlexFlashCardConnectionProtocol
+  - tag: cucs_storage_flex_flash_card_revision
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.20
+      name: cucsStorageFlexFlashCardRevision
+  - tag: cucs_storage_flex_flash_card_serial
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.21
+      name: cucsStorageFlexFlashCardSerial
+  - tag: cucs_storage_flex_flash_card_drives_enabled
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.29
+      name: cucsStorageFlexFlashCardDrivesEnabled
+  - tag: cucs_storage_flex_flash_card_card_health
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.5
+      name: cucsStorageFlexFlashCardCardHealth
+  - tag: cucs_storage_flex_flash_card_operability
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.17
+      name: cucsStorageFlexFlashCardOperability
+  - tag: cucs_storage_flex_flash_card_presence
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.18
+      name: cucsStorageFlexFlashCardPresence
+  - tag: cucs_storage_flex_flash_card_card_state
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.27
+      name: cucsStorageFlexFlashCardCardState
+  - tag: cucs_storage_flex_flash_card_card_sync
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.34.1.28
+      name: cucsStorageFlexFlashCardCardSync
+- mib: CISCO-UNIFIED-COMPUTING-STORAGE-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.719.1.45.36
+    name: cucsStorageFlexFlashDriveTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.719.1.45.36.1.18
+    name: cucsStorageFlexFlashDriveSize
+  metric_tags:
+  - tag: cucs_storage_flex_flash_drive_dn
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.36.1.2
+      name: cucsStorageFlexFlashDriveDn
+  - tag: cucs_storage_flex_flash_drive_connection_protocol
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.36.1.5
+      name: cucsStorageFlexFlashDriveConnectionProtocol
+  - tag: cucs_storage_flex_flash_drive_drive_type
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.36.1.8
+      name: cucsStorageFlexFlashDriveDriveType
+  - tag: cucs_storage_flex_flash_drive_model
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.36.1.10
+      name: cucsStorageFlexFlashDriveModel
+  - tag: cucs_storage_flex_flash_drive_name
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.36.1.11
+      name: cucsStorageFlexFlashDriveName
+  - tag: cucs_storage_flex_flash_drive_visible
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.36.1.21
+      name: cucsStorageFlexFlashDriveVisible
+  - tag: cucs_storage_flex_flash_drive_removable
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.36.1.22
+      name: cucsStorageFlexFlashDriveRemovable
+  - tag: cucs_storage_flex_flash_drive_rw_type
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.36.1.23
+      name: cucsStorageFlexFlashDriveRWType
+  - tag: cucs_storage_flex_flash_drive_state
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.36.1.7
+      name: cucsStorageFlexFlashDriveDriveState
+  - tag: cucs_storage_flex_flash_drive_operability
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.36.1.14
+      name: cucsStorageFlexFlashDriveOperability
+  - tag: cucs_storage_flex_flash_drive_presence
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.36.1.15
+      name: cucsStorageFlexFlashDrivePresence
+  - tag: cucs_storage_flex_flash_drive_operation_state
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.719.1.45.36.1.25
+      name: cucsStorageFlexFlashDriveOperationState
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: cisco
+- tag: profile
+  value: cisco-ucs

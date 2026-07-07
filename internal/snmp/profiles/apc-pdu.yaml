@@ -1,0 +1,166 @@
+# Telvyn SNMP profile — apc-pdu
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/apc-pdu.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.318.1.3.4.*
+metrics:
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.5.0
+    name: tcpActiveOpens
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.6.0
+    name: tcpPassiveOpens
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.7.0
+    name: tcpAttemptFails
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.8.0
+    name: tcpEstabResets
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.9.0
+    name: tcpCurrEstab
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.17.0
+    name: tcpHCInSegs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.18.0
+    name: tcpHCOutSegs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.12.0
+    name: tcpRetransSegs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.14.0
+    name: tcpInErrs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.15.0
+    name: tcpOutRsts
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.8.0
+    name: udpHCInDatagrams
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.2.0
+    name: udpNoPorts
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.3.0
+    name: udpInErrors
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.9.0
+    name: udpHCOutDatagrams
+- mib: PowerNet-MIB
+  table:
+    oid: 1.3.6.1.4.1.318.1.1.12.2.3.1
+    name: rPDULoadStatusTable
+  symbols:
+  - oid: 1.3.6.1.4.1.318.1.1.12.2.3.1.1.2
+    name: powernet.rPDULoadStatusLoad
+  metric_tags:
+  - tag: powernet_r_pdu_load_status_index
+    symbol:
+      oid: 1.3.6.1.4.1.318.1.1.12.2.3.1.1.1
+      name: rPDULoadStatusIndex
+  - tag: powernet_r_pdu_load_status_load_state
+    symbol:
+      oid: 1.3.6.1.4.1.318.1.1.12.2.3.1.1.3
+      name: rPDULoadStatusLoadState
+- mib: PowerNet-MIB
+  table:
+    oid: 1.3.6.1.4.1.318.1.1.12.3.5.1
+    name: rPDUOutletStatusTable
+  symbols:
+  - oid: 1.3.6.1.4.1.318.1.1.12.3.5.1.1.7
+    name: powernet.rPDUOutletStatusLoad
+  metric_tags:
+  - tag: powernet_r_pdu_outlet_status_index
+    symbol:
+      oid: 1.3.6.1.4.1.318.1.1.12.3.5.1.1.1
+      name: rPDUOutletStatusIndex
+  - tag: powernet_r_pdu_outlet_status_outlet_name
+    symbol:
+      oid: 1.3.6.1.4.1.318.1.1.12.3.5.1.1.2
+      name: rPDUOutletStatusOutletName
+  - tag: powernet_r_pdu_outlet_status_outlet_state
+    symbol:
+      oid: 1.3.6.1.4.1.318.1.1.12.3.5.1.1.4
+      name: rPDUOutletStatusOutletState
+- mib: PowerNet-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.318.1.1.12.4.1.3.0
+    name: powernet.rPDUPowerSupplyAlarm
+- mib: PowerNet-MIB
+  table:
+    oid: 1.3.6.1.4.1.318.1.1.26.10.2.2
+    name: rPDU2SensorTempHumidityStatusTable
+  symbols:
+  - oid: 1.3.6.1.4.1.318.1.1.26.10.2.2.1.7
+    name: powernet.rPDU2SensorTempHumidityStatusTempF
+  - oid: 1.3.6.1.4.1.318.1.1.26.10.2.2.1.8
+    name: powernet.rPDU2SensorTempHumidityStatusTempC
+  - oid: 1.3.6.1.4.1.318.1.1.26.10.2.2.1.10
+    name: powernet.rPDU2SensorTempHumidityStatusRelativeHumidity
+  metric_tags:
+  - tag: powernet_r_pdu2_sensor_temp_humidity_status_name
+    symbol:
+      oid: 1.3.6.1.4.1.318.1.1.26.10.2.2.1.3
+      name: rPDU2SensorTempHumidityStatusName
+  - tag: powernet_r_pdu2_sensor_temp_humidity_status_type
+    symbol:
+      oid: 1.3.6.1.4.1.318.1.1.26.10.2.2.1.5
+      name: rPDU2SensorTempHumidityStatusType
+  - tag: powernet_r_pdu2_sensor_temp_humidity_status_temp_status
+    symbol:
+      oid: 1.3.6.1.4.1.318.1.1.26.10.2.2.1.9
+      name: rPDU2SensorTempHumidityStatusTempStatus
+  - tag: powernet_r_pdu2_sensor_temp_humidity_status_humidity_status
+    symbol:
+      oid: 1.3.6.1.4.1.318.1.1.26.10.2.2.1.11
+      name: rPDU2SensorTempHumidityStatusHumidityStatus
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: powernet_r_pdu_ident_name
+  symbol:
+    oid: 1.3.6.1.4.1.318.1.1.12.1.1.0
+    name: rPDUIdentName
+- tag: powernet_r_pdu_ident_hardware_rev
+  symbol:
+    oid: 1.3.6.1.4.1.318.1.1.12.1.2.0
+    name: rPDUIdentHardwareRev
+- tag: powernet_r_pdu_ident_firmware_rev
+  symbol:
+    oid: 1.3.6.1.4.1.318.1.1.12.1.3.0
+    name: rPDUIdentFirmwareRev
+- tag: powernet_r_pdu_ident_model_number
+  symbol:
+    oid: 1.3.6.1.4.1.318.1.1.12.1.5.0
+    name: rPDUIdentModelNumber
+- tag: powernet_r_pdu_ident_serial_number
+  symbol:
+    oid: 1.3.6.1.4.1.318.1.1.12.1.6.0
+    name: rPDUIdentSerialNumber
+- tag: vendor
+  value: apc
+- tag: profile
+  value: apc-pdu

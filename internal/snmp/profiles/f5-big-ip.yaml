@@ -1,0 +1,872 @@
+# Telvyn SNMP profile — f5-big-ip
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/f5-big-ip.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.3375.2.1.3.4.*
+metrics:
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: BGP4-MIB
+  table:
+    oid: 1.3.6.1.2.1.15.3
+    name: bgpPeerTable
+  symbols:
+  - oid: 1.3.6.1.2.1.15.3.1.3
+    name: bgpPeerAdminStatus
+  - oid: 1.3.6.1.2.1.15.3.1.4
+    name: bgpPeerNegotiatedVersion
+  - oid: 1.3.6.1.2.1.15.3.1.9
+    name: bgpPeerRemoteAs
+  - oid: 1.3.6.1.2.1.15.3.1.2
+    name: bgpPeerState
+  - oid: 1.3.6.1.2.1.15.3.1.10
+    name: bgpPeerInUpdates
+  - oid: 1.3.6.1.2.1.15.3.1.11
+    name: bgpPeerOutUpdates
+  - oid: 1.3.6.1.2.1.15.3.1.12
+    name: bgpPeerInTotalMessages
+  - oid: 1.3.6.1.2.1.15.3.1.13
+    name: bgpPeerOutTotalMessages
+  - oid: 1.3.6.1.2.1.15.3.1.15
+    name: bgpPeerFsmEstablishedTransitions
+  - oid: 1.3.6.1.2.1.15.3.1.16
+    name: bgpPeerFsmEstablishedTime
+  - oid: 1.3.6.1.2.1.15.3.1.17
+    name: bgpPeerConnectRetryInterval
+  - oid: 1.3.6.1.2.1.15.3.1.18
+    name: bgpPeerHoldTime
+  - oid: 1.3.6.1.2.1.15.3.1.19
+    name: bgpPeerKeepAlive
+  - oid: 1.3.6.1.2.1.15.3.1.20
+    name: bgpPeerHoldTimeConfigured
+  - oid: 1.3.6.1.2.1.15.3.1.21
+    name: bgpPeerKeepAliveConfigured
+  - oid: 1.3.6.1.2.1.15.3.1.22
+    name: bgpPeerMinASOriginationInterval
+  metric_tags:
+  - tag: remote_as
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.9
+      name: bgpPeerRemoteAs
+  - tag: admin_status
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.3
+      name: bgpPeerAdminStatus
+  - tag: peer_state
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.2
+      name: bgpPeerState
+  - tag: neighbor
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.7
+      name: bgpPeerRemoteAddr
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.10
+    name: ospfNbrTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.10.1.6
+    name: ospfNbrState
+  - oid: 1.3.6.1.2.1.14.10.1.7
+    name: ospfNbrEvents
+  - oid: 1.3.6.1.2.1.14.10.1.8
+    name: ospfNbrLsRetransQLen
+  metric_tags:
+  - tag: neighbor_id
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.3
+      name: ospfNbrRtrId
+  - tag: neighbor_ip
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.1
+      name: ospfNbrIpAddr
+  - tag: neighbor_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.6
+      name: ospfNbrState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.11
+    name: ospfVirtNbrTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.11.1.5
+    name: ospfVirtNbrState
+  - oid: 1.3.6.1.2.1.14.11.1.6
+    name: ospfVirtNbrEvents
+  - oid: 1.3.6.1.2.1.14.11.1.7
+    name: ospfVirtNbrLsRetransQLen
+  metric_tags:
+  - tag: neighbor_ip
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.3
+      name: ospfVirtNbrIpAddr
+  - tag: neighbor_id
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.2
+      name: ospfVirtNbrRtrId
+  - tag: neighbor_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.5
+      name: ospfVirtNbrState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.7
+    name: ospfIfTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.7.1.8
+    name: ospfIfRetransInterval
+  - oid: 1.3.6.1.2.1.14.7.1.12
+    name: ospfIfState
+  - oid: 1.3.6.1.2.1.14.7.1.21
+    name: ospfIfLsaCount
+  metric_tags:
+  - tag: ospf_ip_addr
+    symbol:
+      oid: 1.3.6.1.2.1.14.7.1.1
+      name: ospfIfIpAddress
+  - tag: if_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.7.1.12
+      name: ospfIfState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.9
+    name: ospfVirtIfTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.9.1.4
+    name: ospfVirtIfRetransInterval
+  - oid: 1.3.6.1.2.1.14.9.1.7
+    name: ospfVirtIfState
+  - oid: 1.3.6.1.2.1.14.9.1.12
+    name: ospfVirtIfLsaCount
+  metric_tags:
+  - tag: if_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.9.1.7
+      name: ospfVirtIfState
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.5.0
+    name: tcpActiveOpens
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.6.0
+    name: tcpPassiveOpens
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.7.0
+    name: tcpAttemptFails
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.8.0
+    name: tcpEstabResets
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.9.0
+    name: tcpCurrEstab
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.17.0
+    name: tcpHCInSegs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.18.0
+    name: tcpHCOutSegs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.12.0
+    name: tcpRetransSegs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.14.0
+    name: tcpInErrs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.15.0
+    name: tcpOutRsts
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.8.0
+    name: udpHCInDatagrams
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.2.0
+    name: udpNoPorts
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.3.0
+    name: udpInErrors
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.9.0
+    name: udpHCOutDatagrams
+- mib: IP-MIB
+  table:
+    oid: 1.3.6.1.2.1.4.31.1
+    name: ipSystemStatsTable
+  symbols:
+  - oid: 1.3.6.1.2.1.4.31.1.1.4
+    name: ipSystemStatsHCInReceives
+  - oid: 1.3.6.1.2.1.4.31.1.1.6
+    name: ipSystemStatsHCInOctets
+  - oid: 1.3.6.1.2.1.4.31.1.1.7
+    name: ipSystemStatsInHdrErrors
+  - oid: 1.3.6.1.2.1.4.31.1.1.8
+    name: ipSystemStatsInNoRoutes
+  - oid: 1.3.6.1.2.1.4.31.1.1.9
+    name: ipSystemStatsInAddrErrors
+  - oid: 1.3.6.1.2.1.4.31.1.1.10
+    name: ipSystemStatsInUnknownProtos
+  - oid: 1.3.6.1.2.1.4.31.1.1.11
+    name: ipSystemStatsInTruncatedPkts
+  - oid: 1.3.6.1.2.1.4.31.1.1.13
+    name: ipSystemStatsHCInForwDatagrams
+  - oid: 1.3.6.1.2.1.4.31.1.1.14
+    name: ipSystemStatsReasmReqds
+  - oid: 1.3.6.1.2.1.4.31.1.1.15
+    name: ipSystemStatsReasmOKs
+  - oid: 1.3.6.1.2.1.4.31.1.1.16
+    name: ipSystemStatsReasmFails
+  - oid: 1.3.6.1.2.1.4.31.1.1.17
+    name: ipSystemStatsInDiscards
+  - oid: 1.3.6.1.2.1.4.31.1.1.19
+    name: ipSystemStatsHCInDelivers
+  - oid: 1.3.6.1.2.1.4.31.1.1.21
+    name: ipSystemStatsHCOutRequests
+  - oid: 1.3.6.1.2.1.4.31.1.1.22
+    name: ipSystemStatsOutNoRoutes
+  - oid: 1.3.6.1.2.1.4.31.1.1.24
+    name: ipSystemStatsHCOutForwDatagrams
+  - oid: 1.3.6.1.2.1.4.31.1.1.25
+    name: ipSystemStatsOutDiscards
+  - oid: 1.3.6.1.2.1.4.31.1.1.26
+    name: ipSystemStatsOutFragReqds
+  - oid: 1.3.6.1.2.1.4.31.1.1.27
+    name: ipSystemStatsOutFragOKs
+  - oid: 1.3.6.1.2.1.4.31.1.1.28
+    name: ipSystemStatsOutFragFails
+  - oid: 1.3.6.1.2.1.4.31.1.1.29
+    name: ipSystemStatsOutFragCreates
+  - oid: 1.3.6.1.2.1.4.31.1.1.31
+    name: ipSystemStatsHCOutTransmits
+  - oid: 1.3.6.1.2.1.4.31.1.1.33
+    name: ipSystemStatsHCOutOctets
+  - oid: 1.3.6.1.2.1.4.31.1.1.35
+    name: ipSystemStatsHCInMcastPkts
+  - oid: 1.3.6.1.2.1.4.31.1.1.37
+    name: ipSystemStatsHCInMcastOctets
+  - oid: 1.3.6.1.2.1.4.31.1.1.39
+    name: ipSystemStatsHCOutMcastPkts
+  - oid: 1.3.6.1.2.1.4.31.1.1.41
+    name: ipSystemStatsHCOutMcastOctets
+  - oid: 1.3.6.1.2.1.4.31.1.1.43
+    name: ipSystemStatsHCInBcastPkts
+  - oid: 1.3.6.1.2.1.4.31.1.1.45
+    name: ipSystemStatsHCOutBcastPkts
+- mib: IP-MIB
+  table:
+    oid: 1.3.6.1.2.1.4.31.3
+    name: ipIfStatsTable
+  symbols:
+  - oid: 1.3.6.1.2.1.4.31.3.1.6
+    name: ipIfStatsHCInOctets
+  - oid: 1.3.6.1.2.1.4.31.3.1.7
+    name: ipIfStatsInHdrErrors
+  - oid: 1.3.6.1.2.1.4.31.3.1.8
+    name: ipIfStatsInNoRoutes
+  - oid: 1.3.6.1.2.1.4.31.3.1.9
+    name: ipIfStatsInAddrErrors
+  - oid: 1.3.6.1.2.1.4.31.3.1.10
+    name: ipIfStatsInUnknownProtos
+  - oid: 1.3.6.1.2.1.4.31.3.1.11
+    name: ipIfStatsInTruncatedPkts
+  - oid: 1.3.6.1.2.1.4.31.3.1.13
+    name: ipIfStatsHCInForwDatagrams
+  - oid: 1.3.6.1.2.1.4.31.3.1.14
+    name: ipIfStatsReasmReqds
+  - oid: 1.3.6.1.2.1.4.31.3.1.15
+    name: ipIfStatsReasmOKs
+  - oid: 1.3.6.1.2.1.4.31.3.1.16
+    name: ipIfStatsReasmFails
+  - oid: 1.3.6.1.2.1.4.31.3.1.17
+    name: ipIfStatsInDiscards
+  - oid: 1.3.6.1.2.1.4.31.3.1.19
+    name: ipIfStatsHCInDelivers
+  - oid: 1.3.6.1.2.1.4.31.3.1.21
+    name: ipIfStatsHCOutRequests
+  - oid: 1.3.6.1.2.1.4.31.3.1.24
+    name: ipIfStatsHCOutForwDatagrams
+  - oid: 1.3.6.1.2.1.4.31.3.1.25
+    name: ipIfStatsOutDiscards
+  - oid: 1.3.6.1.2.1.4.31.3.1.26
+    name: ipIfStatsOutFragReqds
+  - oid: 1.3.6.1.2.1.4.31.3.1.27
+    name: ipIfStatsOutFragOKs
+  - oid: 1.3.6.1.2.1.4.31.3.1.28
+    name: ipIfStatsOutFragFails
+  - oid: 1.3.6.1.2.1.4.31.3.1.29
+    name: ipIfStatsOutFragCreates
+  - oid: 1.3.6.1.2.1.4.31.3.1.31
+    name: ipIfStatsHCOutTransmits
+  - oid: 1.3.6.1.2.1.4.31.3.1.33
+    name: ipIfStatsHCOutOctets
+  - oid: 1.3.6.1.2.1.4.31.3.1.35
+    name: ipIfStatsHCInMcastPkts
+  - oid: 1.3.6.1.2.1.4.31.3.1.37
+    name: ipIfStatsHCInMcastOctets
+  - oid: 1.3.6.1.2.1.4.31.3.1.39
+    name: ipIfStatsHCOutMcastPkts
+  - oid: 1.3.6.1.2.1.4.31.3.1.41
+    name: ipIfStatsHCOutMcastOctets
+  - oid: 1.3.6.1.2.1.4.31.3.1.43
+    name: ipIfStatsHCInBcastPkts
+  - oid: 1.3.6.1.2.1.4.31.3.1.45
+    name: ipIfStatsHCOutBcastPkts
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.1.44.0
+    name: memory.total
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.1.45.0
+    name: memory.used
+- mib: F5-BIGIP-SYSTEM-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.1.7.5.2
+    name: sysMultiHostCpuTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.1.7.5.2.1.27
+    name: cpu.usage
+  metric_tags:
+  - tag: cpu
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.1.7.5.2.1.3
+      name: sysMultiHostCpuId
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.21.28.0
+    name: sysGlobalTmmStatMemoryTotal
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.21.29.0
+    name: sysGlobalTmmStatMemoryUsed
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.20.44.0
+    name: sysGlobalHostOtherMemoryTotal
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.20.45.0
+    name: sysGlobalHostOtherMemoryUsed
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.20.46.0
+    name: sysGlobalHostSwapTotal
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.20.47.0
+    name: sysGlobalHostSwapUsed
+- mib: F5-BIGIP-SYSTEM-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.1.7.5.2
+    name: sysMultiHostCpuTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.1.7.5.2.1.11
+    name: sysMultiHostCpuUsageRatio
+  metric_tags:
+  - tag: cpu
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.1.7.5.2.1.3
+      name: sysMultiHostCpuId
+- mib: F5-BIGIP-SYSTEM-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.1.7.5.2
+    name: sysMultiHostCpuTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.1.7.5.2.1.4
+    name: sysMultiHostCpuUser
+  - oid: 1.3.6.1.4.1.3375.2.1.7.5.2.1.5
+    name: sysMultiHostCpuNice
+  - oid: 1.3.6.1.4.1.3375.2.1.7.5.2.1.6
+    name: sysMultiHostCpuSystem
+  - oid: 1.3.6.1.4.1.3375.2.1.7.5.2.1.7
+    name: sysMultiHostCpuIdle
+  - oid: 1.3.6.1.4.1.3375.2.1.7.5.2.1.8
+    name: sysMultiHostCpuIrq
+  - oid: 1.3.6.1.4.1.3375.2.1.7.5.2.1.9
+    name: sysMultiHostCpuSoftirq
+  - oid: 1.3.6.1.4.1.3375.2.1.7.5.2.1.10
+    name: sysMultiHostCpuIowait
+  metric_tags:
+  - tag: cpu
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.1.7.5.2.1.3
+      name: sysMultiHostCpuId
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.12.2.0
+    name: sysTcpStatOpen
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.12.3.0
+    name: sysTcpStatCloseWait
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.12.4.0
+    name: sysTcpStatFinWait
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.12.5.0
+    name: sysTcpStatTimeWait
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.12.6.0
+    name: sysTcpStatAccepts
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.12.7.0
+    name: sysTcpStatAcceptfails
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.12.8.0
+    name: sysTcpStatConnects
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.12.9.0
+    name: sysTcpStatConnfails
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.13.2.0
+    name: sysUdpStatOpen
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.13.3.0
+    name: sysUdpStatAccepts
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.13.4.0
+    name: sysUdpStatAcceptfails
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.13.5.0
+    name: sysUdpStatConnects
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.13.6.0
+    name: sysUdpStatConnfails
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.9.2.0
+    name: sysClientsslStatCurConns
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.9.10.0
+    name: sysClientsslStatEncryptedBytesIn
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.9.11.0
+    name: sysClientsslStatEncryptedBytesOut
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.9.12.0
+    name: sysClientsslStatDecryptedBytesIn
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.9.13.0
+    name: sysClientsslStatDecryptedBytesOut
+- mib: F5-BIGIP-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.1.1.2.9.29.0
+    name: sysClientsslStatHandshakeFailures
+- mib: F5-BIGIP-LOCAL-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.2.10.1.1
+    name: ltmVirtualServNumber
+- mib: F5-BIGIP-LOCAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.2.10.1.2
+    name: ltmVirtualServTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.2.10.1.2.1.9
+    name: ltmVirtualServEnabled
+  - oid: 1.3.6.1.4.1.3375.2.2.10.1.2.1.10
+    name: ltmVirtualServConnLimit
+  metric_tags:
+  - tag: server
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.10.1.2.1.1
+      name: ltmVirtualServName
+- mib: F5-BIGIP-LOCAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.2.10.2.3
+    name: ltmVirtualServStatTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.6
+    name: ltmVirtualServStatClientPktsIn
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.7
+    name: ltmVirtualServStatClientBytesIn
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.8
+    name: ltmVirtualServStatClientPktsOut
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.9
+    name: ltmVirtualServStatClientBytesOut
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.12
+    name: ltmVirtualServStatClientCurConns
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.31
+    name: ltmVirtualServStatVsUsageRatio5s
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.32
+    name: ltmVirtualServStatVsUsageRatio1m
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.33
+    name: ltmVirtualServStatVsUsageRatio5m
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.34
+    name: ltmVirtualServStatCurrentConnsPerSec
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.35
+    name: ltmVirtualServStatDurationRateExceeded
+  metric_tags:
+  - tag: server
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.1
+      name: ltmVirtualServStatName
+- mib: F5-BIGIP-LOCAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.2.10.2.3
+    name: ltmVirtualServStatTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.5
+    name: ltmVirtualServStatNoNodesErrors
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.11
+    name: ltmVirtualServStatClientTotConns
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.27
+    name: ltmVirtualServStatTotRequests
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.40
+    name: ltmVirtualServStatClientEvictedConns
+  - oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.41
+    name: ltmVirtualServStatClientSlowKilled
+  metric_tags:
+  - tag: server
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.10.2.3.1.1
+      name: ltmVirtualServStatName
+- mib: F5-BIGIP-LOCAL-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.2.4.1.1
+    name: ltmNodeAddrNumber
+- mib: F5-BIGIP-LOCAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.2.4.1.2
+    name: ltmNodeAddrTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.2.4.1.2.1.3
+    name: ltmNodeAddrConnLimit
+  - oid: 1.3.6.1.4.1.3375.2.2.4.1.2.1.4
+    name: ltmNodeAddrRatio
+  - oid: 1.3.6.1.4.1.3375.2.2.4.1.2.1.5
+    name: ltmNodeAddrDynamicRatio
+  - oid: 1.3.6.1.4.1.3375.2.2.4.1.2.1.6
+    name: ltmNodeAddrMonitorState
+  - oid: 1.3.6.1.4.1.3375.2.2.4.1.2.1.7
+    name: ltmNodeAddrMonitorStatus
+  - oid: 1.3.6.1.4.1.3375.2.2.4.1.2.1.10
+    name: ltmNodeAddrSessionStatus
+  metric_tags:
+  - tag: node
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.4.1.2.1.17
+      name: ltmNodeAddrName
+- mib: F5-BIGIP-LOCAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.2.4.2.3
+    name: ltmNodeAddrStatTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.2.4.2.3.1.3
+    name: ltmNodeAddrStatServerPktsIn
+  - oid: 1.3.6.1.4.1.3375.2.2.4.2.3.1.4
+    name: ltmNodeAddrStatServerBytesIn
+  - oid: 1.3.6.1.4.1.3375.2.2.4.2.3.1.5
+    name: ltmNodeAddrStatServerPktsOut
+  - oid: 1.3.6.1.4.1.3375.2.2.4.2.3.1.6
+    name: ltmNodeAddrStatServerBytesOut
+  - oid: 1.3.6.1.4.1.3375.2.2.4.2.3.1.9
+    name: ltmNodeAddrStatServerCurConns
+  - oid: 1.3.6.1.4.1.3375.2.2.4.2.3.1.21
+    name: ltmNodeAddrStatCurSessions
+  - oid: 1.3.6.1.4.1.3375.2.2.4.2.3.1.22
+    name: ltmNodeAddrStatCurrentConnsPerSec
+  - oid: 1.3.6.1.4.1.3375.2.2.4.2.3.1.23
+    name: ltmNodeAddrStatDurationRateExceeded
+  metric_tags:
+  - tag: node
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.4.2.3.1.20
+      name: ltmNodeAddrStatNodeName
+- mib: F5-BIGIP-LOCAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.2.4.2.3
+    name: ltmNodeAddrStatTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.2.4.2.3.1.8
+    name: ltmNodeAddrStatServerTotConns
+  - oid: 1.3.6.1.4.1.3375.2.2.4.2.3.1.17
+    name: ltmNodeAddrStatTotRequests
+  metric_tags:
+  - tag: node
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.4.2.3.1.20
+      name: ltmNodeAddrStatNodeName
+- mib: F5-BIGIP-LOCAL-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.2.5.1.1
+    name: ltmPoolNumber
+- mib: F5-BIGIP-LOCAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.2.5.1.2
+    name: ltmPoolTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.2.5.1.2.1.8
+    name: ltmPoolActiveMemberCnt
+  - oid: 1.3.6.1.4.1.3375.2.2.5.1.2.1.16
+    name: ltmPoolDynamicRatioSum
+  - oid: 1.3.6.1.4.1.3375.2.2.5.1.2.1.23
+    name: ltmPoolMemberCnt
+  metric_tags:
+  - tag: pool
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.5.1.2.1.1
+      name: ltmPoolName
+- mib: F5-BIGIP-LOCAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.2.5.2.3
+    name: ltmPoolStatTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.2.5.2.3.1.2
+    name: ltmPoolStatServerPktsIn
+  - oid: 1.3.6.1.4.1.3375.2.2.5.2.3.1.3
+    name: ltmPoolStatServerBytesIn
+  - oid: 1.3.6.1.4.1.3375.2.2.5.2.3.1.4
+    name: ltmPoolStatServerPktsOut
+  - oid: 1.3.6.1.4.1.3375.2.2.5.2.3.1.5
+    name: ltmPoolStatServerBytesOut
+  - oid: 1.3.6.1.4.1.3375.2.2.5.2.3.1.8
+    name: ltmPoolStatServerCurConns
+  - oid: 1.3.6.1.4.1.3375.2.2.5.2.3.1.18
+    name: ltmPoolStatConnqDepth
+  - oid: 1.3.6.1.4.1.3375.2.2.5.2.3.1.19
+    name: ltmPoolStatConnqAgeHead
+  - oid: 1.3.6.1.4.1.3375.2.2.5.2.3.1.31
+    name: ltmPoolStatCurSessions
+  metric_tags:
+  - tag: pool
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.5.2.3.1.1
+      name: ltmPoolStatName
+- mib: F5-BIGIP-LOCAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.2.5.2.3
+    name: ltmPoolStatTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.2.5.2.3.1.7
+    name: ltmPoolStatServerTotConns
+  - oid: 1.3.6.1.4.1.3375.2.2.5.2.3.1.23
+    name: ltmPoolStatConnqServiced
+  - oid: 1.3.6.1.4.1.3375.2.2.5.2.3.1.30
+    name: ltmPoolStatTotRequests
+  metric_tags:
+  - tag: pool
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.5.2.3.1.1
+      name: ltmPoolStatName
+- mib: F5-BIGIP-LOCAL-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.3375.2.2.5.3.1
+    name: ltmPoolMemberNumber
+- mib: F5-BIGIP-LOCAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.2.5.3.2
+    name: ltmPoolMemberTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.2.5.3.2.1.5
+    name: ltmPoolMemberConnLimit
+  - oid: 1.3.6.1.4.1.3375.2.2.5.3.2.1.6
+    name: ltmPoolMemberRatio
+  - oid: 1.3.6.1.4.1.3375.2.2.5.3.2.1.9
+    name: ltmPoolMemberDynamicRatio
+  - oid: 1.3.6.1.4.1.3375.2.2.5.3.2.1.10
+    name: ltmPoolMemberMonitorState
+  - oid: 1.3.6.1.4.1.3375.2.2.5.3.2.1.11
+    name: ltmPoolMemberMonitorStatus
+  - oid: 1.3.6.1.4.1.3375.2.2.5.3.2.1.13
+    name: ltmPoolMemberSessionStatus
+  metric_tags:
+  - tag: pool
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.5.3.2.1.1
+      name: ltmPoolMemberPoolName
+  - tag: node
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.5.3.2.1.19
+      name: ltmPoolMemberNodeName
+- mib: F5-BIGIP-LOCAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.2.5.4.3
+    name: ltmPoolMemberStatTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.5
+    name: ltmPoolMemberStatServerPktsIn
+  - oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.6
+    name: ltmPoolMemberStatServerBytesIn
+  - oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.7
+    name: ltmPoolMemberStatServerPktsOut
+  - oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.8
+    name: ltmPoolMemberStatServerBytesOut
+  - oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.11
+    name: ltmPoolMemberStatServerCurConns
+  - oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.22
+    name: ltmPoolMemberStatConnqDepth
+  - oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.23
+    name: ltmPoolMemberStatConnqAgeHead
+  - oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.29
+    name: ltmPoolMemberStatCurSessions
+  - oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.30
+    name: ltmPoolMemberStatCurrentConnsPerSec
+  - oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.31
+    name: ltmPoolMemberStatDurationRateExceeded
+  metric_tags:
+  - tag: pool
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.1
+      name: ltmPoolMemberStatPoolName
+  - tag: node
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.28
+      name: ltmPoolMemberStatNodeName
+- mib: F5-BIGIP-LOCAL-MIB
+  table:
+    oid: 1.3.6.1.4.1.3375.2.2.5.4.3
+    name: ltmPoolMemberStatTable
+  symbols:
+  - oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.10
+    name: ltmPoolMemberStatServerTotConns
+  - oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.19
+    name: ltmPoolMemberStatTotRequests
+  - oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.27
+    name: ltmPoolMemberStatConnqServiced
+  metric_tags:
+  - tag: pool
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.1
+      name: ltmPoolMemberStatPoolName
+  - tag: node
+    symbol:
+      oid: 1.3.6.1.4.1.3375.2.2.5.4.3.1.28
+      name: ltmPoolMemberStatNodeName
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: f5
+- tag: profile
+  value: f5-big-ip
