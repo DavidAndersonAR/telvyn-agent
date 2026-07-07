@@ -51,6 +51,11 @@ func TestCanonMetricName_CpuMemUptime(t *testing.T) {
 		// Uptime (SNMPv2 sysUpTime), tolera leading dot
 		{"1.3.6.1.2.1.1.3.0", "sysUpTimeInstance", "snmp.sys.uptime"},
 		{".1.3.6.1.2.1.1.3.0", "uptime", "snmp.sys.uptime"},
+		// Temperatura MikroTik (perfil do Datadog batiza com nome da MIB; canonizamos
+		// pra mikrotik.health.temp_* pra cair no widget de Temperatura). O OID é o do
+		// PERFIL (sem .0) — getScalar tenta .0 na coleta, mas canonMetricName usa o do perfil.
+		{"1.3.6.1.4.1.14988.1.1.3.6", "mtxrHlCpuTemperature", "mikrotik.health.temp_cpu"},
+		{"1.3.6.1.4.1.14988.1.1.3.10", "mtxrHlTemperature", "mikrotik.health.temp_system"},
 		// no-op pros hand-curated que já emitem o canônico no mesmo OID
 		{"1.3.6.1.2.1.25.3.3.1.2", "snmp.hr.processor_load", "snmp.hr.processor_load"},
 		// OID de CPU vendor-específico (MIKROTIK-MIB) NÃO é normalizado — mantém o nome

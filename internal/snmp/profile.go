@@ -546,13 +546,26 @@ func applyScale(v, scale float64) float64 {
 	return v * scale
 }
 
-// getScalar faz Get de um OID, retorna float + ok=true se conseguir.
+// getScalar faz Get de um OID escalar. Tenta o OID como está; se não vier valor
+// e o OID não terminar em ".0", tenta o instance ".0". Isso porque os perfis do
+// Datadog escrevem escalares SEM o ".0" (ex. mtxrHlCpuTemperature = .3.6), mas o
+// SNMP exige o ".0" no GET de escalar — nossos perfis hand-curated já põem o ".0".
+// canonMetricName usa o OID do PERFIL (sem .0), então o mapa canônico continua batendo.
 func getScalar(ctx context.Context, c *Client, oid string) (float64, bool) {
-	pdus, err := c.Get(ctx, []string{oid})
-	if err != nil {
-		return 0, false
+	if v, ok := getScalarOnce(ctx, c, oid); ok {
+		return v, true
 	}
-	if len(pdus) == 0 {
+	if !strings.HasSuffix(oid, ".0") {
+		if v, ok := getScalarOnce(ctx, c, oid+".0"); ok {
+			return v, true
+		}
+	}
+	return 0, false
+}
+
+func getScalarOnce(ctx context.Context, c *Client, oid string) (float64, bool) {
+	pdus, err := c.Get(ctx, []string{oid})
+	if err != nil || len(pdus) == 0 {
 		return 0, false
 	}
 	return PduFloat(pdus[0])
@@ -681,6 +694,14 @@ var oidCanonical = map[string]string{
 
 	// --- SNMPv2-MIB (uptime) ---
 	"1.3.6.1.2.1.1.3.0": "snmp.sys.uptime", // sysUpTime (centésimos de s)
+
+	// --- MIKROTIK-MIB (temperatura, °C) ---
+	// O profile do Datadog (mikrotik-router) lê os OIDs CERTOS de temperatura
+	// (mtxrHlCpuTemperature .3.6 e mtxrHlTemperature .3.10) mas os batiza com o
+	// nome da MIB. Canonizar pra mikrotik.health.temp_* faz o DeviceMetricsTab
+	// (filtro mikrotik_health_temp.*) mostrar no widget de Temperatura.
+	"1.3.6.1.4.1.14988.1.1.3.6":  "mikrotik.health.temp_cpu",    // mtxrHlCpuTemperature
+	"1.3.6.1.4.1.14988.1.1.3.10": "mikrotik.health.temp_system", // mtxrHlTemperature
 }
 
 // canonMetricName devolve o nome canônico snmp.* quando o OID é conhecido
