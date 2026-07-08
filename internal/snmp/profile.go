@@ -371,6 +371,14 @@ func (p *Profile) Collect(ctx context.Context, c *Client, hostID string, staticT
 				if m.Filter != nil && !m.Filter.keep(rowTags) {
 					continue
 				}
+				// Enriquecimento GENÉRICO do hrStorageTable (HOST-RESOURCES-MIB,
+				// RFC 2790): a BulkWalk já trouxe TODAS as colunas da row, então
+				// acrescentamos storage_type (RAM/disco/flash...) e storage_descr, e
+				// pegamos o fator de bloco pra converter size/used de blocos → bytes —
+				// mesmo que o profile só declare size/used (como fazem quase todos, do
+				// Mikrotik ao Cisco). Vale pra QUALQUER fabricante que ande nesse OID
+				// padrão. É no-op em qualquer outra tabela.
+				storageFactor := enrichHrStorageRow(m.Table.OID, row, rowTags)
 				seen := make(map[string]bool, len(m.Symbols))
 				for _, sym := range m.Symbols {
 					pdu, ok := findRowPDU(row, sym.OID)
@@ -386,7 +394,12 @@ func (p *Profile) Collect(ctx context.Context, c *Client, hostID string, staticT
 						continue // HC vs 32-bit colidem no mesmo canônico — 1 por row
 					}
 					seen[name] = true
-					out = append(out, newMetric(now, hostID, name, applyScale(val, sym.Scale), mergeTags(staticTags, profileTags, rowTags)))
+					scaled := applyScale(val, sym.Scale)
+					// hrStorageSize/Used vêm em BLOCOS; × unidade de alocação = bytes reais.
+					if storageFactor != 1 && isHrStorageAmount(sym.OID) {
+						scaled *= storageFactor
+					}
+					out = append(out, newMetric(now, hostID, name, scaled, mergeTags(staticTags, profileTags, rowTags)))
 				}
 			}
 		}
@@ -571,6 +584,85 @@ func getScalarOnce(ctx context.Context, c *Client, oid string) (float64, bool) {
 	return PduFloat(pdus[0])
 }
 
+// OIDs padrão do hrStorageTable (HOST-RESOURCES-MIB, RFC 2790). Universais entre
+// fabricantes — Mikrotik, Cisco, Fortinet, Linux e qualquer um que exponha a MIB
+// andam exatamente nestes OIDs.
+const (
+	hrStorageTableOID = "1.3.6.1.2.1.25.2.3"
+	hrStorageTypeCol  = "1.3.6.1.2.1.25.2.3.1.2" // hrStorageType (OID → HOST-RESOURCES-TYPES)
+	hrStorageDescrCol = "1.3.6.1.2.1.25.2.3.1.3" // hrStorageDescr (texto)
+	hrStorageAllocCol = "1.3.6.1.2.1.25.2.3.1.4" // hrStorageAllocationUnits (bytes por bloco)
+	hrStorageSizeCol  = "1.3.6.1.2.1.25.2.3.1.5" // hrStorageSize (em blocos)
+	hrStorageUsedCol  = "1.3.6.1.2.1.25.2.3.1.6" // hrStorageUsed (em blocos)
+)
+
+// enrichHrStorageRow, quando a tabela é o hrStorageTable padrão, acrescenta à row
+// os rótulos storage_type (ram/fixed_disk/flash...) e storage_descr a partir das
+// colunas que a BulkWalk já trouxe, e devolve o FATOR de bloco (unidade de
+// alocação em bytes) pra converter size/used de blocos → bytes reais. Fora do
+// hrStorage devolve 1 (no-op). Isso resolve, de uma vez e pra todo fabricante,
+// (a) "1 MB" no lugar de "1 GB" (blocos lidos como bytes) e (b) RAM vs disco
+// decidido pelo TIPO (código de máquina), não por casar texto do descritor.
+func enrichHrStorageRow(tableOID string, row map[string]gosnmp.SnmpPDU, rowTags map[string]string) float64 {
+	if strings.TrimPrefix(strings.TrimSpace(tableOID), ".") != hrStorageTableOID {
+		return 1
+	}
+	if pdu, ok := findRowPDU(row, hrStorageTypeCol); ok {
+		if t := hrStorageTypeName(pduString(pdu)); t != "" {
+			rowTags["storage_type"] = t
+		}
+	}
+	if pdu, ok := findRowPDU(row, hrStorageDescrCol); ok {
+		if s := strings.TrimSpace(pduString(pdu)); s != "" {
+			rowTags["storage_descr"] = s
+		}
+	}
+	if pdu, ok := findRowPDU(row, hrStorageAllocCol); ok {
+		if u, ok := PduFloat(pdu); ok && u > 0 {
+			return u
+		}
+	}
+	return 1
+}
+
+// isHrStorageAmount diz se o OID é hrStorageSize/Used (as quantidades em blocos
+// que precisam × unidade de alocação pra virar bytes).
+func isHrStorageAmount(oid string) bool {
+	o := strings.TrimPrefix(oid, ".")
+	return o == hrStorageSizeCol || o == hrStorageUsedCol
+}
+
+// hrStorageTypeName mapeia o valor de hrStorageType (que é um OID apontando pra
+// HOST-RESOURCES-TYPES, .1.3.6.1.2.1.25.2.1.X) a um rótulo amigável. É o sinal
+// DETERMINÍSTICO de "isto é RAM" vs "isto é disco" — bem melhor que casar o texto
+// do descritor ("main memory"), que varia por fabricante/idioma.
+func hrStorageTypeName(typeOID string) string {
+	switch strings.TrimPrefix(strings.TrimSpace(typeOID), ".") {
+	case "1.3.6.1.2.1.25.2.1.1":
+		return "other"
+	case "1.3.6.1.2.1.25.2.1.2":
+		return "ram"
+	case "1.3.6.1.2.1.25.2.1.3":
+		return "virtual_memory"
+	case "1.3.6.1.2.1.25.2.1.4":
+		return "fixed_disk"
+	case "1.3.6.1.2.1.25.2.1.5":
+		return "removable_disk"
+	case "1.3.6.1.2.1.25.2.1.6":
+		return "floppy_disk"
+	case "1.3.6.1.2.1.25.2.1.7":
+		return "compact_disc"
+	case "1.3.6.1.2.1.25.2.1.8":
+		return "ram_disk"
+	case "1.3.6.1.2.1.25.2.1.9":
+		return "flash_memory"
+	case "1.3.6.1.2.1.25.2.1.10":
+		return "network_disk"
+	default:
+		return ""
+	}
+}
+
 // findRowPDU localiza a PDU correspondente a uma coluna em uma row.
 // Aceita match com OU sem leading dot.
 func findRowPDU(row map[string]gosnmp.SnmpPDU, colOID string) (gosnmp.SnmpPDU, bool) {
@@ -682,6 +774,15 @@ var oidCanonical = map[string]string{
 	"1.3.6.1.2.1.2.2.1.3":     "snmp.if.type",         // ifType
 	"1.3.6.1.2.1.31.1.1.1.15": "snmp.if.high_speed",   // ifHighSpeed
 	"1.3.6.1.2.1.2.2.1.5":     "snmp.if.speed",        // ifSpeed
+	"1.3.6.1.2.1.2.2.1.4":     "snmp.if.mtu",          // ifMtu (bytes, escalar por interface)
+	// Contadores de pacotes por tipo (ifXTable, 64-bit). ATENÇÃO: .10 é ifHCOutOctets,
+	// então ifHCOutUcastPkts é .11 (não .10).
+	"1.3.6.1.2.1.31.1.1.1.7":  "snmp.if.in_ucast_packets",  // ifHCInUcastPkts
+	"1.3.6.1.2.1.31.1.1.1.8":  "snmp.if.in_mcast_packets",  // ifHCInMulticastPkts
+	"1.3.6.1.2.1.31.1.1.1.9":  "snmp.if.in_bcast_packets",  // ifHCInBroadcastPkts
+	"1.3.6.1.2.1.31.1.1.1.11": "snmp.if.out_ucast_packets", // ifHCOutUcastPkts
+	"1.3.6.1.2.1.31.1.1.1.12": "snmp.if.out_mcast_packets", // ifHCOutMulticastPkts
+	"1.3.6.1.2.1.31.1.1.1.13": "snmp.if.out_bcast_packets", // ifHCOutBroadcastPkts
 
 	// --- HOST-RESOURCES-MIB (CPU + armazenamento, universal) ---
 	"1.3.6.1.2.1.25.3.3.1.2": "snmp.hr.processor_load", // hrProcessorLoad (% por core)
