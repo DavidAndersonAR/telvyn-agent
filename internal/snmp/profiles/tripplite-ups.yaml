@@ -1,0 +1,234 @@
+# Telvyn SNMP profile — tripplite-ups
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/tripplite-ups.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.850.1.1.3.1
+metrics:
+- mib: UPS-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.2.2.0
+    name: upsSecondsOnBattery
+- mib: UPS-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.2.3.0
+    name: upsEstimatedMinutesRemaining
+- mib: UPS-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.2.4.0
+    name: upsEstimatedChargeRemaining
+- mib: UPS-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.2.5.0
+    name: upsBatteryVoltage
+- mib: UPS-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.2.6.0
+    name: upsBatteryCurrent
+- mib: UPS-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.2.7.0
+    name: upsBatteryTemperature
+- mib: UPS-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.3.1.0
+    name: upsInputLineBads
+- mib: UPS-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.3.2.0
+    name: upsInputNumLines
+- mib: UPS-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.4.2.0
+    name: upsOutputFrequency
+- mib: UPS-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.4.3.0
+    name: upsOutputNumLines
+- mib: UPS-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.5.1.0
+    name: upsBypassFrequency
+- mib: UPS-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.5.2.0
+    name: upsBypassNumLines
+- mib: UPS-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.6.1.0
+    name: upsAlarmsPresent
+- mib: UPS-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.7.5.0
+    name: upsTestStartTime
+- mib: UPS-MIB
+  table:
+    oid: 1.3.6.1.2.1.33.1.4.4
+    name: upsOutputTable
+  symbols:
+  - oid: 1.3.6.1.2.1.33.1.4.4.1.2
+    name: upsOutputVoltage
+  - oid: 1.3.6.1.2.1.33.1.4.4.1.3
+    name: upsOutputCurrent
+  - oid: 1.3.6.1.2.1.33.1.4.4.1.4
+    name: upsOutputPower
+  - oid: 1.3.6.1.2.1.33.1.4.4.1.5
+    name: upsOutputPercentLoad
+  metric_tags:
+  - tag: ups_output_line_index
+    symbol:
+      oid: 1.3.6.1.2.1.33.1.4.4.1.1
+      name: upsOutputLineIndex
+- mib: UPS-MIB
+  table:
+    oid: 1.3.6.1.2.1.33.1.3.3
+    name: upsInputTable
+  symbols:
+  - oid: 1.3.6.1.2.1.33.1.3.3.1.2
+    name: upsInputFrequency
+  - oid: 1.3.6.1.2.1.33.1.3.3.1.3
+    name: upsInputVoltage
+  - oid: 1.3.6.1.2.1.33.1.3.3.1.4
+    name: upsInputCurrent
+  - oid: 1.3.6.1.2.1.33.1.3.3.1.5
+    name: upsInputTruePower
+  metric_tags:
+  - tag: ups_input_line_index
+    symbol:
+      oid: 1.3.6.1.2.1.33.1.3.3.1.1
+      name: upsInputLineIndex
+- mib: UPS-MIB
+  table:
+    oid: 1.3.6.1.2.1.33.1.5.3
+    name: upsBypassTable
+  symbols:
+  - oid: 1.3.6.1.2.1.33.1.5.3.1.2
+    name: upsBypassVoltage
+  - oid: 1.3.6.1.2.1.33.1.5.3.1.3
+    name: upsBypassCurrent
+  - oid: 1.3.6.1.2.1.33.1.5.3.1.4
+    name: upsBypassPower
+  metric_tags:
+  - tag: ups_bypass_line_index
+    symbol:
+      oid: 1.3.6.1.2.1.33.1.5.3.1.1
+      name: upsBypassLineIndex
+- mib: UPS-MIB
+  table:
+    oid: 1.3.6.1.2.1.33.1.6.2
+    name: upsAlarmTable
+  symbols:
+  - oid: 1.3.6.1.2.1.33.1.6.2.1.3
+    name: upsAlarmTime
+  metric_tags:
+  - tag: ups_alarm_descr
+    symbol:
+      oid: 1.3.6.1.2.1.33.1.6.2.1.2
+      name: upsAlarmDescr
+- mib: TRIPPLITE-12X
+  symbol:
+    oid: 1.3.6.1.4.1.850.100.1.13.1.0
+    name: tlUpsTemperature
+- mib: TRIPPLITE-12X
+  symbol:
+    oid: 1.3.6.1.4.1.850.100.1.2.1.0
+    name: tlUpsBatteryAge
+- mib: TRIPPLITE-12X
+  symbol:
+    oid: 1.3.6.1.4.1.850.100.1.2.2.0
+    name: tlUpsTemperatureF
+- mib: TRIPPLITE-12X
+  symbol:
+    oid: 1.3.6.1.4.1.850.100.1.2.3.0
+    name: tlUpsExternalBatteryAge
+- mib: TRIPPLITE-12X
+  symbol:
+    oid: 1.3.6.1.4.1.850.100.1.6.1.0
+    name: tlUpsAlarmsPresent
+- mib: TRIPPLITE-12X
+  symbol:
+    oid: 1.3.6.1.4.1.850.101.1.1.1.0
+    name: tlEnvTemperatureC
+- mib: TRIPPLITE-12X
+  symbol:
+    oid: 1.3.6.1.4.1.850.101.1.1.2.0
+    name: tlEnvTemperatureF
+- mib: TRIPPLITE-12X
+  symbol:
+    oid: 1.3.6.1.4.1.850.101.1.2.1.0
+    name: tlEnvHumidity
+- mib: TRIPPLITE-12X
+  table:
+    oid: 1.3.6.1.4.1.850.100.1.3.2
+    name: tlUpsInputVoltageTable
+  symbols:
+  - oid: 1.3.6.1.4.1.850.100.1.3.2.1.3
+    name: tlUpsInputVoltage
+  metric_tags:
+  - tag: tl_ups_input_voltage_index
+    symbol:
+      oid: 1.3.6.1.4.1.850.100.1.3.2.1.1
+      name: tlUpsInputVoltageIndex
+  - tag: tl_ups_input_voltage_type
+    symbol:
+      oid: 1.3.6.1.4.1.850.100.1.3.2.1.2
+      name: tlUpsInputVoltageType
+- mib: TRIPPLITE-12X
+  table:
+    oid: 1.3.6.1.4.1.850.100.1.4.7
+    name: tlUpsOutputCircuitTable
+  symbols:
+  - oid: 1.3.6.1.4.1.850.100.1.4.7.1.3
+    name: tlUpsOutputCircuitLoadCurrent
+  - oid: 1.3.6.1.4.1.850.100.1.4.7.1.4
+    name: tlUpsOutputCircuitVoltage
+  - oid: 1.3.6.1.4.1.850.100.1.4.7.1.5
+    name: tlUpsOutputCircuitPower
+  metric_tags:
+  - tag: tl_ups_output_circuit_status
+    symbol:
+      oid: 1.3.6.1.4.1.850.100.1.4.7.1.2
+      name: tlUpsOutputCircuitStatus
+metric_tags:
+- tag: ups_ident_manufacturer
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.1.1
+    name: upsIdentManufacturer
+- tag: ups_ident_model
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.1.2
+    name: upsIdentModel
+- tag: ups_ident_name
+  symbol:
+    oid: 1.3.6.1.2.1.33.1.1.5
+    name: upsIdentName
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: tl_ups_ident_serial_num
+  symbol:
+    oid: 1.3.6.1.4.1.850.100.1.1.2.0
+    name: tlUpsIdentSerialNum
+- tag: tl_ups_ident_id
+  symbol:
+    oid: 1.3.6.1.4.1.850.100.1.1.3.0
+    name: tlUpsIdentID
+- tag: tl_ups_snmp_card_serial_num
+  symbol:
+    oid: 1.3.6.1.4.1.850.100.1.1.4.0
+    name: tlUpsSnmpCardSerialNum
+- tag: tl_ups_location
+  symbol:
+    oid: 1.3.6.1.4.1.850.100.1.1.6.0
+    name: tlUpsLocation
+- tag: vendor
+  value: tripplite
+- tag: profile
+  value: tripplite-ups

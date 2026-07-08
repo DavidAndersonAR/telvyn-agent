@@ -1,0 +1,343 @@
+# Telvyn SNMP profile — nec-univerge
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/nec-univerge.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.119.1.*
+- 1.3.6.1.4.1.119.1.84.18
+metrics:
+- mib: BGP4-MIB
+  table:
+    oid: 1.3.6.1.2.1.15.3
+    name: bgpPeerTable
+  symbols:
+  - oid: 1.3.6.1.2.1.15.3.1.3
+    name: bgpPeerAdminStatus
+  - oid: 1.3.6.1.2.1.15.3.1.4
+    name: bgpPeerNegotiatedVersion
+  - oid: 1.3.6.1.2.1.15.3.1.9
+    name: bgpPeerRemoteAs
+  - oid: 1.3.6.1.2.1.15.3.1.2
+    name: bgpPeerState
+  - oid: 1.3.6.1.2.1.15.3.1.10
+    name: bgpPeerInUpdates
+  - oid: 1.3.6.1.2.1.15.3.1.11
+    name: bgpPeerOutUpdates
+  - oid: 1.3.6.1.2.1.15.3.1.12
+    name: bgpPeerInTotalMessages
+  - oid: 1.3.6.1.2.1.15.3.1.13
+    name: bgpPeerOutTotalMessages
+  - oid: 1.3.6.1.2.1.15.3.1.15
+    name: bgpPeerFsmEstablishedTransitions
+  - oid: 1.3.6.1.2.1.15.3.1.16
+    name: bgpPeerFsmEstablishedTime
+  - oid: 1.3.6.1.2.1.15.3.1.17
+    name: bgpPeerConnectRetryInterval
+  - oid: 1.3.6.1.2.1.15.3.1.18
+    name: bgpPeerHoldTime
+  - oid: 1.3.6.1.2.1.15.3.1.19
+    name: bgpPeerKeepAlive
+  - oid: 1.3.6.1.2.1.15.3.1.20
+    name: bgpPeerHoldTimeConfigured
+  - oid: 1.3.6.1.2.1.15.3.1.21
+    name: bgpPeerKeepAliveConfigured
+  - oid: 1.3.6.1.2.1.15.3.1.22
+    name: bgpPeerMinASOriginationInterval
+  metric_tags:
+  - tag: remote_as
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.9
+      name: bgpPeerRemoteAs
+  - tag: admin_status
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.3
+      name: bgpPeerAdminStatus
+  - tag: peer_state
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.2
+      name: bgpPeerState
+  - tag: neighbor
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.7
+      name: bgpPeerRemoteAddr
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: PICO-SMI
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.2.1.1.0
+    name: nec.picoCelsius
+- mib: PICO-SMI
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.2.1.2.0
+    name: nec.picoFahrenheit
+- mib: PICO-SMI
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.2.2.0
+    name: nec.picoVoltage
+- mib: PICO-SMI
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.2.5.3.0
+    name: cpu.usage
+- mib: PICO-SMI
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.2.6.2.0
+    name: memory.usage
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.1.0
+    name: nec.pikeGlobalActiveTunnels
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.6.0
+    name: nec.pikeGlobalInNotifys
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.7.0
+    name: nec.pikeGlobalInP2Exchgs
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.8.0
+    name: nec.pikeGlobalInP2ExchgInvalids
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.9.0
+    name: nec.pikeGlobalInP2ExchgRejects
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.10.0
+    name: nec.pikeGlobalInP2SaDelRequests
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.14.0
+    name: nec.pikeGlobalOutNotifys
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.15.0
+    name: nec.pikeGlobalOutP2Exchgs
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.16.0
+    name: nec.pikeGlobalOutP2ExchgInvalids
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.17.0
+    name: nec.pikeGlobalOutP2ExchgRejects
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.18.0
+    name: nec.pikeGlobalOutP2SaDelRequests
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.19.0
+    name: nec.pikeGlobalInitTunnels
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.20.0
+    name: nec.pikeGlobalInitTunnelFails
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.21.0
+    name: nec.pikeGlobalRespTunnelFails
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.23.0
+    name: nec.pikeGlobalAuthFails
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.24.0
+    name: nec.pikeGlobalDecryptFails
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.25.0
+    name: nec.pikeGlobalHashValidFails
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.27.0
+    name: nec.pikeGlobalRespTunnels
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.30.0
+    name: nec.pikeGlobalInP1SaDelRequests
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.2.1.31.0
+    name: nec.pikeGlobalOutP1SaDelRequests
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.1.0
+    name: nec.pipSecGlobalActiveTunnels
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.3.0
+    name: nec.pipSecGlobalInOctets
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.9.0
+    name: nec.pipSecGlobalInPkts
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.10.0
+    name: nec.pipSecGlobalInDrops
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.11.0
+    name: nec.pipSecGlobalInReplayDrops
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.12.0
+    name: nec.pipSecGlobalInAuths
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.13.0
+    name: nec.pipSecGlobalInAuthFails
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.14.0
+    name: nec.pipSecGlobalInDecrypts
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.15.0
+    name: nec.pipSecGlobalInDecryptFails
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.16.0
+    name: nec.pipSecGlobalOutOctets
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.22.0
+    name: nec.pipSecGlobalOutPkts
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.23.0
+    name: nec.pipSecGlobalOutDrops
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.24.0
+    name: nec.pipSecGlobalOutAuths
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.25.0
+    name: nec.pipSecGlobalOutAuthFails
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.26.0
+    name: nec.pipSecGlobalOutEncrypts
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.27.0
+    name: nec.pipSecGlobalOutEncryptFails
+- mib: PICO-IPSEC-FLOW-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.119.2.3.84.3.1.3.1.33.0
+    name: nec.pipSecGlobalNoSaFails
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: nec
+- tag: profile
+  value: nec-univerge

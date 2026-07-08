@@ -1,0 +1,1102 @@
+# Telvyn SNMP profile — cisco-catalyst
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/cisco-catalyst.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.9.1.111
+- 1.3.6.1.4.1.9.1.150
+- 1.3.6.1.4.1.9.1.151
+- 1.3.6.1.4.1.9.1.152
+- 1.3.6.1.4.1.9.1.170
+- 1.3.6.1.4.1.9.1.171
+- 1.3.6.1.4.1.9.1.175
+- 1.3.6.1.4.1.9.1.183
+- 1.3.6.1.4.1.9.1.184
+- 1.3.6.1.4.1.9.1.190
+- 1.3.6.1.4.1.9.1.196
+- 1.3.6.1.4.1.9.1.197
+- 1.3.6.1.4.1.9.1.198
+- 1.3.6.1.4.1.9.1.202
+- 1.3.6.1.4.1.9.1.203
+- 1.3.6.1.4.1.9.1.217
+- 1.3.6.1.4.1.9.1.218
+- 1.3.6.1.4.1.9.1.219
+- 1.3.6.1.4.1.9.1.220
+- 1.3.6.1.4.1.9.1.221
+- 1.3.6.1.4.1.9.1.230
+- 1.3.6.1.4.1.9.1.231
+- 1.3.6.1.4.1.9.1.241
+- 1.3.6.1.4.1.9.1.246
+- 1.3.6.1.4.1.9.1.247
+- 1.3.6.1.4.1.9.1.248
+- 1.3.6.1.4.1.9.1.256
+- 1.3.6.1.4.1.9.1.257
+- 1.3.6.1.4.1.9.1.258
+- 1.3.6.1.4.1.9.1.275
+- 1.3.6.1.4.1.9.1.278
+- 1.3.6.1.4.1.9.1.280
+- 1.3.6.1.4.1.9.1.281
+- 1.3.6.1.4.1.9.1.282
+- 1.3.6.1.4.1.9.1.283
+- 1.3.6.1.4.1.9.1.287
+- 1.3.6.1.4.1.9.1.298
+- 1.3.6.1.4.1.9.1.300
+- 1.3.6.1.4.1.9.1.301
+- 1.3.6.1.4.1.9.1.310
+- 1.3.6.1.4.1.9.1.312
+- 1.3.6.1.4.1.9.1.318
+- 1.3.6.1.4.1.9.1.323
+- 1.3.6.1.4.1.9.1.324
+- 1.3.6.1.4.1.9.1.325
+- 1.3.6.1.4.1.9.1.359
+- 1.3.6.1.4.1.9.1.366
+- 1.3.6.1.4.1.9.1.367
+- 1.3.6.1.4.1.9.1.368
+- 1.3.6.1.4.1.9.1.369
+- 1.3.6.1.4.1.9.1.370
+- 1.3.6.1.4.1.9.1.386
+- 1.3.6.1.4.1.9.1.387
+- 1.3.6.1.4.1.9.1.400
+- 1.3.6.1.4.1.9.1.427
+- 1.3.6.1.4.1.9.1.428
+- 1.3.6.1.4.1.9.1.429
+- 1.3.6.1.4.1.9.1.430
+- 1.3.6.1.4.1.9.1.431
+- 1.3.6.1.4.1.9.1.445
+- 1.3.6.1.4.1.9.1.448
+- 1.3.6.1.4.1.9.1.449
+- 1.3.6.1.4.1.9.1.452
+- 1.3.6.1.4.1.9.1.453
+- 1.3.6.1.4.1.9.1.472
+- 1.3.6.1.4.1.9.1.480
+- 1.3.6.1.4.1.9.1.482
+- 1.3.6.1.4.1.9.1.483
+- 1.3.6.1.4.1.9.1.484
+- 1.3.6.1.4.1.9.1.485
+- 1.3.6.1.4.1.9.1.488
+- 1.3.6.1.4.1.9.1.489
+- 1.3.6.1.4.1.9.1.501
+- 1.3.6.1.4.1.9.1.502
+- 1.3.6.1.4.1.9.1.503
+- 1.3.6.1.4.1.9.1.508
+- 1.3.6.1.4.1.9.1.510
+- 1.3.6.1.4.1.9.1.511
+- 1.3.6.1.4.1.9.1.512
+- 1.3.6.1.4.1.9.1.513
+- 1.3.6.1.4.1.9.1.514
+- 1.3.6.1.4.1.9.1.516
+- 1.3.6.1.4.1.9.1.522
+- 1.3.6.1.4.1.9.1.527
+- 1.3.6.1.4.1.9.1.530
+- 1.3.6.1.4.1.9.1.534
+- 1.3.6.1.4.1.9.1.535
+- 1.3.6.1.4.1.9.1.536
+- 1.3.6.1.4.1.9.1.537
+- 1.3.6.1.4.1.9.1.540
+- 1.3.6.1.4.1.9.1.542
+- 1.3.6.1.4.1.9.1.551
+- 1.3.6.1.4.1.9.1.554
+- 1.3.6.1.4.1.9.1.557
+- 1.3.6.1.4.1.9.1.559
+- 1.3.6.1.4.1.9.1.560
+- 1.3.6.1.4.1.9.1.561
+- 1.3.6.1.4.1.9.1.563
+- 1.3.6.1.4.1.9.1.564
+- 1.3.6.1.4.1.9.1.573
+- 1.3.6.1.4.1.9.1.574
+- 1.3.6.1.4.1.9.1.575
+- 1.3.6.1.4.1.9.1.591
+- 1.3.6.1.4.1.9.1.602
+- 1.3.6.1.4.1.9.1.603
+- 1.3.6.1.4.1.9.1.604
+- 1.3.6.1.4.1.9.1.614
+- 1.3.6.1.4.1.9.1.615
+- 1.3.6.1.4.1.9.1.616
+- 1.3.6.1.4.1.9.1.617
+- 1.3.6.1.4.1.9.1.624
+- 1.3.6.1.4.1.9.1.626
+- 1.3.6.1.4.1.9.1.633
+- 1.3.6.1.4.1.9.1.634
+- 1.3.6.1.4.1.9.1.656
+- 1.3.6.1.4.1.9.1.657
+- 1.3.6.1.4.1.9.1.659
+- 1.3.6.1.4.1.9.1.674
+- 1.3.6.1.4.1.9.1.688
+- 1.3.6.1.4.1.9.1.694
+- 1.3.6.1.4.1.9.1.695
+- 1.3.6.1.4.1.9.1.696
+- 1.3.6.1.4.1.9.1.697
+- 1.3.6.1.4.1.9.1.698
+- 1.3.6.1.4.1.9.1.699
+- 1.3.6.1.4.1.9.1.700
+- 1.3.6.1.4.1.9.1.701
+- 1.3.6.1.4.1.9.1.706
+- 1.3.6.1.4.1.9.1.716
+- 1.3.6.1.4.1.9.1.717
+- 1.3.6.1.4.1.9.1.724
+- 1.3.6.1.4.1.9.1.725
+- 1.3.6.1.4.1.9.1.726
+- 1.3.6.1.4.1.9.1.727
+- 1.3.6.1.4.1.9.1.748
+- 1.3.6.1.4.1.9.1.749
+- 1.3.6.1.4.1.9.1.751
+- 1.3.6.1.4.1.9.1.755
+- 1.3.6.1.4.1.9.1.767
+- 1.3.6.1.4.1.9.1.778
+- 1.3.6.1.4.1.9.1.779
+- 1.3.6.1.4.1.9.1.784
+- 1.3.6.1.4.1.9.1.789
+- 1.3.6.1.4.1.9.1.790
+- 1.3.6.1.4.1.9.1.791
+- 1.3.6.1.4.1.9.1.792
+- 1.3.6.1.4.1.9.1.793
+- 1.3.6.1.4.1.9.1.794
+- 1.3.6.1.4.1.9.1.795
+- 1.3.6.1.4.1.9.1.796
+- 1.3.6.1.4.1.9.1.797
+- 1.3.6.1.4.1.9.1.798
+- 1.3.6.1.4.1.9.1.799
+- 1.3.6.1.4.1.9.1.832
+- 1.3.6.1.4.1.9.1.868
+- 1.3.6.1.4.1.9.1.874
+- 1.3.6.1.4.1.9.1.875
+- 1.3.6.1.4.1.9.1.876
+- 1.3.6.1.4.1.9.1.877
+- 1.3.6.1.4.1.9.1.896
+- 1.3.6.1.4.1.9.1.897
+- 1.3.6.1.4.1.9.1.909
+- 1.3.6.1.4.1.9.1.910
+- 1.3.6.1.4.1.9.1.911
+- 1.3.6.1.4.1.9.1.912
+- 1.3.6.1.4.1.9.1.917
+- 1.3.6.1.4.1.9.1.918
+- 1.3.6.1.4.1.9.1.919
+- 1.3.6.1.4.1.9.1.920
+- 1.3.6.1.4.1.9.1.921
+- 1.3.6.1.4.1.9.1.922
+- 1.3.6.1.4.1.9.1.927
+- 1.3.6.1.4.1.9.1.928
+- 1.3.6.1.4.1.9.1.929
+- 1.3.6.1.4.1.9.1.930
+- 1.3.6.1.4.1.9.1.932
+- 1.3.6.1.4.1.9.1.933
+- 1.3.6.1.4.1.9.1.934
+- 1.3.6.1.4.1.9.1.935
+- 1.3.6.1.4.1.9.1.946
+- 1.3.6.1.4.1.9.1.947
+- 1.3.6.1.4.1.9.1.948
+- 1.3.6.1.4.1.9.1.949
+- 1.3.6.1.4.1.9.1.950
+- 1.3.6.1.4.1.9.1.951
+- 1.3.6.1.4.1.9.1.952
+- 1.3.6.1.4.1.9.1.956
+- 1.3.6.1.4.1.9.1.965
+- 1.3.6.1.4.1.9.1.966
+- 1.3.6.1.4.1.9.1.967
+- 1.3.6.1.4.1.9.1.968
+- 1.3.6.1.4.1.9.1.999
+- 1.3.6.1.4.1.9.1.1000
+- 1.3.6.1.4.1.9.1.1001
+- 1.3.6.1.4.1.9.1.1002
+- 1.3.6.1.4.1.9.1.1004
+- 1.3.6.1.4.1.9.1.1005
+- 1.3.6.1.4.1.9.1.1006
+- 1.3.6.1.4.1.9.1.1015
+- 1.3.6.1.4.1.9.1.1016
+- 1.3.6.1.4.1.9.1.1019
+- 1.3.6.1.4.1.9.1.1020
+- 1.3.6.1.4.1.9.1.1021
+- 1.3.6.1.4.1.9.1.1022
+- 1.3.6.1.4.1.9.1.1023
+- 1.3.6.1.4.1.9.1.1024
+- 1.3.6.1.4.1.9.1.1025
+- 1.3.6.1.4.1.9.1.1026
+- 1.3.6.1.4.1.9.1.1027
+- 1.3.6.1.4.1.9.1.1067
+- 1.3.6.1.4.1.9.1.1068
+- 1.3.6.1.4.1.9.1.1087
+- 1.3.6.1.4.1.9.1.1088
+- 1.3.6.1.4.1.9.1.1089
+- 1.3.6.1.4.1.9.1.1090
+- 1.3.6.1.4.1.9.1.1091
+- 1.3.6.1.4.1.9.1.1092
+- 1.3.6.1.4.1.9.1.1104
+- 1.3.6.1.4.1.9.1.1146
+- 1.3.6.1.4.1.9.1.1147
+- 1.3.6.1.4.1.9.1.1148
+- 1.3.6.1.4.1.9.1.1178
+- 1.3.6.1.4.1.9.1.1179
+- 1.3.6.1.4.1.9.1.1180
+- 1.3.6.1.4.1.9.1.1181
+- 1.3.6.1.4.1.9.1.1182
+- 1.3.6.1.4.1.9.1.1183
+- 1.3.6.1.4.1.9.1.1184
+- 1.3.6.1.4.1.9.1.1185
+- 1.3.6.1.4.1.9.1.1186
+- 1.3.6.1.4.1.9.1.1187
+- 1.3.6.1.4.1.9.1.1188
+- 1.3.6.1.4.1.9.1.1189
+- 1.3.6.1.4.1.9.1.1190
+- 1.3.6.1.4.1.9.1.1208
+- 1.3.6.1.4.1.9.1.1222
+- 1.3.6.1.4.1.9.1.1223
+- 1.3.6.1.4.1.9.1.1224
+- 1.3.6.1.4.1.9.1.1225
+- 1.3.6.1.4.1.9.1.1226
+- 1.3.6.1.4.1.9.1.1227
+- 1.3.6.1.4.1.9.1.1228
+- 1.3.6.1.4.1.9.1.1229
+- 1.3.6.1.4.1.9.1.1256
+- 1.3.6.1.4.1.9.1.1257
+- 1.3.6.1.4.1.9.1.1258
+- 1.3.6.1.4.1.9.1.1259
+- 1.3.6.1.4.1.9.1.1260
+- 1.3.6.1.4.1.9.1.1261
+- 1.3.6.1.4.1.9.1.1262
+- 1.3.6.1.4.1.9.1.1263
+- 1.3.6.1.4.1.9.1.1264
+- 1.3.6.1.4.1.9.1.1265
+- 1.3.6.1.4.1.9.1.1266
+- 1.3.6.1.4.1.9.1.1267
+- 1.3.6.1.4.1.9.1.1278
+- 1.3.6.1.4.1.9.1.1286
+- 1.3.6.1.4.1.9.1.1287
+- 1.3.6.1.4.1.9.1.1292
+- 1.3.6.1.4.1.9.1.1300
+- 1.3.6.1.4.1.9.1.1315
+- 1.3.6.1.4.1.9.1.1316
+- 1.3.6.1.4.1.9.1.1317
+- 1.3.6.1.4.1.9.1.1318
+- 1.3.6.1.4.1.9.1.1327
+- 1.3.6.1.4.1.9.1.1328
+- 1.3.6.1.4.1.9.1.1329
+- 1.3.6.1.4.1.9.1.1330
+- 1.3.6.1.4.1.9.1.1364
+- 1.3.6.1.4.1.9.1.1365
+- 1.3.6.1.4.1.9.1.1366
+- 1.3.6.1.4.1.9.1.1367
+- 1.3.6.1.4.1.9.1.1368
+- 1.3.6.1.4.1.9.1.1404
+- 1.3.6.1.4.1.9.1.1405
+- 1.3.6.1.4.1.9.1.1465
+- 1.3.6.1.4.1.9.1.1466
+- 1.3.6.1.4.1.9.1.1529
+- 1.3.6.1.4.1.9.1.1605
+- 1.3.6.1.4.1.9.1.1606
+- 1.3.6.1.4.1.9.1.1641
+- 1.3.6.1.4.1.9.1.1642
+- 1.3.6.1.4.1.9.1.1643
+- 1.3.6.1.4.1.9.1.1644
+- 1.3.6.1.4.1.9.1.1690
+- 1.3.6.1.4.1.9.1.1691
+- 1.3.6.1.4.1.9.1.1692
+- 1.3.6.1.4.1.9.1.1693
+- 1.3.6.1.4.1.9.1.1694
+- 1.3.6.1.4.1.9.1.1695
+- 1.3.6.1.4.1.9.1.1696
+- 1.3.6.1.4.1.9.1.1697
+- 1.3.6.1.4.1.9.1.1698
+- 1.3.6.1.4.1.9.1.1699
+- 1.3.6.1.4.1.9.1.1700
+- 1.3.6.1.4.1.9.1.1701
+- 1.3.6.1.4.1.9.1.1702
+- 1.3.6.1.4.1.9.1.1703
+- 1.3.6.1.4.1.9.1.1704
+- 1.3.6.1.4.1.9.1.1710
+- 1.3.6.1.4.1.9.1.1711
+- 1.3.6.1.4.1.9.1.1712
+- 1.3.6.1.4.1.9.1.1713
+- 1.3.6.1.4.1.9.1.1732
+- 1.3.6.1.4.1.9.1.1765
+- 1.3.6.1.4.1.9.1.1767
+- 1.3.6.1.4.1.9.1.1768
+- 1.3.6.1.4.1.9.1.1784
+- 1.3.6.1.4.1.9.1.1796
+- 1.3.6.1.4.1.9.1.1797
+- 1.3.6.1.4.1.9.1.1798
+- 1.3.6.1.4.1.9.1.1799
+- 1.3.6.1.4.1.9.1.1800
+- 1.3.6.1.4.1.9.1.1801
+- 1.3.6.1.4.1.9.1.1802
+- 1.3.6.1.4.1.9.1.1803
+- 1.3.6.1.4.1.9.1.1804
+- 1.3.6.1.4.1.9.1.1805
+- 1.3.6.1.4.1.9.1.1806
+- 1.3.6.1.4.1.9.1.1823
+- 1.3.6.1.4.1.9.1.1824
+- 1.3.6.1.4.1.9.1.1825
+- 1.3.6.1.4.1.9.1.1826
+- 1.3.6.1.4.1.9.1.1827
+- 1.3.6.1.4.1.9.1.1828
+- 1.3.6.1.4.1.9.1.1829
+- 1.3.6.1.4.1.9.1.1830
+- 1.3.6.1.4.1.9.1.1866
+- 1.3.6.1.4.1.9.1.1867
+- 1.3.6.1.4.1.9.1.1879
+- 1.3.6.1.4.1.9.1.1880
+- 1.3.6.1.4.1.9.1.1881
+- 1.3.6.1.4.1.9.1.1882
+- 1.3.6.1.4.1.9.1.1936
+- 1.3.6.1.4.1.9.1.2026
+- 1.3.6.1.4.1.9.1.2066
+- 1.3.6.1.4.1.9.1.2130
+- 1.3.6.1.4.1.9.1.2131
+- 1.3.6.1.4.1.9.1.2132
+- 1.3.6.1.4.1.9.1.2133
+- 1.3.6.1.4.1.9.1.2134
+- 1.3.6.1.4.1.9.1.2135
+- 1.3.6.1.4.1.9.1.2136
+- 1.3.6.1.4.1.9.1.2137
+- 1.3.6.1.4.1.9.1.2162
+- 1.3.6.1.4.1.9.1.2163
+- 1.3.6.1.4.1.9.1.2164
+- 1.3.6.1.4.1.9.1.2165
+- 1.3.6.1.4.1.9.1.2166
+- 1.3.6.1.4.1.9.1.2191
+- 1.3.6.1.4.1.9.1.2273
+- 1.3.6.1.4.1.9.1.2274
+- 1.3.6.1.4.1.9.1.2275
+- 1.3.6.1.4.1.9.1.2276
+- 1.3.6.1.4.1.9.1.2277
+- 1.3.6.1.4.1.9.1.2278
+- 1.3.6.1.4.1.9.1.2279
+- 1.3.6.1.4.1.9.1.2280
+- 1.3.6.1.4.1.9.1.2281
+- 1.3.6.1.4.1.9.1.2290
+- 1.3.6.1.4.1.9.1.2291
+- 1.3.6.1.4.1.9.1.2360
+- 1.3.6.1.4.1.9.1.2361
+- 1.3.6.1.4.1.9.1.2362
+- 1.3.6.1.4.1.9.1.2363
+- 1.3.6.1.4.1.9.1.2364
+- 1.3.6.1.4.1.9.1.2365
+- 1.3.6.1.4.1.9.1.2366
+- 1.3.6.1.4.1.9.1.2367
+- 1.3.6.1.4.1.9.1.2398
+- 1.3.6.1.4.1.9.1.2399
+- 1.3.6.1.4.1.9.1.2418
+- 1.3.6.1.4.1.9.1.2435
+- 1.3.6.1.4.1.9.1.2436
+- 1.3.6.1.4.1.9.1.2440
+- 1.3.6.1.4.1.9.1.2441
+- 1.3.6.1.4.1.9.1.2491
+- 1.3.6.1.4.1.9.1.2494
+- 1.3.6.1.4.1.9.1.2495
+- 1.3.6.1.4.1.9.1.2496
+- 1.3.6.1.4.1.9.1.2497
+- 1.3.6.1.4.1.9.1.2498
+- 1.3.6.1.4.1.9.1.2499
+- 1.3.6.1.4.1.9.1.2500
+- 1.3.6.1.4.1.9.1.2501
+- 1.3.6.1.4.1.9.1.2564
+- 1.3.6.1.4.1.9.1.2566
+- 1.3.6.1.4.1.9.1.2567
+- 1.3.6.1.4.1.9.1.2568
+- 1.3.6.1.4.1.9.1.2573
+- 1.3.6.1.4.1.9.1.2574
+- 1.3.6.1.4.1.9.1.2575
+- 1.3.6.1.4.1.9.1.2576
+- 1.3.6.1.4.1.9.1.2577
+- 1.3.6.1.4.1.9.1.2578
+- 1.3.6.1.4.1.9.1.2579
+- 1.3.6.1.4.1.9.1.2580
+- 1.3.6.1.4.1.9.1.2581
+- 1.3.6.1.4.1.9.1.2582
+- 1.3.6.1.4.1.9.1.2583
+- 1.3.6.1.4.1.9.1.2584
+- 1.3.6.1.4.1.9.1.2585
+- 1.3.6.1.4.1.9.1.2586
+- 1.3.6.1.4.1.9.1.2587
+- 1.3.6.1.4.1.9.1.2588
+- 1.3.6.1.4.1.9.1.2589
+- 1.3.6.1.4.1.9.1.2590
+- 1.3.6.1.4.1.9.1.2591
+- 1.3.6.1.4.1.9.1.2592
+- 1.3.6.1.4.1.9.1.2593
+- 1.3.6.1.4.1.9.1.2648
+- 1.3.6.1.4.1.9.1.2664
+- 1.3.6.1.4.1.9.1.2688
+- 1.3.6.1.4.1.9.1.2694
+- 1.3.6.1.4.1.9.1.2695
+- 1.3.6.1.4.1.9.1.2780
+- 1.3.6.1.4.1.9.1.2781
+- 1.3.6.1.4.1.9.1.2792
+- 1.3.6.1.4.1.9.1.2793
+- 1.3.6.1.4.1.9.1.2794
+- 1.3.6.1.4.1.9.1.2795
+- 1.3.6.1.4.1.9.1.2796
+- 1.3.6.1.4.1.9.1.2797
+- 1.3.6.1.4.1.9.1.2798
+- 1.3.6.1.4.1.9.1.2799
+- 1.3.6.1.4.1.9.1.2800
+- 1.3.6.1.4.1.9.1.2801
+- 1.3.6.1.4.1.9.1.2802
+- 1.3.6.1.4.1.9.1.2803
+- 1.3.6.1.4.1.9.1.2804
+- 1.3.6.1.4.1.9.1.2819
+- 1.3.6.1.4.1.9.1.2850
+- 1.3.6.1.4.1.9.1.2871
+- 1.3.6.1.4.1.9.1.2959
+- 1.3.6.1.4.1.9.1.2961
+- 1.3.6.1.4.1.9.1.2963
+- 1.3.6.1.4.1.9.1.2989
+- 1.3.6.1.4.1.9.1.2990
+- 1.3.6.1.4.1.9.1.2992
+- 1.3.6.1.4.1.9.1.2993
+- 1.3.6.1.4.1.9.1.3004
+- 1.3.6.1.4.1.9.1.3021
+- 1.3.6.1.4.1.9.1.3022
+- 1.3.6.1.4.1.9.1.3023
+- 1.3.6.1.4.1.9.1.3024
+- 1.3.6.1.4.1.9.1.3069
+- 1.3.6.1.4.1.9.1.3079
+metrics:
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.5.0
+    name: tcpActiveOpens
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.6.0
+    name: tcpPassiveOpens
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.7.0
+    name: tcpAttemptFails
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.8.0
+    name: tcpEstabResets
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.9.0
+    name: tcpCurrEstab
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.17.0
+    name: tcpHCInSegs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.18.0
+    name: tcpHCOutSegs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.12.0
+    name: tcpRetransSegs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.14.0
+    name: tcpInErrs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.15.0
+    name: tcpOutRsts
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.8.0
+    name: udpHCInDatagrams
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.2.0
+    name: udpNoPorts
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.3.0
+    name: udpInErrors
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.9.0
+    name: udpHCOutDatagrams
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.10
+    name: ospfNbrTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.10.1.6
+    name: ospfNbrState
+  - oid: 1.3.6.1.2.1.14.10.1.7
+    name: ospfNbrEvents
+  - oid: 1.3.6.1.2.1.14.10.1.8
+    name: ospfNbrLsRetransQLen
+  metric_tags:
+  - tag: neighbor_id
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.3
+      name: ospfNbrRtrId
+  - tag: neighbor_ip
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.1
+      name: ospfNbrIpAddr
+  - tag: neighbor_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.6
+      name: ospfNbrState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.11
+    name: ospfVirtNbrTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.11.1.5
+    name: ospfVirtNbrState
+  - oid: 1.3.6.1.2.1.14.11.1.6
+    name: ospfVirtNbrEvents
+  - oid: 1.3.6.1.2.1.14.11.1.7
+    name: ospfVirtNbrLsRetransQLen
+  metric_tags:
+  - tag: neighbor_ip
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.3
+      name: ospfVirtNbrIpAddr
+  - tag: neighbor_id
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.2
+      name: ospfVirtNbrRtrId
+  - tag: neighbor_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.5
+      name: ospfVirtNbrState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.7
+    name: ospfIfTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.7.1.8
+    name: ospfIfRetransInterval
+  - oid: 1.3.6.1.2.1.14.7.1.12
+    name: ospfIfState
+  - oid: 1.3.6.1.2.1.14.7.1.21
+    name: ospfIfLsaCount
+  metric_tags:
+  - tag: ospf_ip_addr
+    symbol:
+      oid: 1.3.6.1.2.1.14.7.1.1
+      name: ospfIfIpAddress
+  - tag: if_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.7.1.12
+      name: ospfIfState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.9
+    name: ospfVirtIfTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.9.1.4
+    name: ospfVirtIfRetransInterval
+  - oid: 1.3.6.1.2.1.14.9.1.7
+    name: ospfVirtIfState
+  - oid: 1.3.6.1.2.1.14.9.1.12
+    name: ospfVirtIfLsaCount
+  metric_tags:
+  - tag: if_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.9.1.7
+      name: ospfVirtIfState
+- mib: BGP4-MIB
+  table:
+    oid: 1.3.6.1.2.1.15.3
+    name: bgpPeerTable
+  symbols:
+  - oid: 1.3.6.1.2.1.15.3.1.3
+    name: bgpPeerAdminStatus
+  - oid: 1.3.6.1.2.1.15.3.1.4
+    name: bgpPeerNegotiatedVersion
+  - oid: 1.3.6.1.2.1.15.3.1.9
+    name: bgpPeerRemoteAs
+  - oid: 1.3.6.1.2.1.15.3.1.2
+    name: bgpPeerState
+  - oid: 1.3.6.1.2.1.15.3.1.10
+    name: bgpPeerInUpdates
+  - oid: 1.3.6.1.2.1.15.3.1.11
+    name: bgpPeerOutUpdates
+  - oid: 1.3.6.1.2.1.15.3.1.12
+    name: bgpPeerInTotalMessages
+  - oid: 1.3.6.1.2.1.15.3.1.13
+    name: bgpPeerOutTotalMessages
+  - oid: 1.3.6.1.2.1.15.3.1.15
+    name: bgpPeerFsmEstablishedTransitions
+  - oid: 1.3.6.1.2.1.15.3.1.16
+    name: bgpPeerFsmEstablishedTime
+  - oid: 1.3.6.1.2.1.15.3.1.17
+    name: bgpPeerConnectRetryInterval
+  - oid: 1.3.6.1.2.1.15.3.1.18
+    name: bgpPeerHoldTime
+  - oid: 1.3.6.1.2.1.15.3.1.19
+    name: bgpPeerKeepAlive
+  - oid: 1.3.6.1.2.1.15.3.1.20
+    name: bgpPeerHoldTimeConfigured
+  - oid: 1.3.6.1.2.1.15.3.1.21
+    name: bgpPeerKeepAliveConfigured
+  - oid: 1.3.6.1.2.1.15.3.1.22
+    name: bgpPeerMinASOriginationInterval
+  metric_tags:
+  - tag: remote_as
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.9
+      name: bgpPeerRemoteAs
+  - tag: admin_status
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.3
+      name: bgpPeerAdminStatus
+  - tag: peer_state
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.2
+      name: bgpPeerState
+  - tag: neighbor
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.7
+      name: bgpPeerRemoteAddr
+- mib: IP-MIB
+  table:
+    oid: 1.3.6.1.2.1.4.31.1
+    name: ipSystemStatsTable
+  symbols:
+  - oid: 1.3.6.1.2.1.4.31.1.1.4
+    name: ipSystemStatsHCInReceives
+  - oid: 1.3.6.1.2.1.4.31.1.1.6
+    name: ipSystemStatsHCInOctets
+  - oid: 1.3.6.1.2.1.4.31.1.1.7
+    name: ipSystemStatsInHdrErrors
+  - oid: 1.3.6.1.2.1.4.31.1.1.8
+    name: ipSystemStatsInNoRoutes
+  - oid: 1.3.6.1.2.1.4.31.1.1.9
+    name: ipSystemStatsInAddrErrors
+  - oid: 1.3.6.1.2.1.4.31.1.1.10
+    name: ipSystemStatsInUnknownProtos
+  - oid: 1.3.6.1.2.1.4.31.1.1.11
+    name: ipSystemStatsInTruncatedPkts
+  - oid: 1.3.6.1.2.1.4.31.1.1.13
+    name: ipSystemStatsHCInForwDatagrams
+  - oid: 1.3.6.1.2.1.4.31.1.1.14
+    name: ipSystemStatsReasmReqds
+  - oid: 1.3.6.1.2.1.4.31.1.1.15
+    name: ipSystemStatsReasmOKs
+  - oid: 1.3.6.1.2.1.4.31.1.1.16
+    name: ipSystemStatsReasmFails
+  - oid: 1.3.6.1.2.1.4.31.1.1.17
+    name: ipSystemStatsInDiscards
+  - oid: 1.3.6.1.2.1.4.31.1.1.19
+    name: ipSystemStatsHCInDelivers
+  - oid: 1.3.6.1.2.1.4.31.1.1.21
+    name: ipSystemStatsHCOutRequests
+  - oid: 1.3.6.1.2.1.4.31.1.1.22
+    name: ipSystemStatsOutNoRoutes
+  - oid: 1.3.6.1.2.1.4.31.1.1.24
+    name: ipSystemStatsHCOutForwDatagrams
+  - oid: 1.3.6.1.2.1.4.31.1.1.25
+    name: ipSystemStatsOutDiscards
+  - oid: 1.3.6.1.2.1.4.31.1.1.26
+    name: ipSystemStatsOutFragReqds
+  - oid: 1.3.6.1.2.1.4.31.1.1.27
+    name: ipSystemStatsOutFragOKs
+  - oid: 1.3.6.1.2.1.4.31.1.1.28
+    name: ipSystemStatsOutFragFails
+  - oid: 1.3.6.1.2.1.4.31.1.1.29
+    name: ipSystemStatsOutFragCreates
+  - oid: 1.3.6.1.2.1.4.31.1.1.31
+    name: ipSystemStatsHCOutTransmits
+  - oid: 1.3.6.1.2.1.4.31.1.1.33
+    name: ipSystemStatsHCOutOctets
+  - oid: 1.3.6.1.2.1.4.31.1.1.35
+    name: ipSystemStatsHCInMcastPkts
+  - oid: 1.3.6.1.2.1.4.31.1.1.37
+    name: ipSystemStatsHCInMcastOctets
+  - oid: 1.3.6.1.2.1.4.31.1.1.39
+    name: ipSystemStatsHCOutMcastPkts
+  - oid: 1.3.6.1.2.1.4.31.1.1.41
+    name: ipSystemStatsHCOutMcastOctets
+  - oid: 1.3.6.1.2.1.4.31.1.1.43
+    name: ipSystemStatsHCInBcastPkts
+  - oid: 1.3.6.1.2.1.4.31.1.1.45
+    name: ipSystemStatsHCOutBcastPkts
+- mib: IP-MIB
+  table:
+    oid: 1.3.6.1.2.1.4.31.3
+    name: ipIfStatsTable
+  symbols:
+  - oid: 1.3.6.1.2.1.4.31.3.1.6
+    name: ipIfStatsHCInOctets
+  - oid: 1.3.6.1.2.1.4.31.3.1.7
+    name: ipIfStatsInHdrErrors
+  - oid: 1.3.6.1.2.1.4.31.3.1.8
+    name: ipIfStatsInNoRoutes
+  - oid: 1.3.6.1.2.1.4.31.3.1.9
+    name: ipIfStatsInAddrErrors
+  - oid: 1.3.6.1.2.1.4.31.3.1.10
+    name: ipIfStatsInUnknownProtos
+  - oid: 1.3.6.1.2.1.4.31.3.1.11
+    name: ipIfStatsInTruncatedPkts
+  - oid: 1.3.6.1.2.1.4.31.3.1.13
+    name: ipIfStatsHCInForwDatagrams
+  - oid: 1.3.6.1.2.1.4.31.3.1.14
+    name: ipIfStatsReasmReqds
+  - oid: 1.3.6.1.2.1.4.31.3.1.15
+    name: ipIfStatsReasmOKs
+  - oid: 1.3.6.1.2.1.4.31.3.1.16
+    name: ipIfStatsReasmFails
+  - oid: 1.3.6.1.2.1.4.31.3.1.17
+    name: ipIfStatsInDiscards
+  - oid: 1.3.6.1.2.1.4.31.3.1.19
+    name: ipIfStatsHCInDelivers
+  - oid: 1.3.6.1.2.1.4.31.3.1.21
+    name: ipIfStatsHCOutRequests
+  - oid: 1.3.6.1.2.1.4.31.3.1.24
+    name: ipIfStatsHCOutForwDatagrams
+  - oid: 1.3.6.1.2.1.4.31.3.1.25
+    name: ipIfStatsOutDiscards
+  - oid: 1.3.6.1.2.1.4.31.3.1.26
+    name: ipIfStatsOutFragReqds
+  - oid: 1.3.6.1.2.1.4.31.3.1.27
+    name: ipIfStatsOutFragOKs
+  - oid: 1.3.6.1.2.1.4.31.3.1.28
+    name: ipIfStatsOutFragFails
+  - oid: 1.3.6.1.2.1.4.31.3.1.29
+    name: ipIfStatsOutFragCreates
+  - oid: 1.3.6.1.2.1.4.31.3.1.31
+    name: ipIfStatsHCOutTransmits
+  - oid: 1.3.6.1.2.1.4.31.3.1.33
+    name: ipIfStatsHCOutOctets
+  - oid: 1.3.6.1.2.1.4.31.3.1.35
+    name: ipIfStatsHCInMcastPkts
+  - oid: 1.3.6.1.2.1.4.31.3.1.37
+    name: ipIfStatsHCInMcastOctets
+  - oid: 1.3.6.1.2.1.4.31.3.1.39
+    name: ipIfStatsHCOutMcastPkts
+  - oid: 1.3.6.1.2.1.4.31.3.1.41
+    name: ipIfStatsHCOutMcastOctets
+  - oid: 1.3.6.1.2.1.4.31.3.1.43
+    name: ipIfStatsHCInBcastPkts
+  - oid: 1.3.6.1.2.1.4.31.3.1.45
+    name: ipIfStatsHCOutBcastPkts
+- mib: CISCO-PROCESS-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.109.1.1.1
+    name: cpmCPUTotalTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.7
+    name: cpu.usage
+- mib: CISCO-MEMORY-POOL-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.48.1.1
+    name: ciscoMemoryPoolTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.48.1.1.1.5
+    name: memory.used
+  - oid: 1.3.6.1.4.1.9.9.48.1.1.1.6
+    name: memory.free
+- mib: CISCO-ENTITY-FRU-CONTROL-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.117.1.1.2
+    name: cefcFRUPowerStatusTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.117.1.1.2.1.1
+    name: cefcFRUPowerAdminStatus
+  - oid: 1.3.6.1.4.1.9.9.117.1.1.2.1.2
+    name: cefcFRUPowerOperStatus
+  - oid: 1.3.6.1.4.1.9.9.117.1.1.2.1.3
+    name: cefcFRUCurrent
+- mib: CISCO-PROCESS-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.109.1.1.1
+    name: cpmCPUTotalTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.10
+    name: cpmCPUTotalMonIntervalValue
+  - oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.12
+    name: cpmCPUMemoryUsed
+  - oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.13
+    name: cpmCPUMemoryFree
+  - oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.7
+    name: cpmCPUTotal1minRev
+- mib: CISCO-IF-EXTENSION-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.276.1.1.2
+    name: cieIfInterfaceTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.276.1.1.2.1.1
+    name: cieIfResetCount
+- mib: CISCO-ENVMON-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.13.1.3
+    name: ciscoEnvMonTemperatureStatusTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.13.1.3.1.3
+    name: ciscoEnvMonTemperatureStatusValue
+  metric_tags:
+  - tag: temp_state
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.13.1.3.1.6
+      name: ciscoEnvMonTemperatureState
+- mib: CISCO-ENVMON-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.13.1.5
+    name: ciscoEnvMonSupplyStatusTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.13.1.5.1.3
+    name: ciscoEnvMonSupplyState
+  metric_tags:
+  - tag: power_source
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.13.1.5.1.4
+      name: ciscoEnvMonSupplySource
+  - tag: power_status_descr
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.13.1.5.1.2
+      name: ciscoEnvMonSupplyStatusDescr
+- mib: CISCO-ENVMON-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.13.1.4
+    name: ciscoEnvMonFanStatusTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.13.1.4.1.3
+    name: ciscoEnvMonFanState
+  metric_tags:
+  - tag: fan_status_index
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.13.1.4.1.1
+      name: ciscoEnvMonFanStatusIndex
+- mib: CISCO-STACKWISE-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.500.1.2.2
+    name: cswStackPortInfoTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.500.1.2.2.1.1
+    name: cswStackPortOperStatus
+- mib: CISCO-STACKWISE-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.500.1.2.1
+    name: cswSwitchInfoTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.500.1.2.1.1.6
+    name: cswSwitchState
+  metric_tags:
+  - tag: mac_addr
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.500.1.2.1.1.7
+      name: cswSwitchMacAddress
+- mib: CISCO-ENTITY-FRU-CONTROL-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.117.1.4.1
+    name: cefcFanTrayStatusTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.117.1.4.1.1.1
+    name: cefcFanTrayOperStatus
+- mib: CISCO-MEMORY-POOL-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.48.1.1
+    name: ciscoMemoryPoolTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.48.1.1.1.5
+    name: ciscoMemoryPoolUsed
+  - oid: 1.3.6.1.4.1.9.9.48.1.1.1.6
+    name: ciscoMemoryPoolFree
+  - oid: 1.3.6.1.4.1.9.9.48.1.1.1.7
+    name: ciscoMemoryPoolLargestFree
+  metric_tags:
+  - tag: mem_pool_name
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.48.1.1.1.2
+      name: ciscoMemoryPoolName
+- mib: CISCO-FIREWALL-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.147.1.2.2.2
+    name: cfwConnectionStatTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.147.1.2.2.2.1.4
+    name: cfwConnectionStatCount
+  metric_tags:
+  - tag: connection_type
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.147.1.2.2.2.1.2
+      name: cfwConnectionStatType
+- mib: CISCO-FIREWALL-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.147.1.2.1.1
+    name: cfwHardwareStatusTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.147.1.2.1.1.1.3
+    name: cfwHardwareStatusValue
+  metric_tags:
+  - tag: hardware_desc
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.147.1.2.1.1.1.2
+      name: cfwHardwareInformation
+- mib: CISCO-VIRTUAL-SWITCH-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.388.1.2.2
+    name: cvsChassisTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.388.1.2.2.1.3
+    name: cvsChassisUpTime
+  metric_tags:
+  - tag: chassis_switch_id
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.388.1.2.2.1.1
+      name: cvsChassisSwitchID
+- mib: CISCO-RTTMON-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.42.1.2.10
+    name: rttMonLatestRttOperTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.42.1.2.10.1.1
+    name: rttMonLatestRttOperCompletionTime
+  - oid: 1.3.6.1.4.1.9.9.42.1.2.10.1.2
+    name: rttMonLatestRttOperSense
+  metric_tags:
+  - tag: rtt_sense
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.42.1.2.10.1.2
+      name: rttMonLatestRttOperSense
+- mib: CISCO-RTTMON-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.42.1.2.9
+    name: rttMonCtrlOperTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.42.1.2.9.1.6
+    name: rttMonCtrlOperTimeoutOccurred
+  metric_tags:
+  - tag: rtt_state
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.42.1.2.9.1.10
+      name: rttMonCtrlOperState
+  - tag: rtt_timeout
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.42.1.2.9.1.6
+      name: rttMonCtrlOperTimeoutOccurred
+- mib: CISCO-ENTITY-SENSOR-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.91.1.1.1
+    name: entSensorValueTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.91.1.1.1.1.4
+    name: entSensorValue
+  metric_tags:
+  - tag: sensor_type
+    symbol:
+      oid: 1.3.6.1.4.1.9.9.91.1.1.1.1.1
+      name: entSensorType
+- mib: CISCO-IF-EXTENSION-MIB
+  table:
+    oid: 1.3.6.1.4.1.9.9.276.1.1.1
+    name: cieIfPacketStatsTable
+  symbols:
+  - oid: 1.3.6.1.4.1.9.9.276.1.1.1.1.1
+    name: cieIfLastInTime
+  - oid: 1.3.6.1.4.1.9.9.276.1.1.1.1.2
+    name: cieIfLastOutTime
+  - oid: 1.3.6.1.4.1.9.9.276.1.1.1.1.10
+    name: cieIfInputQueueDrops
+  - oid: 1.3.6.1.4.1.9.9.276.1.1.1.1.11
+    name: cieIfOutputQueueDrops
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: cisco
+- tag: profile
+  value: cisco-catalyst

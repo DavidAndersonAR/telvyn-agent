@@ -1,0 +1,176 @@
+# Telvyn SNMP profile — servertech-pdu4
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/servertech-pdu4.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.1718.4
+metrics:
+- mib: SENTRY4-MIB
+  table:
+    oid: 1.3.6.1.4.1.1718.4.1.3.3
+    name: st4InputCordMonitorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.1718.4.1.3.3.1.3
+    name: servertech.sentry4.st4InputCordActivePower
+  - oid: 1.3.6.1.4.1.1718.4.1.3.3.1.5
+    name: servertech.sentry4.st4InputCordApparentPower
+  - oid: 1.3.6.1.4.1.1718.4.1.3.3.1.7
+    name: servertech.sentry4.st4InputCordPowerUtilized
+  - oid: 1.3.6.1.4.1.1718.4.1.3.3.1.8
+    name: servertech.sentry4.st4InputCordPowerFactor
+  - oid: 1.3.6.1.4.1.1718.4.1.3.3.1.10
+    name: servertech.sentry4.st4InputCordEnergy
+  - oid: 1.3.6.1.4.1.1718.4.1.3.3.1.11
+    name: servertech.sentry4.st4InputCordFrequency
+  - oid: 1.3.6.1.4.1.1718.4.1.3.3.1.12
+    name: servertech.sentry4.st4InputCordOutOfBalance
+  metric_tags:
+  - tag: servertech_sentry4_st4_input_cord_state
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.3.3.1.1
+      name: servertech.sentry4.st4InputCordState
+  - tag: servertech_sentry4_st4_input_cord_status
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.3.3.1.2
+      name: servertech.sentry4.st4InputCordStatus
+  - tag: servertech_sentry4_st4_input_cord_active_power_status
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.3.3.1.4
+      name: servertech.sentry4.st4InputCordActivePowerStatus
+  - tag: servertech_sentry4_st4_input_cord_apparent_power_status
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.3.3.1.6
+      name: servertech.sentry4.st4InputCordApparentPowerStatus
+  - tag: servertech_sentry4_st4_input_cord_power_factor_status
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.3.3.1.9
+      name: servertech.sentry4.st4InputCordPowerFactorStatus
+  - tag: servertech_sentry4_st4_input_cord_out_of_balance_status
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.3.3.1.13
+      name: servertech.sentry4.st4InputCordOutOfBalanceStatus
+- mib: SENTRY4-MIB
+  table:
+    oid: 1.3.6.1.4.1.1718.4.1.4.3
+    name: st4LineMonitorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.1718.4.1.4.3.1.3
+    name: servertech.sentry4.st4LineCurrent
+  - oid: 1.3.6.1.4.1.1718.4.1.4.3.1.5
+    name: servertech.sentry4.st4LineCurrentUtilized
+  metric_tags:
+  - tag: servertech_sentry4_st4_line_state
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.4.3.1.1
+      name: servertech.sentry4.st4LineState
+  - tag: servertech_sentry4_st4_line_status
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.4.3.1.2
+      name: servertech.sentry4.st4LineStatus
+  - tag: servertech_sentry4_st4_line_current_status
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.4.3.1.4
+      name: servertech.sentry4.st4LineCurrentStatus
+- mib: SENTRY4-MIB
+  table:
+    oid: 1.3.6.1.4.1.1718.4.1.5.3
+    name: st4PhaseMonitorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.1718.4.1.5.3.1.3
+    name: servertech.sentry4.st4PhaseVoltage
+  - oid: 1.3.6.1.4.1.1718.4.1.5.3.1.5
+    name: servertech.sentry4.st4PhaseVoltageDeviation
+  - oid: 1.3.6.1.4.1.1718.4.1.5.3.1.6
+    name: servertech.sentry4.st4PhaseCurrent
+  - oid: 1.3.6.1.4.1.1718.4.1.5.3.1.7
+    name: servertech.sentry4.st4PhaseCurrentCrestFactor
+  - oid: 1.3.6.1.4.1.1718.4.1.5.3.1.8
+    name: servertech.sentry4.st4PhaseActivePower
+  - oid: 1.3.6.1.4.1.1718.4.1.5.3.1.9
+    name: servertech.sentry4.st4PhaseApparentPower
+  - oid: 1.3.6.1.4.1.1718.4.1.5.3.1.10
+    name: servertech.sentry4.st4PhasePowerFactor
+  - oid: 1.3.6.1.4.1.1718.4.1.5.3.1.13
+    name: servertech.sentry4.st4PhaseEnergy
+  metric_tags:
+  - tag: servertech_sentry4_st4_phase_state
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.5.3.1.1
+      name: servertech.sentry4.st4PhaseState
+  - tag: servertech_sentry4_st4_phase_status
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.5.3.1.2
+      name: servertech.sentry4.st4PhaseStatus
+  - tag: servertech_sentry4_st4_phase_voltage_status
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.5.3.1.4
+      name: servertech.sentry4.st4PhaseVoltageStatus
+  - tag: servertech_sentry4_st4_phase_power_factor_status
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.5.3.1.11
+      name: servertech.sentry4.st4PhasePowerFactorStatus
+  - tag: servertech_sentry4_st4_phase_reactance
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.5.3.1.12
+      name: servertech.sentry4.st4PhaseReactance
+- mib: SENTRY4-MIB
+  table:
+    oid: 1.3.6.1.4.1.1718.4.1.7.3
+    name: st4BranchMonitorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.1718.4.1.7.3.1.3
+    name: servertech.sentry4.st4BranchCurrent
+  - oid: 1.3.6.1.4.1.1718.4.1.7.3.1.5
+    name: servertech.sentry4.st4BranchCurrentUtilized
+  metric_tags:
+  - tag: servertech_sentry4_st4_branch_state
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.7.3.1.1
+      name: servertech.sentry4.st4BranchState
+  - tag: servertech_sentry4_st4_branch_status
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.7.3.1.2
+      name: servertech.sentry4.st4BranchStatus
+  - tag: servertech_sentry4_st4_branch_current_status
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.7.3.1.4
+      name: servertech.sentry4.st4BranchCurrentStatus
+- mib: SENTRY4-MIB
+  table:
+    oid: 1.3.6.1.4.1.1718.4.1.9.3
+    name: st4TempSensorMonitorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.1718.4.1.9.3.1.1
+    name: servertech.sentry4.st4TempSensorValue
+  metric_tags:
+  - tag: servertech_sentry4_st4_temp_sensor_status
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.9.3.1.2
+      name: servertech.sentry4.st4TempSensorStatus
+- mib: SENTRY4-MIB
+  table:
+    oid: 1.3.6.1.4.1.1718.4.1.10.3
+    name: st4HumidSensorMonitorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.1718.4.1.10.3.1.1
+    name: servertech.sentry4.st4HumidSensorValue
+  metric_tags:
+  - tag: servertech_sentry4_st4_humid_sensor_status
+    symbol:
+      oid: 1.3.6.1.4.1.1718.4.1.10.3.1.2
+      name: servertech.sentry4.st4HumidSensorStatus
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: servertech
+- tag: profile
+  value: servertech-pdu4

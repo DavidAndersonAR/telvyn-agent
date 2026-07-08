@@ -1,0 +1,380 @@
+# Telvyn SNMP profile — huawei-routers
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/huawei-routers.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.2011.2.224.279
+metrics:
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: HUAWEI-ENTITY-EXTENT-MIB
+  table:
+    oid: 1.3.6.1.4.1.2011.5.25.31.1.1.1
+    name: hwEntityStateTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.11
+    name: huawei.hwEntityTemperature
+  - oid: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.13
+    name: huawei.hwEntityVoltage
+  metric_tags:
+  - tag: huawei_hw_entity_board_name
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.43
+      name: huawei.hwEntityBoardName
+  - tag: huawei_hw_entity_admin_status
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.1
+      name: huawei.hwEntityAdminStatus
+  - tag: huawei_hw_entity_oper_status
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.2
+      name: huawei.hwEntityOperStatus
+  - tag: huawei_hw_entity_standby_status
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.3
+      name: huawei.hwEntityStandbyStatus
+  - tag: huawei_hw_entity_fault_light
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.42
+      name: huawei.hwEntityFaultLight
+- mib: HUAWEI-ENTITY-EXTENT-MIB
+  table:
+    oid: 1.3.6.1.4.1.2011.5.25.31.1.1.10
+    name: hwFanStatusTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2011.5.25.31.1.1.10.1.5
+    name: huawei.hwEntityFanSpeed
+  metric_tags:
+  - tag: huawei_hw_entity_fan_slot
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.31.1.1.10.1.1
+      name: huawei.hwEntityFanSlot
+  - tag: huawei_hw_entity_fan_sn
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.31.1.1.10.1.2
+      name: huawei.hwEntityFanSn
+  - tag: huawei_hw_entity_fan_reg
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.31.1.1.10.1.3
+      name: huawei.hwEntityFanReg
+  - tag: huawei_hw_entity_fan_spd_adj_mode
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.31.1.1.10.1.4
+      name: huawei.hwEntityFanSpdAdjMode
+  - tag: huawei_hw_entity_fan_present
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.31.1.1.10.1.6
+      name: huawei.hwEntityFanPresent
+  - tag: huawei_hw_entity_fan_state
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.31.1.1.10.1.7
+      name: huawei.hwEntityFanState
+- mib: HUAWEI-ENTITY-EXTENT-MIB
+  table:
+    oid: 1.3.6.1.4.1.2011.5.25.31.1.1.14
+    name: hwSystemPowerTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2011.5.25.31.1.1.14.1.2
+    name: huawei.hwSystemPowerTotalPower
+  - oid: 1.3.6.1.4.1.2011.5.25.31.1.1.14.1.3
+    name: huawei.hwSystemPowerUsedPower
+  - oid: 1.3.6.1.4.1.2011.5.25.31.1.1.14.1.4
+    name: huawei.hwSystemPowerRemainPower
+  metric_tags:
+  - tag: huawei_hw_system_power_device_id
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.31.1.1.14.1.1
+      name: huawei.hwSystemPowerDeviceID
+- mib: HUAWEI-OSPFV2-MIB
+  table:
+    oid: 1.3.6.1.4.1.2011.5.25.155.6
+    name: hwOspfv2NeighborTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2011.5.25.155.6.1.12
+    name: huawei.hwOspfv2NbrPriority
+  - oid: 1.3.6.1.4.1.2011.5.25.155.6.1.13
+    name: huawei.hwOspfv2NbrUpTime
+  - oid: 1.3.6.1.4.1.2011.5.25.155.6.1.15
+    name: huawei.hwOspfv2NbrDeadTimeLeft
+  metric_tags:
+  - tag: huawei_hw_ospfv2_self_router_id
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.155.6.1.3
+      name: huawei.hwOspfv2SelfRouterId
+  - tag: huawei_hw_ospfv2_neighbor_router_id
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.155.6.1.9
+      name: huawei.hwOspfv2NbrRouterId
+  - tag: huawei_hw_ospfv2_self_if_ip_address
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.155.6.1.4
+      name: huawei.hwOspfv2SelfIfIpAddress
+  - tag: huawei_hw_ospfv2_self_if_name
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.155.6.1.5
+      name: huawei.hwOspfv2SelfIfName
+  - tag: huawei_hw_ospfv2_nbr_if_designated_router
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.155.6.1.6
+      name: huawei.hwOspfv2NbrIfDesignatedRouter
+  - tag: huawei_hw_ospfv2_nbr_if_backup_designated_router
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.155.6.1.7
+      name: huawei.hwOspfv2NbrIfBackupDesignatedRouter
+  - tag: huawei_hw_ospfv2_nbr_state
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.155.6.1.10
+      name: huawei.hwOspfv2NbrState
+  - tag: huawei_hw_ospfv2_nbr_mode
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.155.6.1.11
+      name: huawei.hwOspfv2NbrMode
+  - tag: huawei_hw_ospfv2_nbr_gr_status
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.155.6.1.16
+      name: huawei.hwOspfv2NbrGrStatus
+- mib: HUAWEI-DEVICE-MIB
+  table:
+    oid: 1.3.6.1.4.1.2011.6.3.4
+    name: hwCpuDevTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2011.6.3.4.1.3
+    name: huawei.hwAvgDuty1min
+- mib: HUAWEI-DEVICE-MIB
+  table:
+    oid: 1.3.6.1.4.1.2011.6.3.5.1
+    name: hwMemoryDevTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2011.6.3.5.1.1.2
+    name: huawei.hwMemoryDevSize
+  - oid: 1.3.6.1.4.1.2011.6.3.5.1.1.3
+    name: huawei.hwMemoryDevFree
+- mib: HUAWEI-BGP-VPN-MIB
+  table:
+    oid: 1.3.6.1.4.1.2011.5.25.177.1.1.2
+    name: hwBgpPeerTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.2.1.1
+    name: huawei.hwBgpPeerNegotiatedVersion
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.2.1.2
+    name: huawei.hwBgpPeerRemoteAs
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.2.1.6
+    name: huawei.hwBgpPeerFsmEstablishedCounter
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.2.1.7
+    name: huawei.hwBgpPeerFsmEstablishedTime
+  metric_tags:
+  - tag: huawei_hw_bgp_peer_remote_addr
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.177.1.1.2.1.4
+      name: huawei.hwBgpPeerRemoteAddr
+  - tag: huawei_hw_bgp_peer_state
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.177.1.1.2.1.5
+      name: huawei.hwBgpPeerState
+  - tag: huawei_hw_bgp_peer_un_avai_reason
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.177.1.1.2.1.10
+      name: huawei.hwBgpPeerUnAvaiReason
+- mib: HUAWEI-BGP-VPN-MIB
+  table:
+    oid: 1.3.6.1.4.1.2011.5.25.177.1.1.3
+    name: hwBgpPeerRouteTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.3.1.1
+    name: huawei.hwBgpPeerPrefixRcvCounter
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.3.1.2
+    name: huawei.hwBgpPeerPrefixActiveCounter
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.3.1.3
+    name: huawei.hwBgpPeerPrefixAdvCounter
+- mib: HUAWEI-BGP-VPN-MIB
+  table:
+    oid: 1.3.6.1.4.1.2011.5.25.177.1.1.4
+    name: hwBgpPeerMessageTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.4.1.1
+    name: huawei.hwBgpPeerInTotalMsgCounter
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.4.1.2
+    name: huawei.hwBgpPeerOutTotalMsgCounter
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.4.1.3
+    name: huawei.hwBgpPeerInOpenMsgCounter
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.4.1.4
+    name: huawei.hwBgpPeerInUpdateMsgCounter
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.4.1.5
+    name: huawei.hwBgpPeerInNotificationMsgCounter
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.4.1.6
+    name: huawei.hwBgpPeerInKeepAliveMsgCounter
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.4.1.7
+    name: huawei.hwBgpPeerInRouteFreshMsgCounter
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.4.1.8
+    name: huawei.hwBgpPeerOutOpenMsgCounter
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.4.1.9
+    name: huawei.hwBgpPeerOutUpdateMsgCounter
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.4.1.10
+    name: huawei.hwBgpPeerOutNotificationMsgCounter
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.4.1.11
+    name: huawei.hwBgpPeerOutKeepAliveMsgCounter
+  - oid: 1.3.6.1.4.1.2011.5.25.177.1.1.4.1.12
+    name: huawei.hwBgpPeerOutRouteFreshMsgCounter
+- mib: HUAWEI-DNS-MIB
+  table:
+    oid: 1.3.6.1.4.1.2011.5.25.194.1.1
+    name: hwDnsHostsDynamicTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2011.5.25.194.1.1.1.3
+    name: huawei.hwDnsTtl
+  metric_tags:
+  - tag: huawei_hw_dns_domain_name
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.194.1.1.1.1
+      name: huawei.hwDnsDomainName
+  - tag: huawei_hw_dns_ip_address
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.194.1.1.1.2
+      name: huawei.hwDnsIpAddress
+  - tag: huawei_hw_dns_alias
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.194.1.1.1.4
+      name: huawei.hwDnsAlias
+- mib: HUAWEI-FIREWALL-MIB
+  table:
+    oid: 1.3.6.1.4.1.2011.5.25.222.1.2.2.2
+    name: hwFwConnectionStatTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2011.5.25.222.1.2.2.2.1.4
+    name: huawei.hwFwConnectionStatCount
+  metric_tags:
+  - tag: huawei_hw_fw_connection_stat_description
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.222.1.2.2.2.1.3
+      name: huawei.hwFwConnectionStatDescription
+- mib: HUAWEI-NAT-EXT-MIB
+  table:
+    oid: 1.3.6.1.4.1.2011.5.25.226.2.3.2
+    name: hwNatAddrPoolTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2011.5.25.226.2.3.2.1.4
+    name: huawei.hwNatAddrPoolRefTimes
+  metric_tags:
+  - tag: huawei_hw_nat_addr_pool_start_addr
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.226.2.3.2.1.2
+      name: huawei.hwNatAddrPoolStartAddr
+  - tag: huawei_hw_nat_addr_pool_end_addr
+    symbol:
+      oid: 1.3.6.1.4.1.2011.5.25.226.2.3.2.1.3
+      name: huawei.hwNatAddrPoolEndAddr
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: huawei_hw_entity_system_model
+  symbol:
+    oid: 1.3.6.1.4.1.2011.5.25.31.6.5.0
+    name: hwEntitySystemModel
+- tag: vendor
+  value: huawei
+- tag: profile
+  value: huawei-routers

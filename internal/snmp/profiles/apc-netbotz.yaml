@@ -1,0 +1,138 @@
+# Telvyn SNMP profile — apc-netbotz
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/apc-netbotz.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.5528.100.20.*
+metrics:
+- mib: NETBOTZV2-MIB
+  table:
+    oid: 1.3.6.1.4.1.5528.100.4.1.1
+    name: tempSensorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.5528.100.4.1.1.1.8
+    name: netbotz.tempSensorValueInt
+  - oid: 1.3.6.1.4.1.5528.100.4.1.1.1.9
+    name: netbotz.tempSensorValueIntF
+  metric_tags:
+  - tag: netbotz_temp_sensor_index
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.1.1.10
+      name: tempSensorIndex
+  - tag: netbotz_temp_sensor_id
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.1.1.1
+      name: tempSensorId
+  - tag: netbotz_temp_sensor_label
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.1.1.4
+      name: tempSensorLabel
+  - tag: netbotz_temp_sensor_enc_id
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.1.1.5
+      name: tempSensorEncId
+  - tag: netbotz_temp_sensor_error_status
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.1.1.3
+      name: tempSensorErrorStatus
+- mib: NETBOTZV2-MIB
+  table:
+    oid: 1.3.6.1.4.1.5528.100.4.1.2
+    name: humiSensorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.5528.100.4.1.2.1.8
+    name: netbotz.humiSensorValueInt
+  metric_tags:
+  - tag: netbotz_humi_sensor_index
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.2.1.9
+      name: humiSensorIndex
+  - tag: netbotz_humi_sensor_id
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.2.1.1
+      name: humiSensorId
+  - tag: netbotz_humi_sensor_label
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.2.1.4
+      name: humiSensorLabel
+  - tag: netbotz_humi_sensor_enc_id
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.2.1.5
+      name: humiSensorEncId
+  - tag: netbotz_humi_sensor_error_status
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.2.1.3
+      name: humiSensorErrorStatus
+- mib: NETBOTZ410-MIB
+  table:
+    oid: 1.3.6.1.4.1.5528.100.4.1.3
+    name: dewPointSensorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.5528.100.4.1.3.1.8
+    name: netbotz.dewPointSensorValueInt
+  - oid: 1.3.6.1.4.1.5528.100.4.1.3.1.9
+    name: netbotz.dewPointSensorValueIntF
+  metric_tags:
+  - tag: netbotz_dew_point_sensor_index
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.3.1.10
+      name: dewPointSensorIndex
+  - tag: netbotz_dew_point_sensor_id
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.3.1.1
+      name: dewPointSensorId
+  - tag: netbotz_dew_point_sensor_label
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.3.1.4
+      name: dewPointSensorLabel
+  - tag: netbotz_dew_point_sensor_enc_id
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.3.1.5
+      name: dewPointSensorEncId
+- mib: NETBOTZV2-MIB
+  table:
+    oid: 1.3.6.1.4.1.5528.100.4.1.10
+    name: otherNumericSensorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.5528.100.4.1.10.1.8
+    name: netbotz.otherNumericSensorValueInt
+  metric_tags:
+  - tag: netbotz_other_numeric_sensor_index
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.10.1.12
+      name: otherNumericSensorIndex
+  - tag: netbotz_other_numeric_sensor_id
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.10.1.1
+      name: otherNumericSensorId
+  - tag: netbotz_other_numeric_sensor_label
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.10.1.4
+      name: otherNumericSensorLabel
+  - tag: netbotz_other_numeric_sensor_enc_id
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.10.1.5
+      name: otherNumericSensorEncId
+  - tag: netbotz_other_numeric_sensor_units
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.10.1.9
+      name: otherNumericSensorUnits
+  - tag: netbotz_other_numeric_sensor_error_status
+    symbol:
+      oid: 1.3.6.1.4.1.5528.100.4.1.10.1.3
+      name: otherNumericSensorErrorStatus
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: apc
+- tag: profile
+  value: apc-netbotz
