@@ -208,6 +208,38 @@ var (
 	loadErr    error
 )
 
+// Overlay dinâmico: perfis SNMP CUSTOM do tenant, entregues pelo backend via
+// config-pull (NDM Fase 2). Vivem só em memória; o backend manda o CONJUNTO
+// COMPLETO e RegisterDynamicProfiles faz um REPLACE atômico. Os perfis embutidos
+// (go:embed) têm precedência sobre os dinâmicos em caso de nome igual — mas o
+// backend já rejeita slug custom que colida com builtin, então na prática não há
+// colisão.
+var (
+	dynamicMu   sync.RWMutex
+	dynamicByID map[string]*Profile
+)
+
+// ParseProfileYAML parseia um YAML de perfil (mesmo formato do embed) e carimba
+// o Name. Reusa exatamente o unmarshal do loadAll.
+func ParseProfileYAML(name, yamlContent string) (*Profile, error) {
+	p := &Profile{}
+	if err := yaml.Unmarshal([]byte(yamlContent), p); err != nil {
+		return nil, fmt.Errorf("snmp: parse dynamic profile %q: %w", name, err)
+	}
+	p.Name = name
+	return p, nil
+}
+
+// RegisterDynamicProfiles substitui atomicamente o overlay dinâmico. Passa o
+// CONJUNTO COMPLETO de perfis custom do tenant — o replace é total (criar/editar/
+// excluir no backend converge aqui no próximo poll). Passar um map vazio limpa o
+// overlay.
+func RegisterDynamicProfiles(m map[string]*Profile) {
+	dynamicMu.Lock()
+	dynamicByID = m
+	dynamicMu.Unlock()
+}
+
 // loadAll inicializa loadedByID/loadedAll a partir de profiles.FS. Roda
 // uma vez via sync.Once.
 func loadAll() {
@@ -258,6 +290,13 @@ func LoadProfile(name string) (*Profile, error) {
 	if p, ok := loadedByID[name]; ok {
 		return p, nil
 	}
+	// Overlay dinâmico (perfis custom do tenant) — precedência menor que o embed.
+	dynamicMu.RLock()
+	if p, ok := dynamicByID[name]; ok {
+		dynamicMu.RUnlock()
+		return p, nil
+	}
+	dynamicMu.RUnlock()
 	valid := make([]string, 0, len(loadedByID))
 	for k := range loadedByID {
 		valid = append(valid, k)
@@ -273,9 +312,19 @@ func AllProfiles() ([]*Profile, error) {
 	if loadErr != nil {
 		return nil, loadErr
 	}
-	// Devolve copia da slice — caller nao deve mutar nossa estrutura.
-	out := make([]*Profile, len(loadedAll))
-	copy(out, loadedAll)
+	// Devolve copia da slice — caller nao deve mutar nossa estrutura. Concatena
+	// os perfis dinâmicos (custom do tenant) pra o auto-match (MatchSysObjectID)
+	// enxergá-los. Pula dinâmico com nome já presente no embed (embed vence).
+	dynamicMu.RLock()
+	out := make([]*Profile, 0, len(loadedAll)+len(dynamicByID))
+	out = append(out, loadedAll...)
+	for name, p := range dynamicByID {
+		if _, clash := loadedByID[name]; clash {
+			continue
+		}
+		out = append(out, p)
+	}
+	dynamicMu.RUnlock()
 	return out, nil
 }
 

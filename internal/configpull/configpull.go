@@ -29,6 +29,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/durationpb"
 
+	"github.com/ispwatch/collector/internal/snmp"
 	collectorv1 "github.com/ispwatch/collector/proto/v1"
 )
 
@@ -110,9 +111,20 @@ func Run(ctx context.Context, cfg Config, applier Applier) error {
 }
 
 type pullResponse struct {
-	Version        int64           `json:"version"`
-	AddedOrUpdated []pulledCheck   `json:"added_or_updated"`
-	DeletedIds     []string        `json:"deleted_ids"`
+	Version        int64         `json:"version"`
+	AddedOrUpdated []pulledCheck `json:"added_or_updated"`
+	DeletedIds     []string      `json:"deleted_ids"`
+	// NDM Fase 2 — conjunto COMPLETO de perfis SNMP custom do tenant. O backend
+	// só manda no caminho não-short-circuit; o agente faz replace atômico do
+	// overlay dinâmico. Ausente nas versões antigas do backend (json zero = nil).
+	SnmpProfiles []pulledProfile `json:"snmp_profiles"`
+}
+
+// pulledProfile é um perfil SNMP custom entregue pelo config-pull.
+type pulledProfile struct {
+	Name    string `json:"name"`    // slug (profile_id)
+	Yaml    string `json:"yaml"`    // YAML cru, formato Datadog
+	Version int64  `json:"version"` // versão do perfil (pra log)
 }
 
 type pulledCheck struct {
@@ -121,8 +133,8 @@ type pulledCheck struct {
 	HostId          int64  `json:"host_id"`
 	Hostname        string `json:"hostname"`
 	ExternalId      string `json:"external_id"`
-	Params          string `json:"params"`        // JSON string
-	StaticTags      string `json:"static_tags"`   // JSON string
+	Params          string `json:"params"`      // JSON string
+	StaticTags      string `json:"static_tags"` // JSON string
 	IntervalSeconds int32  `json:"interval_seconds"`
 	ConfigVersion   int64  `json:"config_version"`
 	DisabledMetrics string `json:"disabled_metrics"` // JSON array of metric names, e.g. ["snmp_if_in_octets"]
@@ -144,12 +156,16 @@ func pullOnce(
 		since)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	req.Header.Set("Accept", "application/json")
 
 	t0 := time.Now()
 	resp, err := client.Do(req)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode >= 400 {
@@ -171,11 +187,11 @@ func pullOnce(
 	cfgs := make([]*collectorv1.CheckConfig, 0, len(r.AddedOrUpdated))
 	for _, p := range r.AddedOrUpdated {
 		cb := collectorv1.CheckConfig{
-			CheckId:    p.ID,
-			CheckType:  p.CheckType,
-			HostId:     fmt.Sprintf("%d", p.HostId),
-			Enabled:    true,
-			Interval:   nil, // setado abaixo
+			CheckId:   p.ID,
+			CheckType: p.CheckType,
+			HostId:    fmt.Sprintf("%d", p.HostId),
+			Enabled:   true,
+			Interval:  nil, // setado abaixo
 		}
 		// Interval em segundos → durationpb.Duration
 		if p.IntervalSeconds > 0 {
@@ -190,20 +206,45 @@ func pullOnce(
 		if (startsWith(p.CheckType, "snmp.") || startsWith(p.CheckType, "icmp.")) && cb.Params != nil {
 			if _, has := cb.Params["target"]; !has {
 				target := p.ExternalId
-				if target == "" { target = p.Hostname }
-				if target != "" { cb.Params["target"] = target }
+				if target == "" {
+					target = p.Hostname
+				}
+				if target != "" {
+					cb.Params["target"] = target
+				}
 			}
 		}
 		// Injeta disabled_metrics no params pra que o check SNMP filtre
 		// métricas desabilitadas pelo usuário. Valor é JSON array string.
 		if p.DisabledMetrics != "" && p.DisabledMetrics != "[]" {
-			if cb.Params == nil { cb.Params = make(map[string]string) }
+			if cb.Params == nil {
+				cb.Params = make(map[string]string)
+			}
 			cb.Params["disabled_metrics"] = p.DisabledMetrics
 		}
 		cfgs = append(cfgs, &cb)
 	}
 
 	added, removed := applier.ApplyDelta(cfgs, r.DeletedIds)
+
+	// NDM Fase 2 — registra o conjunto COMPLETO de perfis SNMP custom (replace
+	// atômico do overlay dinâmico). r.SnmpProfiles == nil ⇒ backend antigo não
+	// mandou o campo: NÃO mexe no overlay. non-nil (mesmo vazio) ⇒ estado
+	// autoritativo do tenant (vazio = tenant sem custom, limpa o overlay).
+	if r.SnmpProfiles != nil {
+		dyn := make(map[string]*snmp.Profile, len(r.SnmpProfiles))
+		for _, pp := range r.SnmpProfiles {
+			prof, err := snmp.ParseProfileYAML(pp.Name, pp.Yaml)
+			if err != nil {
+				log.Warn("config pull: skip bad custom profile", "name", pp.Name, "err", err)
+				continue
+			}
+			dyn[pp.Name] = prof
+		}
+		snmp.RegisterDynamicProfiles(dyn)
+		log.Info("config pull: custom SNMP profiles registered", "count", len(dyn))
+	}
+
 	sinceVer.Store(r.Version)
 	log.Info("config pull: delta applied",
 		"from_version", since, "to_version", r.Version,
@@ -213,7 +254,9 @@ func pullOnce(
 }
 
 func jsonObjectToStringMap(s string) map[string]string {
-	if s == "" || s == "{}" { return map[string]string{} }
+	if s == "" || s == "{}" {
+		return map[string]string{}
+	}
 	var raw map[string]any
 	if err := json.Unmarshal([]byte(s), &raw); err != nil {
 		return map[string]string{}
@@ -221,10 +264,14 @@ func jsonObjectToStringMap(s string) map[string]string {
 	out := make(map[string]string, len(raw))
 	for k, v := range raw {
 		switch t := v.(type) {
-		case string: out[k] = t
-		case float64: out[k] = fmt.Sprintf("%v", t)
-		case bool: out[k] = fmt.Sprintf("%v", t)
-		default: out[k] = fmt.Sprintf("%v", t)
+		case string:
+			out[k] = t
+		case float64:
+			out[k] = fmt.Sprintf("%v", t)
+		case bool:
+			out[k] = fmt.Sprintf("%v", t)
+		default:
+			out[k] = fmt.Sprintf("%v", t)
 		}
 	}
 	return out
@@ -234,7 +281,12 @@ func startsWith(s, prefix string) bool {
 	return len(s) >= len(prefix) && s[:len(prefix)] == prefix
 }
 
-func min(a, b int) int { if a < b { return a }; return b }
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
 
 // buildMTLSClient monta um *http.Client com client cert + trust bundle.
 //
