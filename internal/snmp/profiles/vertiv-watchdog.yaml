@@ -1,0 +1,78 @@
+# Telvyn SNMP profile — vertiv-watchdog
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/vertiv-watchdog.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.21239.5.1
+metrics:
+- mib: VERTIV-BB-MIB
+  table:
+    oid: 1.3.6.1.4.1.21239.5.1.2
+    name: internalTable
+  symbols:
+  - oid: 1.3.6.1.4.1.21239.5.1.2.1.5
+    name: vertiv.internalTemp
+  - oid: 1.3.6.1.4.1.21239.5.1.2.1.6
+    name: vertiv.internalHumidity
+  - oid: 1.3.6.1.4.1.21239.5.1.2.1.7
+    name: vertiv.internalDewPoint
+  metric_tags:
+  - tag: vertiv_internal_serial
+    symbol:
+      oid: 1.3.6.1.4.1.21239.5.1.2.1.2
+      name: vertiv.internalSerial
+  - tag: vertiv_internal_avail
+    symbol:
+      oid: 1.3.6.1.4.1.21239.5.1.2.1.4
+      name: vertiv.internalAvail
+- mib: VERTIV-BB-MIB
+  table:
+    oid: 1.3.6.1.4.1.21239.5.1.4
+    name: tempSensorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.21239.5.1.4.1.5
+    name: vertiv.tempSensorTemp
+  metric_tags:
+  - tag: vertiv_temp_sensor_serial
+    symbol:
+      oid: 1.3.6.1.4.1.21239.5.1.4.1.2
+      name: vertiv.tempSensorSerial
+  - tag: vertiv_temp_sensor_label
+    symbol:
+      oid: 1.3.6.1.4.1.21239.5.1.4.1.3
+      name: vertiv.tempSensorLabel
+  - tag: vertiv_temp_sensor_avail
+    symbol:
+      oid: 1.3.6.1.4.1.21239.5.1.4.1.4
+      name: vertiv.tempSensorAvail
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vertiv_product_title
+  symbol:
+    oid: 1.3.6.1.4.1.21239.5.1.1.1.0
+    name: productTitle
+- tag: vertiv_product_version
+  symbol:
+    oid: 1.3.6.1.4.1.21239.5.1.1.2.0
+    name: productVersion
+- tag: vertiv_product_friendly_name
+  symbol:
+    oid: 1.3.6.1.4.1.21239.5.1.1.3.0
+    name: productFriendlyName
+- tag: vertiv_product_mac_address
+  symbol:
+    oid: 1.3.6.1.4.1.21239.5.1.1.4.0
+    name: productMacAddress
+- tag: vendor
+  value: vertiv
+- tag: profile
+  value: vertiv-watchdog

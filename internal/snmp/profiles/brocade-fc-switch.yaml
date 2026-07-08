@@ -1,0 +1,187 @@
+# Telvyn SNMP profile — brocade-fc-switch
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/brocade-fc-switch.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.1588.2.1.1.*
+- 1.3.6.1.4.1.1588.2.1.1.32
+- 1.3.6.1.4.1.1588.2.1.1.44
+- 1.3.6.1.4.1.1588.2.1.1.62
+- 1.3.6.1.4.1.1588.2.1.1.64
+- 1.3.6.1.4.1.1588.2.1.1.66
+- 1.3.6.1.4.1.1588.2.1.1.71
+- 1.3.6.1.4.1.1588.2.1.1.72
+- 1.3.6.1.4.1.1588.2.1.1.77
+- 1.3.6.1.4.1.1588.2.1.1.83
+- 1.3.6.1.4.1.1588.2.1.1.109
+- 1.3.6.1.4.1.1588.2.1.1.117
+- 1.3.6.1.4.1.1588.2.1.1.118
+- 1.3.6.1.4.1.1588.2.1.1.120
+- 1.3.6.1.4.1.1588.2.1.1.133
+- 1.3.6.1.4.1.1588.2.1.3
+metrics:
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: RESOURCE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1588.2.1.1.1.26.1.0
+    name: cpu.usage
+- mib: RESOURCE-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1588.2.1.1.1.26.6.0
+    name: memory.usage
+- mib: BROCADE-SYSTEM-MIB
+  table:
+    oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2
+    name: swFCPortTable
+  symbols:
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.13
+    name: swFCPortTxFrames
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.14
+    name: swFCPortRxFrames
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.15
+    name: swFCPortRxC2Frames
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.16
+    name: swFCPortRxC3Frames
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.17
+    name: swFCPortRxLCs
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.19
+    name: swFCPortTooManyRdys
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.20
+    name: swFCPortNoTxCredits
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.21
+    name: swFCPortRxEncInFrs
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.22
+    name: swFCPortRxCrcs
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.23
+    name: swFCPortRcTruncs
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.24
+    name: swFCPortRxTooLongs
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.25
+    name: swFCPortRxBadEofs
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.26
+    name: swFCPortRxEncOutFrs
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.27
+    name: swFCPortRxBadOs
+  - oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.28
+    name: swFCPortC3Discards
+  metric_tags:
+  - tag: sw_fc_port_name
+    symbol:
+      oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.36
+      name: swFCPortName
+  - tag: sw_fc_port_specifier
+    symbol:
+      oid: 1.3.6.1.4.1.1588.2.1.1.1.6.2.1.37
+      name: swFCPortSpecifier
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: brocade
+- tag: profile
+  value: brocade-fc-switch

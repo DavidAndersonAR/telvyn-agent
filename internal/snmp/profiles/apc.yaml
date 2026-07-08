@@ -1,0 +1,78 @@
+# Telvyn SNMP profile — apc
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/apc.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.318.*
+metrics:
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.5.0
+    name: tcpActiveOpens
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.6.0
+    name: tcpPassiveOpens
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.7.0
+    name: tcpAttemptFails
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.8.0
+    name: tcpEstabResets
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.9.0
+    name: tcpCurrEstab
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.17.0
+    name: tcpHCInSegs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.18.0
+    name: tcpHCOutSegs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.12.0
+    name: tcpRetransSegs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.14.0
+    name: tcpInErrs
+- mib: TCP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.6.15.0
+    name: tcpOutRsts
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.8.0
+    name: udpHCInDatagrams
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.2.0
+    name: udpNoPorts
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.3.0
+    name: udpInErrors
+- mib: UDP-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.7.9.0
+    name: udpHCOutDatagrams
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: apc
+- tag: profile
+  value: apc

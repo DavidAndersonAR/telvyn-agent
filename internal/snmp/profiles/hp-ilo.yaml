@@ -1,0 +1,475 @@
+# Telvyn SNMP profile — hp-ilo
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/hp-ilo.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.232.9.4.*
+metrics:
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.1.0
+    name: hrSystemUptime
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.5.0
+    name: hrSystemNumUsers
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.6.0
+    name: hrSystemProcesses
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.7.0
+    name: hrSystemMaxProcesses
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.2.3
+    name: hrStorageTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.2.3.1.4
+    name: hrStorageAllocationUnits
+  - oid: 1.3.6.1.2.1.25.2.3.1.5
+    name: hrStorageSize
+  - oid: 1.3.6.1.2.1.25.2.3.1.6
+    name: hrStorageUsed
+  - oid: 1.3.6.1.2.1.25.2.3.1.7
+    name: hrStorageAllocationFailures
+  metric_tags:
+  - tag: storagedesc
+    symbol:
+      oid: 1.3.6.1.2.1.25.2.3.1.3
+      name: hrStorageDescr
+  - tag: storagetype
+    symbol:
+      oid: 1.3.6.1.2.1.25.2.3.1.2
+      name: hrStorageType
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.3.3
+    name: hrProcessorTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.3.3.1.2
+    name: hrProcessorLoad
+  metric_tags:
+  - tag: processorid
+    symbol:
+      oid: 1.3.6.1.2.1.25.3.3.1.1
+      name: hrProcessorFrwID
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.2.3
+    name: hrStorageTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.2.3.1.5
+    name: memory.total
+  - oid: 1.3.6.1.2.1.25.2.3.1.6
+    name: memory.used
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.8.1.0
+    name: cpqHeSysUtilLifeTime
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.8.2.0
+    name: cpqHeSysUtilEisaBusMin
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.2.2.0
+    name: cpqHeCritLogCondition
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.3.1.0
+    name: cpqHeCorrMemLogStatus
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.3.2.0
+    name: cpqHeCorrMemLogCondition
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.3.3.0
+    name: cpqHeCorrMemTotalErrs
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.5.1.0
+    name: cpqHeAsrStatus
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.5.6.0
+    name: cpqHeAsrPost
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.5.10.0
+    name: cpqHeAsrRebootCount
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.5.17.0
+    name: cpqHeAsrCondition
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.5.21.0
+    name: cpqHeAsrNetworkAccessStatus
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.6.3.0
+    name: cpqHeThermalTempStatus
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.6.4.0
+    name: cpqHeThermalSystemFanStatus
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.6.5.0
+    name: cpqHeThermalCpuFanStatus
+- mib: CPQHLTH-MIB
+  table:
+    oid: 1.3.6.1.4.1.232.6.2.6.8
+    name: cpqHeTemperatureTable
+  symbols:
+  - oid: 1.3.6.1.4.1.232.6.2.6.8.1.4
+    name: cpqHeTemperatureCelsius
+  - oid: 1.3.6.1.4.1.232.6.2.6.8.1.6
+    name: cpqHeTemperatureCondition
+  metric_tags:
+  - tag: temperature_index
+    symbol:
+      oid: 1.3.6.1.4.1.232.6.2.6.8.1.2
+      name: cpqHeTemperatureIndex
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.15.3.0
+    name: cpqHePowerMeterCurrReading
+- mib: CPQHLTH-MIB
+  table:
+    oid: 1.3.6.1.4.1.232.6.2.17.2
+    name: cpqHeSysBatteryTable
+  symbols:
+  - oid: 1.3.6.1.4.1.232.6.2.17.2.1.4
+    name: cpqHeSysBatteryCondition
+  - oid: 1.3.6.1.4.1.232.6.2.17.2.1.5
+    name: cpqHeSysBatteryStatus
+  metric_tags:
+  - tag: battery_index
+    symbol:
+      oid: 1.3.6.1.4.1.232.6.2.17.2.1.2
+      name: cpqHeSysBatteryIndex
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.6.1.0
+    name: cpqHeThermalCondition
+- mib: CPQHLTH-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.6.2.9.2.0
+    name: cpqHeFltTolPwrSupplyStatus
+- mib: CPQHLTH-MIB
+  table:
+    oid: 1.3.6.1.4.1.232.6.2.14.13
+    name: cpqHeResMem2ModuleTable
+  symbols:
+  - oid: 1.3.6.1.4.1.232.6.2.14.13.1.20
+    name: cpqHeResMem2ModuleCondition
+  metric_tags:
+  - tag: mem_board_index
+    symbol:
+      oid: 1.3.6.1.4.1.232.6.2.14.13.1.15
+      name: cpqHeResMem2ModuleCellTablePtr
+- mib: CPQHLTH-MIB
+  table:
+    oid: 1.3.6.1.4.1.232.6.2.9.3
+    name: cpqHeFltTolPowerSupplyTable
+  symbols:
+  - oid: 1.3.6.1.4.1.232.6.2.9.3.1.5
+    name: cpqHeFltTolPowerSupplyStatus
+  metric_tags:
+  - tag: chassis_num
+    symbol:
+      oid: 1.3.6.1.4.1.232.6.2.9.3.1.1
+      name: cpqHeFltTolPowerSupplyChassis
+- mib: CPQHLTH-MIB
+  table:
+    oid: 1.3.6.1.4.1.232.6.2.9.3
+    name: cpqHeFltTolPowerSupplyTable
+  symbols:
+  - oid: 1.3.6.1.4.1.232.6.2.9.3.1.7
+    name: cpqHeFltTolPowerSupplyCapacityUsed
+  - oid: 1.3.6.1.4.1.232.6.2.9.3.1.8
+    name: cpqHeFltTolPowerSupplyCapacityMaximum
+  metric_tags:
+  - tag: power_supply_status
+    symbol:
+      oid: 1.3.6.1.4.1.232.6.2.9.3.1.5
+      name: cpqHeFltTolPowerSupplyStatus
+  - tag: chassis_num
+    symbol:
+      oid: 1.3.6.1.4.1.232.6.2.9.3.1.1
+      name: cpqHeFltTolPowerSupplyChassis
+  - tag: bay_num
+    symbol:
+      oid: 1.3.6.1.4.1.232.6.2.9.3.1.2
+      name: cpqHeFltTolPowerSupplyBay
+- mib: CPQIDA-MIB
+  table:
+    oid: 1.3.6.1.4.1.232.3.2.5.1
+    name: cpqDaPhyDrvTable
+  symbols:
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.8
+    name: cpqDaPhyDrvUsedReallocs
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.9
+    name: cpqDaPhyDrvRefHours
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.16
+    name: cpqDaPhyDrvHardReadErrs
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.17
+    name: cpqDaPhyDrvRecvReadErrs
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.18
+    name: cpqDaPhyDrvHardWriteErrs
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.19
+    name: cpqDaPhyDrvRecvWriteErrs
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.20
+    name: cpqDaPhyDrvHSeekErrs
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.21
+    name: cpqDaPhyDrvSeekErrs
+  metric_tags:
+  - tag: drive_cntrl_idx
+    symbol:
+      oid: 1.3.6.1.4.1.232.3.2.5.1.1.1
+      name: cpqDaPhyDrvCntlrIndex
+  - tag: drive_index
+    symbol:
+      oid: 1.3.6.1.4.1.232.3.2.5.1.1.2
+      name: cpqDaPhyDrvIndex
+- mib: CPQIDA-MIB
+  table:
+    oid: 1.3.6.1.4.1.232.3.2.5.1
+    name: cpqDaPhyDrvTable
+  symbols:
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.6
+    name: cpqDaPhyDrvStatus
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.7
+    name: cpqDaPhyDrvFactReallocs
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.22
+    name: cpqDaPhyDrvSpinupTime
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.45
+    name: cpqDaPhyDrvSize
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.57
+    name: cpqDaPhyDrvSmartStatus
+  - oid: 1.3.6.1.4.1.232.3.2.5.1.1.70
+    name: cpqDaPhyDrvCurrentTemperature
+  metric_tags:
+  - tag: drive_cntrl_idx
+    symbol:
+      oid: 1.3.6.1.4.1.232.3.2.5.1.1.1
+      name: cpqDaPhyDrvCntlrIndex
+  - tag: drive_index
+    symbol:
+      oid: 1.3.6.1.4.1.232.3.2.5.1.1.2
+      name: cpqDaPhyDrvIndex
+- mib: CPQSM2-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.9.2.2.32.0
+    name: cpqSm2CntlrServerPowerState
+- mib: CPQSM2-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.9.2.2.5.0
+    name: cpqSm2CntlrBatteryStatus
+- mib: CPQSM2-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.9.2.2.6.0
+    name: cpqSm2CntlrBatteryPercentCharged
+- mib: CPQSM2-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.9.2.2.9.0
+    name: cpqSm2CntlrSelfTestErrors
+- mib: CPQSM2-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.9.2.2.16.0
+    name: cpqSm2CntlrRemoteSessionStatus
+- mib: CPQSM2-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.9.2.2.17.0
+    name: cpqSm2CntlrInterfaceStatus
+- mib: CPQSM2-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.9.2.3.1.0
+    name: cpqSm2EventTotalEntries
+- mib: CPQSM2-MIB
+  table:
+    oid: 1.3.6.1.4.1.232.9.2.5.2
+    name: cpqSm2NicStatsTable
+  symbols:
+  - oid: 1.3.6.1.4.1.232.9.2.5.2.1.2
+    name: cpqSm2NicXmitBytes
+  - oid: 1.3.6.1.4.1.232.9.2.5.2.1.3
+    name: cpqSm2NicXmitTotalPackets
+  - oid: 1.3.6.1.4.1.232.9.2.5.2.1.6
+    name: cpqSm2NicXmitDiscardPackets
+  - oid: 1.3.6.1.4.1.232.9.2.5.2.1.7
+    name: cpqSm2NicXmitErrorPackets
+  - oid: 1.3.6.1.4.1.232.9.2.5.2.1.8
+    name: cpqSm2NicXmitQueueLength
+  - oid: 1.3.6.1.4.1.232.9.2.5.2.1.9
+    name: cpqSm2NicRecvBytes
+  - oid: 1.3.6.1.4.1.232.9.2.5.2.1.10
+    name: cpqSm2NicRecvTotalPackets
+  - oid: 1.3.6.1.4.1.232.9.2.5.2.1.13
+    name: cpqSm2NicRecvDiscardPackets
+  - oid: 1.3.6.1.4.1.232.9.2.5.2.1.14
+    name: cpqSm2NicRecvErrorPackets
+  - oid: 1.3.6.1.4.1.232.9.2.5.2.1.15
+    name: cpqSm2NicRecvUnknownPackets
+  metric_tags:
+  - tag: nic_stats_location
+    symbol:
+      oid: 1.3.6.1.4.1.232.9.2.5.2.1.1
+      name: cpqSm2NicStatsLocation
+- mib: CPQNIC-MIB
+  table:
+    oid: 1.3.6.1.4.1.232.18.2.3.1
+    name: cpqNicIfPhysAdapterTable
+  symbols:
+  - oid: 1.3.6.1.4.1.232.18.2.3.1.1.16
+    name: cpqNicIfPhysAdapterGoodTransmits
+  - oid: 1.3.6.1.4.1.232.18.2.3.1.1.17
+    name: cpqNicIfPhysAdapterGoodReceives
+  - oid: 1.3.6.1.4.1.232.18.2.3.1.1.18
+    name: cpqNicIfPhysAdapterBadTransmits
+  - oid: 1.3.6.1.4.1.232.18.2.3.1.1.19
+    name: cpqNicIfPhysAdapterBadReceives
+  - oid: 1.3.6.1.4.1.232.18.2.3.1.1.37
+    name: cpqNicIfPhysAdapterInOctets
+  - oid: 1.3.6.1.4.1.232.18.2.3.1.1.38
+    name: cpqNicIfPhysAdapterOutOctets
+  metric_tags:
+  - tag: interface
+    symbol:
+      oid: 1.3.6.1.4.1.232.18.2.3.1.1.39
+      name: cpqNicIfPhysAdapterName
+- mib: CPQNIC-MIB
+  table:
+    oid: 1.3.6.1.4.1.232.18.2.3.1
+    name: cpqNicIfPhysAdapterTable
+  symbols:
+  - oid: 1.3.6.1.4.1.232.18.2.3.1.1.33
+    name: cpqNicIfPhysAdapterSpeed
+  - oid: 1.3.6.1.4.1.232.18.2.3.1.1.36
+    name: cpqNicIfPhysAdapterSpeedMbps
+  metric_tags:
+  - tag: interface
+    symbol:
+      oid: 1.3.6.1.4.1.232.18.2.3.1.1.39
+      name: cpqNicIfPhysAdapterName
+- mib: CPQNIC-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.232.18.2.5.3.0
+    name: cpqNicVtVirusActivity
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: hp
+- tag: profile
+  value: hp-ilo

@@ -1,0 +1,170 @@
+# Telvyn SNMP profile — extreme-switching
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/extreme-switching.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.1916.2.89
+- 1.3.6.1.4.1.1916.2.343
+metrics:
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: ENTITY-SENSOR-MIB
+  table:
+    oid: 1.3.6.1.2.1.99.1.1
+    name: entPhySensorTable
+  symbols:
+  - oid: 1.3.6.1.2.1.99.1.1.1.4
+    name: entPhySensorValue
+  metric_tags:
+  - tag: ent_phy_sensor_type
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.1
+      name: entPhySensorType
+  - tag: ent_phy_sensor_scale
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.2
+      name: entPhySensorScale
+  - tag: ent_phy_sensor_precision
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.3
+      name: entPhySensorPrecision
+  - tag: ent_phy_sensor_units_display
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.6
+      name: entPhySensorUnitsDisplay
+  - tag: ent_phy_sensor_oper_status
+    symbol:
+      oid: 1.3.6.1.2.1.99.1.1.1.5
+      name: entPhySensorOperStatus
+- mib: EXTREME-SOFTWARE-MONITOR-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1916.1.32.1.2.0
+    name: cpu.usage
+- mib: EXTREME-SOFTWARE-MONITOR-MIB
+  table:
+    oid: 1.3.6.1.4.1.1916.1.32.2.2
+    name: extremeMemoryMonitorSystemTable
+  symbols:
+  - oid: 1.3.6.1.4.1.1916.1.32.2.2.1.2
+    name: memory.total
+  - oid: 1.3.6.1.4.1.1916.1.32.2.2.1.3
+    name: memory.free
+- mib: EXTREME-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1916.1.1.1.8.0
+    name: extremeCurrentTemperature
+- mib: EXTREME-SYSTEM-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.1916.1.1.1.20.0
+    name: extremeInputPowerVoltage
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: extreme-networks
+- tag: profile
+  value: extreme-switching

@@ -1,0 +1,187 @@
+# Telvyn SNMP profile — eaton-epdu
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/eaton-epdu.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.534.6.6.7
+metrics:
+- mib: EATON-EPDU-MIB
+  table:
+    oid: 1.3.6.1.4.1.534.6.6.7.3.1
+    name: inputTable
+  symbols:
+  - oid: 1.3.6.1.4.1.534.6.6.7.3.1.1.3
+    name: eaton.epdu.inputFrequency
+  metric_tags:
+  - tag: eaton_epdu_input_feed_name
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.3.1.1.10
+      name: eaton.epdu.inputFeedName
+  - tag: eaton_epdu_input_frequency_status
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.3.1.1.4
+      name: eaton.epdu.inputFrequencyStatus
+- mib: EATON-EPDU-MIB
+  table:
+    oid: 1.3.6.1.4.1.534.6.6.7.3.2
+    name: inputVoltageTable
+  symbols:
+  - oid: 1.3.6.1.4.1.534.6.6.7.3.2.1.3
+    name: eaton.epdu.inputVoltage
+  metric_tags:
+  - tag: eaton_epdu_input_voltage_th_status
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.3.2.1.4
+      name: eaton.epdu.inputVoltageThStatus
+- mib: EATON-EPDU-MIB
+  table:
+    oid: 1.3.6.1.4.1.534.6.6.7.3.3
+    name: inputCurrentTable
+  symbols:
+  - oid: 1.3.6.1.4.1.534.6.6.7.3.3.1.4
+    name: eaton.epdu.inputCurrent
+  - oid: 1.3.6.1.4.1.534.6.6.7.3.3.1.11
+    name: eaton.epdu.inputCurrentPercentLoad
+  metric_tags:
+  - tag: eaton_epdu_input_description
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.3.3.1.12
+      name: eaton.epdu.inputPhaseDesignator
+  - tag: eaton_epdu_input_current_th_status
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.3.3.1.5
+      name: eaton.epdu.inputCurrentThStatus
+- mib: EATON-EPDU-MIB
+  table:
+    oid: 1.3.6.1.4.1.534.6.6.7.3.4
+    name: inputPowerTable
+  symbols:
+  - oid: 1.3.6.1.4.1.534.6.6.7.3.4.1.3
+    name: eaton.epdu.inputVA
+  - oid: 1.3.6.1.4.1.534.6.6.7.3.4.1.4
+    name: eaton.epdu.inputWatts
+- mib: EATON-EPDU-MIB
+  table:
+    oid: 1.3.6.1.4.1.534.6.6.7.5.3
+    name: groupVoltageTable
+  symbols:
+  - oid: 1.3.6.1.4.1.534.6.6.7.5.3.1.3
+    name: eaton.epdu.groupVoltage
+  metric_tags:
+  - tag: eaton_epdu_group_voltage_th_status
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.5.3.1.4
+      name: eaton.epdu.groupVoltageThStatus
+- mib: EATON-EPDU-MIB
+  table:
+    oid: 1.3.6.1.4.1.534.6.6.7.5.4
+    name: groupCurrentTable
+  symbols:
+  - oid: 1.3.6.1.4.1.534.6.6.7.5.4.1.3
+    name: eaton.epdu.groupCurrent
+  - oid: 1.3.6.1.4.1.534.6.6.7.5.4.1.10
+    name: eaton.epdu.groupCurrentPercentLoad
+  metric_tags:
+  - tag: eaton_epdu_group_current_th_status
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.5.4.1.4
+      name: eaton.epdu.groupCurrentThStatus
+- mib: EATON-EPDU-MIB
+  table:
+    oid: 1.3.6.1.4.1.534.6.6.7.5.5
+    name: groupPowerTable
+  symbols:
+  - oid: 1.3.6.1.4.1.534.6.6.7.5.5.1.2
+    name: eaton.epdu.groupVA
+  - oid: 1.3.6.1.4.1.534.6.6.7.5.5.1.3
+    name: eaton.epdu.groupWatts
+- mib: EATON-EPDU-MIB
+  table:
+    oid: 1.3.6.1.4.1.534.6.6.7.6.3
+    name: outletVoltageTable
+  symbols:
+  - oid: 1.3.6.1.4.1.534.6.6.7.6.3.1.2
+    name: eaton.epdu.outletVoltage
+  metric_tags:
+  - tag: eaton_epdu_outlet_voltage_th_status
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.6.3.1.3
+      name: eaton.epdu.outletVoltageThStatus
+- mib: EATON-EPDU-MIB
+  table:
+    oid: 1.3.6.1.4.1.534.6.6.7.6.4
+    name: outletCurrentTable
+  symbols:
+  - oid: 1.3.6.1.4.1.534.6.6.7.6.4.1.3
+    name: eaton.epdu.outletCurrent
+  - oid: 1.3.6.1.4.1.534.6.6.7.6.4.1.10
+    name: eaton.epdu.outletCurrentPercentLoad
+  metric_tags:
+  - tag: eaton_epdu_outlet_current_th_status
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.6.4.1.4
+      name: eaton.epdu.outletCurrentThStatus
+- mib: EATON-EPDU-MIB
+  table:
+    oid: 1.3.6.1.4.1.534.6.6.7.6.5
+    name: outletPowerTable
+  symbols:
+  - oid: 1.3.6.1.4.1.534.6.6.7.6.5.1.2
+    name: eaton.epdu.outletVA
+  - oid: 1.3.6.1.4.1.534.6.6.7.6.5.1.3
+    name: eaton.epdu.outletWatts
+- mib: EATON-EPDU-MIB
+  table:
+    oid: 1.3.6.1.4.1.534.6.6.7.7.1
+    name: temperatureTable
+  symbols:
+  - oid: 1.3.6.1.4.1.534.6.6.7.7.1.1.4
+    name: eaton.epdu.temperatureValue
+  metric_tags:
+  - tag: eaton_epdu_temperature_name
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.7.1.1.2
+      name: eaton.epdu.temperatureName
+  - tag: eaton_epdu_temperature_probe_status
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.7.1.1.3
+      name: eaton.epdu.temperatureProbeStatus
+  - tag: eaton_epdu_temperature_th_status
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.7.1.1.5
+      name: eaton.epdu.temperatureThStatus
+- mib: EATON-EPDU-MIB
+  table:
+    oid: 1.3.6.1.4.1.534.6.6.7.7.2
+    name: humidityTable
+  symbols:
+  - oid: 1.3.6.1.4.1.534.6.6.7.7.2.1.4
+    name: eaton.epdu.humidityValue
+  metric_tags:
+  - tag: eaton_epdu_humidity_name
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.7.2.1.2
+      name: eaton.epdu.humidityName
+  - tag: eaton_epdu_humidity_probe_status
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.7.2.1.3
+      name: eaton.epdu.humidityProbeStatus
+  - tag: eaton_epdu_humidity_th_status
+    symbol:
+      oid: 1.3.6.1.4.1.534.6.6.7.7.2.1.5
+      name: eaton.epdu.humidityThStatus
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: eaton
+- tag: profile
+  value: eaton-epdu

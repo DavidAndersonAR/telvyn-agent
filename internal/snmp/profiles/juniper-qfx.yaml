@@ -1,0 +1,526 @@
+# Telvyn SNMP profile — juniper-qfx
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/juniper-qfx.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.2636.1.1.1.2.82
+- 1.3.6.1.4.1.2636.1.1.1.4.82.*
+metrics:
+- mib: BGP4-MIB
+  table:
+    oid: 1.3.6.1.2.1.15.3
+    name: bgpPeerTable
+  symbols:
+  - oid: 1.3.6.1.2.1.15.3.1.3
+    name: bgpPeerAdminStatus
+  - oid: 1.3.6.1.2.1.15.3.1.4
+    name: bgpPeerNegotiatedVersion
+  - oid: 1.3.6.1.2.1.15.3.1.9
+    name: bgpPeerRemoteAs
+  - oid: 1.3.6.1.2.1.15.3.1.2
+    name: bgpPeerState
+  - oid: 1.3.6.1.2.1.15.3.1.10
+    name: bgpPeerInUpdates
+  - oid: 1.3.6.1.2.1.15.3.1.11
+    name: bgpPeerOutUpdates
+  - oid: 1.3.6.1.2.1.15.3.1.12
+    name: bgpPeerInTotalMessages
+  - oid: 1.3.6.1.2.1.15.3.1.13
+    name: bgpPeerOutTotalMessages
+  - oid: 1.3.6.1.2.1.15.3.1.15
+    name: bgpPeerFsmEstablishedTransitions
+  - oid: 1.3.6.1.2.1.15.3.1.16
+    name: bgpPeerFsmEstablishedTime
+  - oid: 1.3.6.1.2.1.15.3.1.17
+    name: bgpPeerConnectRetryInterval
+  - oid: 1.3.6.1.2.1.15.3.1.18
+    name: bgpPeerHoldTime
+  - oid: 1.3.6.1.2.1.15.3.1.19
+    name: bgpPeerKeepAlive
+  - oid: 1.3.6.1.2.1.15.3.1.20
+    name: bgpPeerHoldTimeConfigured
+  - oid: 1.3.6.1.2.1.15.3.1.21
+    name: bgpPeerKeepAliveConfigured
+  - oid: 1.3.6.1.2.1.15.3.1.22
+    name: bgpPeerMinASOriginationInterval
+  metric_tags:
+  - tag: remote_as
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.9
+      name: bgpPeerRemoteAs
+  - tag: admin_status
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.3
+      name: bgpPeerAdminStatus
+  - tag: peer_state
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.2
+      name: bgpPeerState
+  - tag: neighbor
+    symbol:
+      oid: 1.3.6.1.2.1.15.3.1.7
+      name: bgpPeerRemoteAddr
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.1.0
+    name: hrSystemUptime
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.5.0
+    name: hrSystemNumUsers
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.6.0
+    name: hrSystemProcesses
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.7.0
+    name: hrSystemMaxProcesses
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.2.3
+    name: hrStorageTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.2.3.1.4
+    name: hrStorageAllocationUnits
+  - oid: 1.3.6.1.2.1.25.2.3.1.5
+    name: hrStorageSize
+  - oid: 1.3.6.1.2.1.25.2.3.1.6
+    name: hrStorageUsed
+  - oid: 1.3.6.1.2.1.25.2.3.1.7
+    name: hrStorageAllocationFailures
+  metric_tags:
+  - tag: storagedesc
+    symbol:
+      oid: 1.3.6.1.2.1.25.2.3.1.3
+      name: hrStorageDescr
+  - tag: storagetype
+    symbol:
+      oid: 1.3.6.1.2.1.25.2.3.1.2
+      name: hrStorageType
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.3.3
+    name: hrProcessorTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.3.3.1.2
+    name: hrProcessorLoad
+  metric_tags:
+  - tag: processorid
+    symbol:
+      oid: 1.3.6.1.2.1.25.3.3.1.1
+      name: hrProcessorFrwID
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.2.3
+    name: hrStorageTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.2.3.1.5
+    name: memory.total
+  - oid: 1.3.6.1.2.1.25.2.3.1.6
+    name: memory.used
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.10
+    name: ospfNbrTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.10.1.6
+    name: ospfNbrState
+  - oid: 1.3.6.1.2.1.14.10.1.7
+    name: ospfNbrEvents
+  - oid: 1.3.6.1.2.1.14.10.1.8
+    name: ospfNbrLsRetransQLen
+  metric_tags:
+  - tag: neighbor_id
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.3
+      name: ospfNbrRtrId
+  - tag: neighbor_ip
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.1
+      name: ospfNbrIpAddr
+  - tag: neighbor_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.6
+      name: ospfNbrState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.11
+    name: ospfVirtNbrTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.11.1.5
+    name: ospfVirtNbrState
+  - oid: 1.3.6.1.2.1.14.11.1.6
+    name: ospfVirtNbrEvents
+  - oid: 1.3.6.1.2.1.14.11.1.7
+    name: ospfVirtNbrLsRetransQLen
+  metric_tags:
+  - tag: neighbor_ip
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.3
+      name: ospfVirtNbrIpAddr
+  - tag: neighbor_id
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.2
+      name: ospfVirtNbrRtrId
+  - tag: neighbor_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.5
+      name: ospfVirtNbrState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.7
+    name: ospfIfTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.7.1.8
+    name: ospfIfRetransInterval
+  - oid: 1.3.6.1.2.1.14.7.1.12
+    name: ospfIfState
+  - oid: 1.3.6.1.2.1.14.7.1.21
+    name: ospfIfLsaCount
+  metric_tags:
+  - tag: ospf_ip_addr
+    symbol:
+      oid: 1.3.6.1.2.1.14.7.1.1
+      name: ospfIfIpAddress
+  - tag: if_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.7.1.12
+      name: ospfIfState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.9
+    name: ospfVirtIfTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.9.1.4
+    name: ospfVirtIfRetransInterval
+  - oid: 1.3.6.1.2.1.14.9.1.7
+    name: ospfVirtIfState
+  - oid: 1.3.6.1.2.1.14.9.1.12
+    name: ospfVirtIfLsaCount
+  metric_tags:
+  - tag: if_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.9.1.7
+      name: ospfVirtIfState
+- mib: JUNIPER-COS-MIB
+  table:
+    oid: 1.3.6.1.4.1.2636.3.15.10
+    name: jnxCosIfsetQstatTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.3
+    name: jnxCosIfsetQstatQedPkts
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.5
+    name: jnxCosIfsetQstatQedBytes
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.7
+    name: jnxCosIfsetQstatTxedPkts
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.9
+    name: jnxCosIfsetQstatTxedBytes
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.11
+    name: jnxCosIfsetQstatTailDropPkts
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.13
+    name: jnxCosIfsetQstatTotalRedDropPkts
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.15
+    name: jnxCosIfsetQstatLpNonTcpRedDropPkts
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.17
+    name: jnxCosIfsetQstatLpTcpRedDropPkts
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.19
+    name: jnxCosIfsetQstatHpNonTcpRedDropPkts
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.21
+    name: jnxCosIfsetQstatHpTcpRedDropPkts
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.23
+    name: jnxCosIfsetQstatTotalRedDropBytes
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.25
+    name: jnxCosIfsetQstatLpNonTcpRedDropBytes
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.27
+    name: jnxCosIfsetQstatLpTcpRedDropBytes
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.29
+    name: jnxCosIfsetQstatHpNonTcpRedDropBytes
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.31
+    name: jnxCosIfsetQstatHpTcpRedDropBytes
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.33
+    name: jnxCosIfsetQstatLpRedDropPkts
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.35
+    name: jnxCosIfsetQstatMLpRedDropPkts
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.37
+    name: jnxCosIfsetQstatMHpRedDropPkts
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.39
+    name: jnxCosIfsetQstatHpRedDropPkts
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.41
+    name: jnxCosIfsetQstatLpRedDropBytes
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.43
+    name: jnxCosIfsetQstatMLpRedDropBytes
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.45
+    name: jnxCosIfsetQstatMHpRedDropBytes
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.47
+    name: jnxCosIfsetQstatHpRedDropBytes
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.49
+    name: jnxCosIfsetQstatRateLimitDropPkts
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.51
+    name: jnxCosIfsetQstatRateLimitDropBytes
+  metric_tags:
+  - tag: queue_number
+    symbol:
+      oid: 1.3.6.1.4.1.2636.3.15.10.1.2
+      name: jnxCosIfsetQstatQueueNr
+- mib: JUNIPER-COS-MIB
+  table:
+    oid: 1.3.6.1.4.1.2636.3.15.10
+    name: jnxCosIfsetQstatTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.4
+    name: jnxCosIfsetQstatQedPktRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.6
+    name: jnxCosIfsetQstatQedByteRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.8
+    name: jnxCosIfsetQstatTxedPktRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.10
+    name: jnxCosIfsetQstatTxedByteRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.12
+    name: jnxCosIfsetQstatTailDropPktRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.14
+    name: jnxCosIfsetQstatTotalRedDropPktRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.16
+    name: jnxCosIfsetQstatLpNonTcpRDropPktRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.18
+    name: jnxCosIfsetQstatLpTcpRedDropPktRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.20
+    name: jnxCosIfsetQstatHpNonTcpRDropPktRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.22
+    name: jnxCosIfsetQstatHpTcpRedDropPktRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.24
+    name: jnxCosIfsetQstatTotalRedDropByteRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.26
+    name: jnxCosIfsetQstatLpNonTcpRDropByteRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.28
+    name: jnxCosIfsetQstatLpTcpRedDropByteRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.30
+    name: jnxCosIfsetQstatHpNonTcpRDropByteRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.32
+    name: jnxCosIfsetQstatHpTcpRedDropByteRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.34
+    name: jnxCosIfsetQstatLpRedDropPktRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.36
+    name: jnxCosIfsetQstatMLpRedDropPktRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.38
+    name: jnxCosIfsetQstatMHpRedDropPktRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.40
+    name: jnxCosIfsetQstatHpRedDropPktRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.42
+    name: jnxCosIfsetQstatLpRedDropByteRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.44
+    name: jnxCosIfsetQstatMLpRedDropByteRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.46
+    name: jnxCosIfsetQstatMHpRedDropByteRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.48
+    name: jnxCosIfsetQstatHpRedDropByteRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.50
+    name: jnxCosIfsetQstatRateLimitDropPktRate
+  - oid: 1.3.6.1.4.1.2636.3.15.10.1.52
+    name: jnxCosIfsetQstatRateLimitDropByteRate
+  metric_tags:
+  - tag: queue_number
+    symbol:
+      oid: 1.3.6.1.4.1.2636.3.15.10.1.2
+      name: jnxCosIfsetQstatQueueNr
+- mib: JUNIPER-DCU-MIB
+  table:
+    oid: 1.3.6.1.4.1.2636.3.6.2
+    name: jnxDcuStatsTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2636.3.6.2.1.4
+    name: jnxDcuStatsPackets
+  - oid: 1.3.6.1.4.1.2636.3.6.2.1.5
+    name: jnxDcuStatsBytes
+  metric_tags:
+  - tag: address_family
+    symbol:
+      oid: 1.3.6.1.4.1.2636.3.6.2.1.2
+      name: jnxDcuStatsAddrFamily
+  - tag: destination_class_name
+    symbol:
+      oid: 1.3.6.1.4.1.2636.3.6.2.1.3
+      name: jnxDcuStatsClassName
+- mib: JUNIPER-FIREWALL-MIB
+  table:
+    oid: 1.3.6.1.4.1.2636.3.5.2
+    name: jnxFirewallCounterTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2636.3.5.2.1.4
+    name: jnxFWCounterPacketCount
+  - oid: 1.3.6.1.4.1.2636.3.5.2.1.5
+    name: jnxFWCounterByteCount
+  metric_tags:
+  - tag: firewall_filter_name
+    symbol:
+      oid: 1.3.6.1.4.1.2636.3.5.2.1.1
+      name: jnxFWCounterFilterName
+  - tag: counter_name
+    symbol:
+      oid: 1.3.6.1.4.1.2636.3.5.2.1.2
+      name: jnxFWCounterName
+  - tag: counter_type
+    symbol:
+      oid: 1.3.6.1.4.1.2636.3.5.2.1.3
+      name: jnxFWCounterType
+- mib: JUNIPER-VIRTUALCHASSIS-MIB
+  table:
+    oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2
+    name: jnxVirtualChassisPortTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.5
+    name: jnxVirtualChassisPortInPkts
+  - oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.6
+    name: jnxVirtualChassisPortOutPkts
+  - oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.7
+    name: jnxVirtualChassisPortInOctets
+  - oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.8
+    name: jnxVirtualChassisPortOutOctets
+  - oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.9
+    name: jnxVirtualChassisPortInMcasts
+  - oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.10
+    name: jnxVirtualChassisPortOutMcasts
+  - oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.15
+    name: jnxVirtualChassisPortCarrierTrans
+  - oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.16
+    name: jnxVirtualChassisPortInCRCAlignErrors
+  - oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.17
+    name: jnxVirtualChassisPortUndersizePkts
+  - oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.18
+    name: jnxVirtualChassisPortCollisions
+  metric_tags:
+  - tag: port_name
+    symbol:
+      oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.2
+      name: jnxVirtualChassisPortName
+- mib: JUNIPER-VIRTUALCHASSIS-MIB
+  table:
+    oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2
+    name: jnxVirtualChassisPortTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.11
+    name: jnxVirtualChassisPortInPkts1secRate
+  - oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.12
+    name: jnxVirtualChassisPortOutPkts1secRate
+  - oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.13
+    name: jnxVirtualChassisPortInOctets1secRate
+  - oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.14
+    name: jnxVirtualChassisPortOutOctets1secRate
+  metric_tags:
+  - tag: port_name
+    symbol:
+      oid: 1.3.6.1.4.1.2636.3.40.1.4.1.2.1.2
+      name: jnxVirtualChassisPortName
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: juniper-networks
+- tag: profile
+  value: juniper-qfx

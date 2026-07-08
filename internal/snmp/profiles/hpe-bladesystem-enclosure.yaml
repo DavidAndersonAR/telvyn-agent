@@ -1,0 +1,477 @@
+# Telvyn SNMP profile — hpe-bladesystem-enclosure
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/hpe-bladesystem-enclosure.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.11.5.7.1.2
+metrics:
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.10.1.5.1
+    name: cpu.usage
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.5.0
+    name: memory.total
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.6.0
+    name: memory.free
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.3.0
+    name: ucd.memTotalSwap
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.4.0
+    name: ucd.memAvailSwap
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.11.0
+    name: ucd.memTotalFree
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.12.0
+    name: ucd.memMinimumSwap
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.13.0
+    name: ucd.memShared
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.14.0
+    name: ucd.memBuffer
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.15.0
+    name: ucd.memCached
+- mib: UCD-SNMP-MIB
+  table:
+    oid: 1.3.6.1.4.1.2021.9
+    name: dskTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2021.9.1.6
+    name: ucd.dskTotal
+  - oid: 1.3.6.1.4.1.2021.9.1.7
+    name: ucd.dskAvail
+  - oid: 1.3.6.1.4.1.2021.9.1.8
+    name: ucd.dskUsed
+  - oid: 1.3.6.1.4.1.2021.9.1.9
+    name: ucd.dskPercent
+  - oid: 1.3.6.1.4.1.2021.9.1.10
+    name: ucd.dskPercentNode
+  metric_tags:
+  - tag: ucd_dsk_path
+    symbol:
+      oid: 1.3.6.1.4.1.2021.9.1.2
+      name: ucd.dskPath
+  - tag: ucd_dsk_device
+    symbol:
+      oid: 1.3.6.1.4.1.2021.9.1.3
+      name: ucd.dskDevice
+  - tag: ucd_dsk_error_flag
+    symbol:
+      oid: 1.3.6.1.4.1.2021.9.1.100
+      name: ucd.dskErrorFlag
+- mib: UCD-DISKIO-MIB
+  table:
+    oid: 1.3.6.1.4.1.2021.13.15.1.1
+    name: diskIOTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.5
+    name: ucd.diskIOReads
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.6
+    name: ucd.diskIOWrites
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.9
+    name: ucd.diskIOLA1
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.10
+    name: ucd.diskIOLA5
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.11
+    name: ucd.diskIOLA15
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.12
+    name: ucd.diskIONReadX
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.13
+    name: ucd.diskIONWrittenX
+  metric_tags:
+  - tag: ucd_disk_io_device
+    symbol:
+      oid: 1.3.6.1.4.1.2021.13.15.1.1.2
+      name: ucd.diskIODevice
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.9.0
+    name: ucd.ssCpuUser
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.10.0
+    name: ucd.ssCpuSystem
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.11.0
+    name: ucd.ssCpuIdle
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.50.0
+    name: ucd.ssCpuRawUser
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.51.0
+    name: ucd.ssCpuRawNice
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.52.0
+    name: ucd.ssCpuRawSystem
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.53.0
+    name: ucd.ssCpuRawIdle
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.54.0
+    name: ucd.ssCpuRawWait
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.55.0
+    name: ucd.ssCpuRawKernel
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.56.0
+    name: ucd.ssCpuRawInterrupt
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.1.0
+    name: hrSystemUptime
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.5.0
+    name: hrSystemNumUsers
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.6.0
+    name: hrSystemProcesses
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.7.0
+    name: hrSystemMaxProcesses
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.2.3
+    name: hrStorageTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.2.3.1.4
+    name: hrStorageAllocationUnits
+  - oid: 1.3.6.1.2.1.25.2.3.1.5
+    name: hrStorageSize
+  - oid: 1.3.6.1.2.1.25.2.3.1.6
+    name: hrStorageUsed
+  - oid: 1.3.6.1.2.1.25.2.3.1.7
+    name: hrStorageAllocationFailures
+  metric_tags:
+  - tag: storagedesc
+    symbol:
+      oid: 1.3.6.1.2.1.25.2.3.1.3
+      name: hrStorageDescr
+  - tag: storagetype
+    symbol:
+      oid: 1.3.6.1.2.1.25.2.3.1.2
+      name: hrStorageType
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.3.3
+    name: hrProcessorTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.3.3.1.2
+    name: hrProcessorLoad
+  metric_tags:
+  - tag: processorid
+    symbol:
+      oid: 1.3.6.1.2.1.25.3.3.1.1
+      name: hrProcessorFrwID
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.2.3
+    name: hrStorageTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.2.3.1.5
+    name: memory.total
+  - oid: 1.3.6.1.2.1.25.2.3.1.6
+    name: memory.used
+- mib: CPQRACK-MIB
+  table:
+    oid: 1.3.6.1.4.1.232.22.2.3.1.2
+    name: cpqRackCommonEnclosureTempTable
+  symbols:
+  - oid: 1.3.6.1.4.1.232.22.2.3.1.2.1.6
+    name: cpqRackCommonEnclosureTempCurrent
+  metric_tags:
+  - tag: cpq_rack_common_enclosure_temp_sensor_enclosure_name
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.3.1.2.1.4
+      name: cpqRackCommonEnclosureTempSensorEnclosureName
+  - tag: cpq_rack_common_enclosure_temp_location
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.3.1.2.1.5
+      name: cpqRackCommonEnclosureTempLocation
+  - tag: cpq_rack_common_enclosure_temp_condition
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.3.1.2.1.8
+      name: cpqRackCommonEnclosureTempCondition
+  - tag: cpq_rack_common_enclosure_temp_type
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.3.1.2.1.9
+      name: cpqRackCommonEnclosureTempType
+- mib: CPQRACK-MIB
+  table:
+    oid: 1.3.6.1.4.1.232.22.2.4.1.1
+    name: cpqRackServerBladeTable
+  symbols:
+  - oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.22
+    name: cpqRackServerBladeFaultMajor
+  - oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.23
+    name: cpqRackServerBladeFaultMinor
+  metric_tags:
+  - tag: cpq_rack_server_blade_name
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.4
+      name: cpqRackServerBladeName
+  - tag: cpq_rack_server_blade_part_number
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.6
+      name: cpqRackServerBladePartNumber
+  - tag: cpq_rack_server_blade_spare_part_number
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.7
+      name: cpqRackServerBladeSparePartNumber
+  - tag: cpq_rack_server_blade_position
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.8
+      name: cpqRackServerBladePosition
+  - tag: cpq_rack_server_blade_present
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.12
+      name: cpqRackServerBladePresent
+  - tag: cpq_rack_server_blade_has_fuses
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.13
+      name: cpqRackServerBladeHasFuses
+  - tag: cpq_rack_server_blade_serial_num
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.16
+      name: cpqRackServerBladeSerialNum
+  - tag: cpq_rack_server_blade_product_id
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.17
+      name: cpqRackServerBladeProductId
+  - tag: cpq_rack_server_blade_uid
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.18
+      name: cpqRackServerBladeUid
+  - tag: cpq_rack_server_blade_post_status
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.35
+      name: cpqRackServerBladePOSTStatus
+  - tag: cpq_rack_server_blade_status
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.21
+      name: cpqRackServerBladeStatus
+  - tag: cpq_rack_server_blade_powered
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.25
+      name: cpqRackServerBladePowered
+  - tag: cpq_rack_server_blade_uid_state
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.1.1.1.26
+      name: cpqRackServerBladeUIDState
+- mib: CPQRACK-MIB
+  table:
+    oid: 1.3.6.1.4.1.232.22.2.4.3.1
+    name: cpqRackServerTempSensorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.232.22.2.4.3.1.1.8
+    name: cpqRackServerTempSensorCurrent
+  metric_tags:
+  - tag: cpq_rack_server_temp_sensor_name
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.3.1.1.4
+      name: cpqRackServerTempSensorName
+  - tag: cpq_rack_server_temp_sensor_location
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.3.1.1.7
+      name: cpqRackServerTempSensorLocation
+  - tag: cpq_rack_server_temp_sensor_condition
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.3.1.1.10
+      name: cpqRackServerTempSensorCondition
+  - tag: cpq_rack_server_temp_sensor_type
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.4.3.1.1.11
+      name: cpqRackServerTempSensorType
+- mib: CPQRACK-MIB
+  table:
+    oid: 1.3.6.1.4.1.232.22.2.5.1.1
+    name: cpqRackPowerSupplyTable
+  symbols:
+  - oid: 1.3.6.1.4.1.232.22.2.5.1.1.1.10
+    name: cpqRackPowerSupplyCurPwrOutput
+  - oid: 1.3.6.1.4.1.232.22.2.5.1.1.1.12
+    name: cpqRackPowerSupplyIntakeTemp
+  - oid: 1.3.6.1.4.1.232.22.2.5.1.1.1.13
+    name: cpqRackPowerSupplyExhaustTemp
+  metric_tags:
+  - tag: cpq_rack_power_supply_enclosure_name
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.5.1.1.1.4
+      name: cpqRackPowerSupplyEnclosureName
+  - tag: cpq_rack_power_supply_serial_num
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.5.1.1.1.5
+      name: cpqRackPowerSupplySerialNum
+  - tag: cpq_rack_power_supply_part_number
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.5.1.1.1.6
+      name: cpqRackPowerSupplyPartNumber
+  - tag: cpq_rack_power_supply_spare_part_number
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.5.1.1.1.7
+      name: cpqRackPowerSupplySparePartNumber
+  - tag: cpq_rack_power_supply_fw_rev
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.5.1.1.1.8
+      name: cpqRackPowerSupplyFWRev
+  - tag: cpq_rack_power_supply_max_pwr_output
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.5.1.1.1.9
+      name: cpqRackPowerSupplyMaxPwrOutput
+  - tag: cpq_rack_power_supply_present
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.5.1.1.1.16
+      name: cpqRackPowerSupplyPresent
+  - tag: cpq_rack_power_supply_enclosure_serial_num
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.5.1.1.1.18
+      name: cpqRackPowerSupplyEnclosureSerialNum
+  - tag: cpq_rack_power_supply_status
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.5.1.1.1.14
+      name: cpqRackPowerSupplyStatus
+  - tag: cpq_rack_power_supply_input_line_status
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.5.1.1.1.15
+      name: cpqRackPowerSupplyInputLineStatus
+  - tag: cpq_rack_power_supply_condition
+    symbol:
+      oid: 1.3.6.1.4.1.232.22.2.5.1.1.1.17
+      name: cpqRackPowerSupplyCondition
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: hp
+- tag: profile
+  value: hpe-bladesystem-enclosure

@@ -1,0 +1,92 @@
+# Telvyn SNMP profile — tripplite-pdu
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/tripplite-pdu.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.850.1.1.1
+metrics:
+- mib: TRIPPLITE-PRODUCTS
+  table:
+    oid: 1.3.6.1.4.1.850.1.1.3.2.2.1
+    name: tlpPduDeviceTable
+  symbols:
+  - oid: 1.3.6.1.4.1.850.1.1.3.2.2.1.1.6
+    name: tlpPduDeviceTemperatureC
+  - oid: 1.3.6.1.4.1.850.1.1.3.2.2.1.1.7
+    name: tlpPduDeviceTemperatureF
+  - oid: 1.3.6.1.4.1.850.1.1.3.2.2.1.1.8
+    name: tlpPduDevicePhaseImbalance
+  - oid: 1.3.6.1.4.1.850.1.1.3.2.2.1.1.9
+    name: tlpPduDeviceOutputPowerTotal
+  metric_tags:
+  - tag: tlp_pdu_device_output_current_precision
+    symbol:
+      oid: 1.3.6.1.4.1.850.1.1.3.2.2.1.1.11
+      name: tlpPduDeviceOutputCurrentPrecision
+  - tag: tlp_pdu_device_main_load_state
+    symbol:
+      oid: 1.3.6.1.4.1.850.1.1.3.2.2.1.1.1
+      name: tlpPduDeviceMainLoadState
+- mib: TRIPPLITE-PRODUCTS
+  table:
+    oid: 1.3.6.1.4.1.850.1.1.3.2.3.2.1
+    name: tlpPduOutputTable
+  symbols:
+  - oid: 1.3.6.1.4.1.850.1.1.3.2.3.2.1.1.4
+    name: tlpPduOutputVoltage
+  - oid: 1.3.6.1.4.1.850.1.1.3.2.3.2.1.1.5
+    name: tlpPduOutputCurrent
+  - oid: 1.3.6.1.4.1.850.1.1.3.2.3.2.1.1.10
+    name: tlpPduOutputSource
+  - oid: 1.3.6.1.4.1.850.1.1.3.2.3.2.1.1.11
+    name: tlpPduOutputFrequency
+  metric_tags:
+  - tag: tlp_pdu_output_phase
+    symbol:
+      oid: 1.3.6.1.4.1.850.1.1.3.2.3.2.1.1.2
+      name: tlpPduOutputPhase
+  - tag: tlp_pdu_output_phase_type
+    symbol:
+      oid: 1.3.6.1.4.1.850.1.1.3.2.3.2.1.1.3
+      name: tlpPduOutputPhaseType
+- mib: TRIPPLITE-PRODUCTS
+  table:
+    oid: 1.3.6.1.4.1.850.1.1.3.2.3.3.1
+    name: tlpPduOutletTable
+  symbols:
+  - oid: 1.3.6.1.4.1.850.1.1.3.2.3.3.1.1.4
+    name: tlpPduOutletState
+  - oid: 1.3.6.1.4.1.850.1.1.3.2.3.3.1.1.7
+    name: tlpPduOutletVoltage
+  - oid: 1.3.6.1.4.1.850.1.1.3.2.3.3.1.1.8
+    name: tlpPduOutletCurrent
+  - oid: 1.3.6.1.4.1.850.1.1.3.2.3.3.1.1.9
+    name: tlpPduOutletPower
+  metric_tags:
+  - tag: tlp_pdu_outlet_name
+    symbol:
+      oid: 1.3.6.1.4.1.850.1.1.3.2.3.3.1.1.2
+      name: tlpPduOutletName
+  - tag: tlp_pdu_outlet_description
+    symbol:
+      oid: 1.3.6.1.4.1.850.1.1.3.2.3.3.1.1.3
+      name: tlpPduOutletDescription
+- mib: TRIPPLITE-PRODUCTS
+  symbol:
+    oid: 1.3.6.1.4.1.850.1.3.1.0
+    name: tlpAlarmsPresent
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: tripplite
+- tag: profile
+  value: tripplite-pdu

@@ -371,6 +371,14 @@ func (p *Profile) Collect(ctx context.Context, c *Client, hostID string, staticT
 				if m.Filter != nil && !m.Filter.keep(rowTags) {
 					continue
 				}
+				// Enriquecimento GENÉRICO do hrStorageTable (HOST-RESOURCES-MIB,
+				// RFC 2790): a BulkWalk já trouxe TODAS as colunas da row, então
+				// acrescentamos storage_type (RAM/disco/flash...) e storage_descr, e
+				// pegamos o fator de bloco pra converter size/used de blocos → bytes —
+				// mesmo que o profile só declare size/used (como fazem quase todos, do
+				// Mikrotik ao Cisco). Vale pra QUALQUER fabricante que ande nesse OID
+				// padrão. É no-op em qualquer outra tabela.
+				storageFactor := enrichHrStorageRow(m.Table.OID, row, rowTags)
 				seen := make(map[string]bool, len(m.Symbols))
 				for _, sym := range m.Symbols {
 					pdu, ok := findRowPDU(row, sym.OID)
@@ -386,7 +394,12 @@ func (p *Profile) Collect(ctx context.Context, c *Client, hostID string, staticT
 						continue // HC vs 32-bit colidem no mesmo canônico — 1 por row
 					}
 					seen[name] = true
-					out = append(out, newMetric(now, hostID, name, applyScale(val, sym.Scale), mergeTags(staticTags, profileTags, rowTags)))
+					scaled := applyScale(val, sym.Scale)
+					// hrStorageSize/Used vêm em BLOCOS; × unidade de alocação = bytes reais.
+					if storageFactor != 1 && isHrStorageAmount(sym.OID) {
+						scaled *= storageFactor
+					}
+					out = append(out, newMetric(now, hostID, name, scaled, mergeTags(staticTags, profileTags, rowTags)))
 				}
 			}
 		}
@@ -546,16 +559,108 @@ func applyScale(v, scale float64) float64 {
 	return v * scale
 }
 
-// getScalar faz Get de um OID, retorna float + ok=true se conseguir.
+// getScalar faz Get de um OID escalar. Tenta o OID como está; se não vier valor
+// e o OID não terminar em ".0", tenta o instance ".0". Isso porque os perfis do
+// Datadog escrevem escalares SEM o ".0" (ex. mtxrHlCpuTemperature = .3.6), mas o
+// SNMP exige o ".0" no GET de escalar — nossos perfis hand-curated já põem o ".0".
+// canonMetricName usa o OID do PERFIL (sem .0), então o mapa canônico continua batendo.
 func getScalar(ctx context.Context, c *Client, oid string) (float64, bool) {
-	pdus, err := c.Get(ctx, []string{oid})
-	if err != nil {
-		return 0, false
+	if v, ok := getScalarOnce(ctx, c, oid); ok {
+		return v, true
 	}
-	if len(pdus) == 0 {
+	if !strings.HasSuffix(oid, ".0") {
+		if v, ok := getScalarOnce(ctx, c, oid+".0"); ok {
+			return v, true
+		}
+	}
+	return 0, false
+}
+
+func getScalarOnce(ctx context.Context, c *Client, oid string) (float64, bool) {
+	pdus, err := c.Get(ctx, []string{oid})
+	if err != nil || len(pdus) == 0 {
 		return 0, false
 	}
 	return PduFloat(pdus[0])
+}
+
+// OIDs padrão do hrStorageTable (HOST-RESOURCES-MIB, RFC 2790). Universais entre
+// fabricantes — Mikrotik, Cisco, Fortinet, Linux e qualquer um que exponha a MIB
+// andam exatamente nestes OIDs.
+const (
+	hrStorageTableOID = "1.3.6.1.2.1.25.2.3"
+	hrStorageTypeCol  = "1.3.6.1.2.1.25.2.3.1.2" // hrStorageType (OID → HOST-RESOURCES-TYPES)
+	hrStorageDescrCol = "1.3.6.1.2.1.25.2.3.1.3" // hrStorageDescr (texto)
+	hrStorageAllocCol = "1.3.6.1.2.1.25.2.3.1.4" // hrStorageAllocationUnits (bytes por bloco)
+	hrStorageSizeCol  = "1.3.6.1.2.1.25.2.3.1.5" // hrStorageSize (em blocos)
+	hrStorageUsedCol  = "1.3.6.1.2.1.25.2.3.1.6" // hrStorageUsed (em blocos)
+)
+
+// enrichHrStorageRow, quando a tabela é o hrStorageTable padrão, acrescenta à row
+// os rótulos storage_type (ram/fixed_disk/flash...) e storage_descr a partir das
+// colunas que a BulkWalk já trouxe, e devolve o FATOR de bloco (unidade de
+// alocação em bytes) pra converter size/used de blocos → bytes reais. Fora do
+// hrStorage devolve 1 (no-op). Isso resolve, de uma vez e pra todo fabricante,
+// (a) "1 MB" no lugar de "1 GB" (blocos lidos como bytes) e (b) RAM vs disco
+// decidido pelo TIPO (código de máquina), não por casar texto do descritor.
+func enrichHrStorageRow(tableOID string, row map[string]gosnmp.SnmpPDU, rowTags map[string]string) float64 {
+	if strings.TrimPrefix(strings.TrimSpace(tableOID), ".") != hrStorageTableOID {
+		return 1
+	}
+	if pdu, ok := findRowPDU(row, hrStorageTypeCol); ok {
+		if t := hrStorageTypeName(pduString(pdu)); t != "" {
+			rowTags["storage_type"] = t
+		}
+	}
+	if pdu, ok := findRowPDU(row, hrStorageDescrCol); ok {
+		if s := strings.TrimSpace(pduString(pdu)); s != "" {
+			rowTags["storage_descr"] = s
+		}
+	}
+	if pdu, ok := findRowPDU(row, hrStorageAllocCol); ok {
+		if u, ok := PduFloat(pdu); ok && u > 0 {
+			return u
+		}
+	}
+	return 1
+}
+
+// isHrStorageAmount diz se o OID é hrStorageSize/Used (as quantidades em blocos
+// que precisam × unidade de alocação pra virar bytes).
+func isHrStorageAmount(oid string) bool {
+	o := strings.TrimPrefix(oid, ".")
+	return o == hrStorageSizeCol || o == hrStorageUsedCol
+}
+
+// hrStorageTypeName mapeia o valor de hrStorageType (que é um OID apontando pra
+// HOST-RESOURCES-TYPES, .1.3.6.1.2.1.25.2.1.X) a um rótulo amigável. É o sinal
+// DETERMINÍSTICO de "isto é RAM" vs "isto é disco" — bem melhor que casar o texto
+// do descritor ("main memory"), que varia por fabricante/idioma.
+func hrStorageTypeName(typeOID string) string {
+	switch strings.TrimPrefix(strings.TrimSpace(typeOID), ".") {
+	case "1.3.6.1.2.1.25.2.1.1":
+		return "other"
+	case "1.3.6.1.2.1.25.2.1.2":
+		return "ram"
+	case "1.3.6.1.2.1.25.2.1.3":
+		return "virtual_memory"
+	case "1.3.6.1.2.1.25.2.1.4":
+		return "fixed_disk"
+	case "1.3.6.1.2.1.25.2.1.5":
+		return "removable_disk"
+	case "1.3.6.1.2.1.25.2.1.6":
+		return "floppy_disk"
+	case "1.3.6.1.2.1.25.2.1.7":
+		return "compact_disc"
+	case "1.3.6.1.2.1.25.2.1.8":
+		return "ram_disk"
+	case "1.3.6.1.2.1.25.2.1.9":
+		return "flash_memory"
+	case "1.3.6.1.2.1.25.2.1.10":
+		return "network_disk"
+	default:
+		return ""
+	}
 }
 
 // findRowPDU localiza a PDU correspondente a uma coluna em uma row.
@@ -637,15 +742,25 @@ func newMetric(ts *timestamppb.Timestamp, hostID, name string, val float64, tags
 	}
 }
 
-// ifMibCanonical mapeia colunas IF-MIB conhecidas (pelo OID) ao nome CANÔNICO
-// snmp.if.* que o backend Telvyn consulta (IfaceMetricsReader, InterfaceRegistryJob,
-// DeviceLensService). Os perfis importados do Datadog batizam essas colunas como
-// community.<vendor>.net_if_* — nome que o backend NÃO lê, então tráfego/erros/
-// status de interface saíam vazios em ~169 perfis. Normalizar por OID (não por
-// texto) conserta todos de uma vez e é no-op pros perfis bundled, que já emitem
-// snmp.if.*. Octets de 32 e 64 bits (HC) mapeiam pro mesmo canônico; o dedup
-// por-row evita série duplicada quando o perfil traz os dois.
-var ifMibCanonical = map[string]string{
+// oidCanonical mapeia OIDs padrão (universais entre fabricantes) ao nome CANÔNICO
+// snmp.* que o backend Telvyn consulta. Normalizar por OID (não por texto) faz o
+// sinal acender em QUALQUER perfil que ande no OID certo — independente de como o
+// perfil batizou a métrica.
+//
+//   - IF-MIB (tráfego/erros/status): IfaceMetricsReader, InterfaceRegistryJob,
+//     DeviceLensService leem snmp.if.*. Perfis importados batizavam como
+//     community.<vendor>.net_if_* (backend NÃO lia) — a normalização conserta.
+//   - HOST-RESOURCES / UCD / SNMPv2 (CPU/memória/uptime): DeviceMetricsTab e o
+//     MonitorDrawer leem snmp.hr.processor_load, snmp.hr.storage_used,
+//     snmp.mem.avail_kb, snmp.sys.uptime. Os ~167 perfis do Datadog andam nesses
+//     mesmos OIDs padrão mas batizam como hrProcessorLoad/cpu.usage/memory.free —
+//     normalizar faz CPU/memória/uptime acenderem em todo fabricante.
+//
+// É no-op pros perfis hand-curated, que já emitem o canônico nesses mesmos OIDs.
+// Octets de 32 e 64 bits (HC) mapeiam pro mesmo canônico; o dedup por-row evita
+// série duplicada quando o perfil traz os dois.
+var oidCanonical = map[string]string{
+	// --- IF-MIB (interface) ---
 	"1.3.6.1.2.1.2.2.1.10":    "snmp.if.in_octets",    // ifInOctets (32-bit)
 	"1.3.6.1.2.1.31.1.1.1.6":  "snmp.if.in_octets",    // ifHCInOctets (64-bit)
 	"1.3.6.1.2.1.2.2.1.16":    "snmp.if.out_octets",   // ifOutOctets
@@ -659,12 +774,41 @@ var ifMibCanonical = map[string]string{
 	"1.3.6.1.2.1.2.2.1.3":     "snmp.if.type",         // ifType
 	"1.3.6.1.2.1.31.1.1.1.15": "snmp.if.high_speed",   // ifHighSpeed
 	"1.3.6.1.2.1.2.2.1.5":     "snmp.if.speed",        // ifSpeed
+	"1.3.6.1.2.1.2.2.1.4":     "snmp.if.mtu",          // ifMtu (bytes, escalar por interface)
+	// Contadores de pacotes por tipo (ifXTable, 64-bit). ATENÇÃO: .10 é ifHCOutOctets,
+	// então ifHCOutUcastPkts é .11 (não .10).
+	"1.3.6.1.2.1.31.1.1.1.7":  "snmp.if.in_ucast_packets",  // ifHCInUcastPkts
+	"1.3.6.1.2.1.31.1.1.1.8":  "snmp.if.in_mcast_packets",  // ifHCInMulticastPkts
+	"1.3.6.1.2.1.31.1.1.1.9":  "snmp.if.in_bcast_packets",  // ifHCInBroadcastPkts
+	"1.3.6.1.2.1.31.1.1.1.11": "snmp.if.out_ucast_packets", // ifHCOutUcastPkts
+	"1.3.6.1.2.1.31.1.1.1.12": "snmp.if.out_mcast_packets", // ifHCOutMulticastPkts
+	"1.3.6.1.2.1.31.1.1.1.13": "snmp.if.out_bcast_packets", // ifHCOutBroadcastPkts
+
+	// --- HOST-RESOURCES-MIB (CPU + armazenamento, universal) ---
+	"1.3.6.1.2.1.25.3.3.1.2": "snmp.hr.processor_load", // hrProcessorLoad (% por core)
+	"1.3.6.1.2.1.25.2.3.1.5": "snmp.hr.storage_size",   // hrStorageSize (alloc units)
+	"1.3.6.1.2.1.25.2.3.1.6": "snmp.hr.storage_used",   // hrStorageUsed (alloc units)
+
+	// --- UCD-SNMP-MIB (memória real, em KB) ---
+	"1.3.6.1.4.1.2021.4.5.0": "snmp.mem.total_kb", // memTotalReal
+	"1.3.6.1.4.1.2021.4.6.0": "snmp.mem.avail_kb", // memAvailReal
+
+	// --- SNMPv2-MIB (uptime) ---
+	"1.3.6.1.2.1.1.3.0": "snmp.sys.uptime", // sysUpTime (centésimos de s)
+
+	// --- MIKROTIK-MIB (temperatura, °C) ---
+	// O profile do Datadog (mikrotik-router) lê os OIDs CERTOS de temperatura
+	// (mtxrHlCpuTemperature .3.6 e mtxrHlTemperature .3.10) mas os batiza com o
+	// nome da MIB. Canonizar pra mikrotik.health.temp_* faz o DeviceMetricsTab
+	// (filtro mikrotik_health_temp.*) mostrar no widget de Temperatura.
+	"1.3.6.1.4.1.14988.1.1.3.6":  "mikrotik.health.temp_cpu",    // mtxrHlCpuTemperature
+	"1.3.6.1.4.1.14988.1.1.3.10": "mikrotik.health.temp_system", // mtxrHlTemperature
 }
 
-// canonMetricName devolve o nome canônico snmp.if.* quando o OID é uma coluna
-// IF-MIB conhecida; senão devolve o nome do perfil inalterado.
+// canonMetricName devolve o nome canônico snmp.* quando o OID é conhecido
+// (IF-MIB, HOST-RESOURCES, UCD, SNMPv2); senão devolve o nome do perfil inalterado.
 func canonMetricName(oid, fallback string) string {
-	if c, ok := ifMibCanonical[strings.TrimPrefix(oid, ".")]; ok {
+	if c, ok := oidCanonical[strings.TrimPrefix(oid, ".")]; ok {
 		return c
 	}
 	return fallback

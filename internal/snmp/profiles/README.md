@@ -7,21 +7,43 @@ collector** via `embed.FS`. Banco guarda apenas qual profile cada host usa
 (coluna `snmp_profile` na tabela `host`); os OIDs em si vivem aqui.
 
 ```
-infra/collector/agent/internal/snmp/profiles/
-├── cisco-ios.yaml
+internal/snmp/profiles/
+├── cisco-ios.yaml            ← 8 hand-curated (mantidos à mão)
 ├── cisco-nx-os.yaml
+├── fiberhome-an5516.yaml
 ├── generic-snmpv2.yaml
 ├── juniper-junos.yaml
 ├── linux-net-snmp.yaml
 ├── mikrotik-ccr1036.yaml
 ├── mikrotik-routeros.yaml
-└── README.md         ← este arquivo
+├── cisco-catalyst.yaml       ← ~167 derivados do Datadog (GERADOS — não editar à mão)
+├── fortinet-fortigate.yaml
+├── aruba-switch.yaml
+├── ... (~250 no total)
+├── embed.go
+└── README.md                 ← este arquivo
 ```
 
 **Por que arquivo e não banco?** Profiles são *configuração de produto*
 (igual aos profiles do Datadog), não dado de tenant. Vão
 junto com o release do collector, versionam via git, e o operador final
 só **seleciona** o profile pela UI/API — não edita OID.
+
+---
+
+## ⚠️ A maioria do catálogo é GERADA (biblioteca Datadog)
+
+A maior parte destes YAMLs é **derivada da biblioteca oficial de NDM profiles do
+Datadog** (BSD-3), convertida em build-time por
+[`tools/convert-datadog-profiles/`](../../../tools/convert-datadog-profiles/). Esses
+arquivos têm o cabeçalho `# Convertido da biblioteca oficial do Datadog` — **não edite à
+mão** (a próxima regeneração sobrescreve). Para atualizar a biblioteca, mexa na fonte
+vendorizada e rode o conversor (ver o README de lá).
+
+Os **8 hand-curated** acima são obra própria, mantidos à mão, e o conversor os respeita
+(política de conflito: eles são donos do seu prefixo de sysObjectID). Para adicionar um
+vendor **à mão** (fora da biblioteca Datadog), siga o passo-a-passo abaixo e use um nome
+que não colida com os gerados.
 
 ---
 

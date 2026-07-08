@@ -1,0 +1,302 @@
+# Telvyn SNMP profile — aruba-cx-switch
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/aruba-cx-switch.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.47196.4.1.1.1.*
+- 1.3.6.1.4.1.47196.4.1.1.1.1
+- 1.3.6.1.4.1.47196.4.1.1.1.2
+- 1.3.6.1.4.1.47196.4.1.1.1.3
+- 1.3.6.1.4.1.47196.4.1.1.1.5
+- 1.3.6.1.4.1.47196.4.1.1.1.50
+- 1.3.6.1.4.1.47196.4.1.1.1.70
+- 1.3.6.1.4.1.47196.4.1.1.1.101
+- 1.3.6.1.4.1.47196.4.1.1.1.103
+- 1.3.6.1.4.1.47196.4.1.1.1.104
+- 1.3.6.1.4.1.47196.4.1.1.1.150
+- 1.3.6.1.4.1.47196.4.1.1.1.304
+- 1.3.6.1.4.1.47196.4.1.1.1.405
+metrics:
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.10
+    name: ospfNbrTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.10.1.6
+    name: ospfNbrState
+  - oid: 1.3.6.1.2.1.14.10.1.7
+    name: ospfNbrEvents
+  - oid: 1.3.6.1.2.1.14.10.1.8
+    name: ospfNbrLsRetransQLen
+  metric_tags:
+  - tag: neighbor_id
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.3
+      name: ospfNbrRtrId
+  - tag: neighbor_ip
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.1
+      name: ospfNbrIpAddr
+  - tag: neighbor_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.10.1.6
+      name: ospfNbrState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.11
+    name: ospfVirtNbrTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.11.1.5
+    name: ospfVirtNbrState
+  - oid: 1.3.6.1.2.1.14.11.1.6
+    name: ospfVirtNbrEvents
+  - oid: 1.3.6.1.2.1.14.11.1.7
+    name: ospfVirtNbrLsRetransQLen
+  metric_tags:
+  - tag: neighbor_ip
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.3
+      name: ospfVirtNbrIpAddr
+  - tag: neighbor_id
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.2
+      name: ospfVirtNbrRtrId
+  - tag: neighbor_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.11.1.5
+      name: ospfVirtNbrState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.7
+    name: ospfIfTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.7.1.8
+    name: ospfIfRetransInterval
+  - oid: 1.3.6.1.2.1.14.7.1.12
+    name: ospfIfState
+  - oid: 1.3.6.1.2.1.14.7.1.21
+    name: ospfIfLsaCount
+  metric_tags:
+  - tag: ospf_ip_addr
+    symbol:
+      oid: 1.3.6.1.2.1.14.7.1.1
+      name: ospfIfIpAddress
+  - tag: if_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.7.1.12
+      name: ospfIfState
+- mib: OSPF-MIB
+  table:
+    oid: 1.3.6.1.2.1.14.9
+    name: ospfVirtIfTable
+  symbols:
+  - oid: 1.3.6.1.2.1.14.9.1.4
+    name: ospfVirtIfRetransInterval
+  - oid: 1.3.6.1.2.1.14.9.1.7
+    name: ospfVirtIfState
+  - oid: 1.3.6.1.2.1.14.9.1.12
+    name: ospfVirtIfLsaCount
+  metric_tags:
+  - tag: if_state
+    symbol:
+      oid: 1.3.6.1.2.1.14.9.1.7
+      name: ospfVirtIfState
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.2.3.1.5.1
+    name: memory.total
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.2.3.1.6.1
+    name: memory.used
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.3.3.1.2.196608
+    name: cpu.usage
+- mib: ARUBAWIRED-TEMPSENSOR-MIB
+  table:
+    oid: 1.3.6.1.4.1.47196.4.1.1.3.11.3.1
+    name: arubaWiredTempSensorTable
+  symbols:
+  - oid: 1.3.6.1.4.1.47196.4.1.1.3.11.3.1.1.7
+    name: arubaWiredTempSensorTemperature
+  metric_tags:
+  - tag: aruba_wired_temp_sensor_name
+    symbol:
+      oid: 1.3.6.1.4.1.47196.4.1.1.3.11.3.1.1.5
+      name: arubaWiredTempSensorName
+  - tag: aruba_wired_temp_sensor_state
+    symbol:
+      oid: 1.3.6.1.4.1.47196.4.1.1.3.11.3.1.1.6
+      name: arubaWiredTempSensorState
+- mib: ARUBAWIRED-POWERSUPPLY-MIB
+  table:
+    oid: 1.3.6.1.4.1.47196.4.1.1.3.11.2.1
+    name: arubaWiredPowerSupplyTable
+  symbols:
+  - oid: 1.3.6.1.4.1.47196.4.1.1.3.11.2.1.1.7
+    name: arubaWiredPSUInstantaneousPower
+  - oid: 1.3.6.1.4.1.47196.4.1.1.3.11.2.1.1.9
+    name: arubaWiredPSUNumberFailures
+  metric_tags:
+  - tag: aruba_wired_psu_name
+    symbol:
+      oid: 1.3.6.1.4.1.47196.4.1.1.3.11.2.1.1.3
+      name: arubaWiredPSUName
+  - tag: aruba_wired_psu_product_name
+    symbol:
+      oid: 1.3.6.1.4.1.47196.4.1.1.3.11.2.1.1.5
+      name: arubaWiredPSUProductName
+  - tag: aruba_wired_psu_serial_number
+    symbol:
+      oid: 1.3.6.1.4.1.47196.4.1.1.3.11.2.1.1.6
+      name: arubaWiredPSUSerialNumber
+  - tag: aruba_wired_psu_airflow_direction
+    symbol:
+      oid: 1.3.6.1.4.1.47196.4.1.1.3.11.2.1.1.10
+      name: arubaWiredPSUAirflowDirection
+  - tag: aruba_wired_psu_state
+    symbol:
+      oid: 1.3.6.1.4.1.47196.4.1.1.3.11.2.1.1.4
+      name: arubaWiredPSUState
+- mib: ARUBAWIRED-FAN-MIB
+  table:
+    oid: 1.3.6.1.4.1.47196.4.1.1.3.11.5.1
+    name: arubaWiredFanTable
+  symbols:
+  - oid: 1.3.6.1.4.1.47196.4.1.1.3.11.5.1.1.8
+    name: arubaWiredFanRPM
+  metric_tags:
+  - tag: aruba_wired_fan_name
+    symbol:
+      oid: 1.3.6.1.4.1.47196.4.1.1.3.11.5.1.1.4
+      name: arubaWiredFanName
+  - tag: aruba_wired_fan_product_name
+    symbol:
+      oid: 1.3.6.1.4.1.47196.4.1.1.3.11.5.1.1.6
+      name: arubaWiredFanProductName
+  - tag: aruba_wired_fan_serial_number
+    symbol:
+      oid: 1.3.6.1.4.1.47196.4.1.1.3.11.5.1.1.7
+      name: arubaWiredFanSerialNumber
+  - tag: aruba_wired_fan_airflow_direction
+    symbol:
+      oid: 1.3.6.1.4.1.47196.4.1.1.3.11.5.1.1.9
+      name: arubaWiredFanAirflowDirection
+  - tag: aruba_wired_fan_state
+    symbol:
+      oid: 1.3.6.1.4.1.47196.4.1.1.3.11.5.1.1.5
+      name: arubaWiredFanState
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: aruba
+- tag: profile
+  value: aruba-cx-switch

@@ -1,0 +1,90 @@
+# Telvyn SNMP profile — avtech-roomalert-3s
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/avtech-roomalert-3s.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.20916.1.13.*
+metrics:
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.1.1.1.1.0
+    name: roomalert.3s.internal_tempf
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.1.1.1.2.0
+    name: roomalert.3s.internal_tempc
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.1.2.1.1.0
+    name: roomalert.3s.digital_sen1_1
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.1.2.1.2.0
+    name: roomalert.3s.digital_sen1_2
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.1.2.1.3.0
+    name: roomalert.3s.digital_sen1_3
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.1.2.1.4.0
+    name: roomalert.3s.digital_sen1_4
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.1.2.1.5.0
+    name: roomalert.3s.digital_sen1_5
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.1.2.1.6.0
+    name: roomalert.3s.digital_sen1_6
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.1.2.1.7.0
+    name: roomalert.3s.digital_sen1_7
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.3.1.1.0
+    name: roomalert.3s.externalrelay1_element_one
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.3.1.2.0
+    name: roomalert.3s.externalrelay1_element_two
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.3.1.3.0
+    name: roomalert.3s.externalrelay1_element_three
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.3.1.4.0
+    name: roomalert.3s.externalrelay1_element_four
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.3.1.5.0
+    name: roomalert.3s.externalrelay1_element_five
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.3.1.6.0
+    name: roomalert.3s.externalrelay1_element_six
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.3.1.7.0
+    name: roomalert.3s.externalrelay1_element_seven
+- mib: ROOMALERT3S-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.20916.1.13.3.1.8.0
+    name: roomalert.3s.externalrelay1_element_eight
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: avtech
+- tag: profile
+  value: avtech-roomalert-3s

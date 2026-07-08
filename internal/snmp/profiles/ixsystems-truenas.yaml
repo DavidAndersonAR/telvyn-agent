@@ -1,0 +1,448 @@
+# Telvyn SNMP profile — ixsystems-truenas
+# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
+# Fonte: snmp/datadog_checks/snmp/data/default_profiles/ixsystems-truenas.yaml
+# `extends` resolvido em build; recursos nao suportados pelo agente descartados.
+# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+
+sysobjectid:
+- 1.3.6.1.4.1.50536.3.2
+metrics:
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.1.0
+    name: hrSystemUptime
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.5.0
+    name: hrSystemNumUsers
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.6.0
+    name: hrSystemProcesses
+- mib: HOST-RESOURCES-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.25.1.7.0
+    name: hrSystemMaxProcesses
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.2.3
+    name: hrStorageTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.2.3.1.4
+    name: hrStorageAllocationUnits
+  - oid: 1.3.6.1.2.1.25.2.3.1.5
+    name: hrStorageSize
+  - oid: 1.3.6.1.2.1.25.2.3.1.6
+    name: hrStorageUsed
+  - oid: 1.3.6.1.2.1.25.2.3.1.7
+    name: hrStorageAllocationFailures
+  metric_tags:
+  - tag: storagedesc
+    symbol:
+      oid: 1.3.6.1.2.1.25.2.3.1.3
+      name: hrStorageDescr
+  - tag: storagetype
+    symbol:
+      oid: 1.3.6.1.2.1.25.2.3.1.2
+      name: hrStorageType
+- mib: HOST-RESOURCES-MIB
+  table:
+    oid: 1.3.6.1.2.1.25.3.3
+    name: hrProcessorTable
+  symbols:
+  - oid: 1.3.6.1.2.1.25.3.3.1.2
+    name: hrProcessorLoad
+  metric_tags:
+  - tag: processorid
+    symbol:
+      oid: 1.3.6.1.2.1.25.3.3.1.1
+      name: hrProcessorFrwID
+- mib: IF-MIB
+  symbol:
+    oid: 1.3.6.1.2.1.2.1.0
+    name: ifNumber
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.14
+    name: ifInErrors
+  - oid: 1.3.6.1.2.1.2.2.1.13
+    name: ifInDiscards
+  - oid: 1.3.6.1.2.1.2.2.1.20
+    name: ifOutErrors
+  - oid: 1.3.6.1.2.1.2.2.1.19
+    name: ifOutDiscards
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.2.2
+    name: ifTable
+  symbols:
+  - oid: 1.3.6.1.2.1.2.2.1.7
+    name: ifAdminStatus
+  - oid: 1.3.6.1.2.1.2.2.1.8
+    name: ifOperStatus
+  - oid: 1.3.6.1.2.1.2.2.1.5
+    name: ifSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.2.2.1.2
+      name: ifDescr
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.7
+    name: ifHCInUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.8
+    name: ifHCInMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.9
+    name: ifHCInBroadcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.11
+    name: ifHCOutUcastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.12
+    name: ifHCOutMulticastPkts
+  - oid: 1.3.6.1.2.1.31.1.1.1.13
+    name: ifHCOutBroadcastPkts
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.6
+    name: ifHCInOctets
+  - oid: 1.3.6.1.2.1.31.1.1.1.10
+    name: ifHCOutOctets
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: IF-MIB
+  table:
+    oid: 1.3.6.1.2.1.31.1.1
+    name: ifXTable
+  symbols:
+  - oid: 1.3.6.1.2.1.31.1.1.1.15
+    name: ifHighSpeed
+  metric_tags:
+  - tag: interface_name
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.1
+      name: ifName
+  - tag: interface_alias
+    symbol:
+      oid: 1.3.6.1.2.1.31.1.1.1.18
+      name: ifAlias
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.10.1.5.1
+    name: cpu.usage
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.5.0
+    name: memory.total
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.6.0
+    name: memory.free
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.3.0
+    name: ucd.memTotalSwap
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.4.0
+    name: ucd.memAvailSwap
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.11.0
+    name: ucd.memTotalFree
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.12.0
+    name: ucd.memMinimumSwap
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.13.0
+    name: ucd.memShared
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.14.0
+    name: ucd.memBuffer
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.4.15.0
+    name: ucd.memCached
+- mib: UCD-SNMP-MIB
+  table:
+    oid: 1.3.6.1.4.1.2021.9
+    name: dskTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2021.9.1.6
+    name: ucd.dskTotal
+  - oid: 1.3.6.1.4.1.2021.9.1.7
+    name: ucd.dskAvail
+  - oid: 1.3.6.1.4.1.2021.9.1.8
+    name: ucd.dskUsed
+  - oid: 1.3.6.1.4.1.2021.9.1.9
+    name: ucd.dskPercent
+  - oid: 1.3.6.1.4.1.2021.9.1.10
+    name: ucd.dskPercentNode
+  metric_tags:
+  - tag: ucd_dsk_path
+    symbol:
+      oid: 1.3.6.1.4.1.2021.9.1.2
+      name: ucd.dskPath
+  - tag: ucd_dsk_device
+    symbol:
+      oid: 1.3.6.1.4.1.2021.9.1.3
+      name: ucd.dskDevice
+  - tag: ucd_dsk_error_flag
+    symbol:
+      oid: 1.3.6.1.4.1.2021.9.1.100
+      name: ucd.dskErrorFlag
+- mib: UCD-DISKIO-MIB
+  table:
+    oid: 1.3.6.1.4.1.2021.13.15.1.1
+    name: diskIOTable
+  symbols:
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.5
+    name: ucd.diskIOReads
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.6
+    name: ucd.diskIOWrites
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.9
+    name: ucd.diskIOLA1
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.10
+    name: ucd.diskIOLA5
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.11
+    name: ucd.diskIOLA15
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.12
+    name: ucd.diskIONReadX
+  - oid: 1.3.6.1.4.1.2021.13.15.1.1.13
+    name: ucd.diskIONWrittenX
+  metric_tags:
+  - tag: ucd_disk_io_device
+    symbol:
+      oid: 1.3.6.1.4.1.2021.13.15.1.1.2
+      name: ucd.diskIODevice
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.9.0
+    name: ucd.ssCpuUser
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.10.0
+    name: ucd.ssCpuSystem
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.11.0
+    name: ucd.ssCpuIdle
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.50.0
+    name: ucd.ssCpuRawUser
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.51.0
+    name: ucd.ssCpuRawNice
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.52.0
+    name: ucd.ssCpuRawSystem
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.53.0
+    name: ucd.ssCpuRawIdle
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.54.0
+    name: ucd.ssCpuRawWait
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.55.0
+    name: ucd.ssCpuRawKernel
+- mib: UCD-SNMP-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.2021.11.56.0
+    name: ucd.ssCpuRawInterrupt
+- mib: FREENAS-MIB
+  table:
+    oid: 1.3.6.1.4.1.50536.1.1.1
+    name: zpoolTable
+  symbols:
+  - oid: 1.3.6.1.4.1.50536.1.1.1.1.10
+    name: freenas.zpoolReadBytes
+  - oid: 1.3.6.1.4.1.50536.1.1.1.1.11
+    name: freenas.zpoolWriteBytes
+  - oid: 1.3.6.1.4.1.50536.1.1.1.1.12
+    name: freenas.zpoolReadOps1sec
+  - oid: 1.3.6.1.4.1.50536.1.1.1.1.13
+    name: freenas.zpoolWriteOps1sec
+  - oid: 1.3.6.1.4.1.50536.1.1.1.1.14
+    name: freenas.zpoolReadBytes1sec
+  - oid: 1.3.6.1.4.1.50536.1.1.1.1.15
+    name: freenas.zpoolWriteBytes1sec
+  - oid: 1.3.6.1.4.1.50536.1.1.1.1.3
+    name: freenas.zpoolAllocationUnits
+  - oid: 1.3.6.1.4.1.50536.1.1.1.1.4
+    name: freenas.zpoolSize
+  - oid: 1.3.6.1.4.1.50536.1.1.1.1.5
+    name: freenas.zpoolUsed
+  - oid: 1.3.6.1.4.1.50536.1.1.1.1.6
+    name: freenas.zpoolAvailable
+  - oid: 1.3.6.1.4.1.50536.1.1.1.1.7
+    name: freenas.zpoolHealth
+  - oid: 1.3.6.1.4.1.50536.1.1.1.1.8
+    name: freenas.zpoolReadOps
+  - oid: 1.3.6.1.4.1.50536.1.1.1.1.9
+    name: freenas.zpoolWriteOps
+  metric_tags:
+  - tag: freenas_zpool_descr
+    symbol:
+      oid: 1.3.6.1.4.1.50536.1.1.1.1.2
+      name: freenas.zpoolDescr
+- mib: FREENAS-MIB
+  table:
+    oid: 1.3.6.1.4.1.50536.1.2.1
+    name: datasetTable
+  symbols:
+  - oid: 1.3.6.1.4.1.50536.1.2.1.1.3
+    name: freenas.datasetAllocationUnits
+  - oid: 1.3.6.1.4.1.50536.1.2.1.1.4
+    name: freenas.datasetSize
+  - oid: 1.3.6.1.4.1.50536.1.2.1.1.5
+    name: freenas.datasetUsed
+  - oid: 1.3.6.1.4.1.50536.1.2.1.1.6
+    name: freenas.datasetAvailable
+  metric_tags:
+  - tag: freenas_dataset_descr
+    symbol:
+      oid: 1.3.6.1.4.1.50536.1.2.1.1.2
+      name: freenas.datasetDescr
+- mib: FREENAS-MIB
+  table:
+    oid: 1.3.6.1.4.1.50536.1.3.1
+    name: zvolTable
+  symbols:
+  - oid: 1.3.6.1.4.1.50536.1.3.1.1.3
+    name: freenas.zvolAllocationUnits
+  - oid: 1.3.6.1.4.1.50536.1.3.1.1.4
+    name: freenas.zvolSize
+  - oid: 1.3.6.1.4.1.50536.1.3.1.1.5
+    name: freenas.zvolUsed
+  - oid: 1.3.6.1.4.1.50536.1.3.1.1.6
+    name: freenas.zvolAvailable
+  - oid: 1.3.6.1.4.1.50536.1.3.1.1.7
+    name: freenas.zvolReferenced
+  metric_tags:
+  - tag: freenas_zvol_descr
+    symbol:
+      oid: 1.3.6.1.4.1.50536.1.3.1.1.2
+      name: freenas.zvolDescr
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.4.1.0
+    name: freenas.zfsArcSize
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.4.10.0
+    name: freenas.zfsArcCacheMissRatio
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.4.2.0
+    name: freenas.zfsArcMeta
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.4.3.0
+    name: freenas.zfsArcData
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.4.4.0
+    name: freenas.zfsArcHits
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.4.5.0
+    name: freenas.zfsArcMisses
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.4.6.0
+    name: freenas.zfsArcC
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.4.7.0
+    name: freenas.zfsArcP
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.4.8.0
+    name: freenas.zfsArcMissPercent
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.4.9.0
+    name: freenas.zfsArcCacheHitRatio
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.5.1.0
+    name: freenas.zfsL2ArcHits
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.5.2.0
+    name: freenas.zfsL2ArcMisses
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.5.3.0
+    name: freenas.zfsL2ArcRead
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.5.4.0
+    name: freenas.zfsL2ArcWrite
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.5.5.0
+    name: freenas.zfsL2ArcSize
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.6.1.0
+    name: freenas.zfsZilstatOps1sec
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.6.2.0
+    name: freenas.zfsZilstatOps5sec
+- mib: FREENAS-MIB
+  symbol:
+    oid: 1.3.6.1.4.1.50536.1.6.3.0
+    name: freenas.zfsZilstatOps10sec
+metric_tags:
+- tag: snmp_host
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: device_hostname
+  symbol:
+    oid: 1.3.6.1.2.1.1.5.0
+    name: sysName
+- tag: vendor
+  value: iXsystems
+- tag: profile
+  value: ixsystems-truenas
