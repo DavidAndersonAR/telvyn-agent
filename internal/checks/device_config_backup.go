@@ -35,7 +35,7 @@ import (
 // Implementado por *otlp.IngestExporter. Injetado uma vez no startup do ingest
 // (mesma mecânica do DeviceMetadataPusher).
 type DeviceConfigPusher interface {
-	PostDeviceConfig(ctx context.Context, hostID, vendor, source, rawText string) error
+	PostDeviceConfig(ctx context.Context, hostID, vendor, source, rawText, hostKey string) error
 }
 
 var deviceConfigPusher DeviceConfigPusher
@@ -186,8 +186,10 @@ func (c *deviceConfigBackupCheck) Run(ctx context.Context) ([]*collectorv1.Metri
 	if strings.TrimSpace(stdout) == "" {
 		return nil, fmt.Errorf("device.config_backup: config vazia de %s", c.target)
 	}
+	// TOFU: repassa a host key SSH observada (vazia quando veio known_host e já verificamos).
+	hostKey, _ := res["host_key"].(string)
 
-	if err := deviceConfigPusher.PostDeviceConfig(ctx, c.hostID, c.vendor, "running", stdout); err != nil {
+	if err := deviceConfigPusher.PostDeviceConfig(ctx, c.hostID, c.vendor, "running", stdout, hostKey); err != nil {
 		return nil, fmt.Errorf("device.config_backup: post: %w", err)
 	}
 	return nil, nil

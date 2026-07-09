@@ -3,6 +3,7 @@ package tools
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net"
 	"strconv"
@@ -60,10 +61,15 @@ func (SSHExec) Execute(ctx context.Context, args map[string]any) (map[string]any
 		return nil, err
 	}
 
-	// Host key verification: prefer the provided known_host line; fall back
-	// to InsecureIgnoreHostKey ONLY if no known_host given (caller's choice
-	// — the central server policy decides whether to send one).
-	hostKeyCallback := ssh.InsecureIgnoreHostKey()
+	// Host key verification (TOFU). If the server sent a pinned known_host line,
+	// VERIFY against it (FixedHostKey). Otherwise CAPTURE the presented key and
+	// report it back (capturedHostKey) so the server can pin it on first use —
+	// no more blindly accepting any key (closes the MITM window on NCM backups).
+	var capturedHostKey string
+	hostKeyCallback := ssh.HostKeyCallback(func(_ string, _ net.Addr, key ssh.PublicKey) error {
+		capturedHostKey = host + " " + key.Type() + " " + base64.StdEncoding.EncodeToString(key.Marshal())
+		return nil
+	})
 	if khLine, ok := args["known_host"].(string); ok && khLine != "" {
 		_, _, pubKey, _, _, err := ssh.ParseKnownHosts([]byte(khLine))
 		if err != nil {
@@ -146,6 +152,7 @@ func (SSHExec) Execute(ctx context.Context, args map[string]any) (map[string]any
 		"duration_ms": float64(durationMs),
 		"truncated":   stdout.truncated || stderr.truncated,
 		"error":       exitErrMsg,
+		"host_key":    capturedHostKey, // TOFU: known_hosts line observada (vazio se veio known_host p/ verificar)
 	}, nil
 }
 
