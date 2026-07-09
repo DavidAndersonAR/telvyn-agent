@@ -304,6 +304,27 @@ func (e *IngestExporter) PostDeviceMetadata(ctx context.Context, hostID string, 
 	return e.PostRaw(ctx, "device-metadata", "application/json", body)
 }
 
+// PostDeviceConfig envia a running-config coletada por SSH pro gateway (NCM),
+// que sanitiza → versiona por hash em noc_device_config. v1 é SÓ LEITURA — o
+// agente nunca reescreve o equipamento. host_id é o bigint do noc_host (string;
+// o backend coage). vendor orienta a sanitização de linhas voláteis no backend.
+func (e *IngestExporter) PostDeviceConfig(ctx context.Context, hostID, vendor, source, rawText string) error {
+	if rawText == "" {
+		return nil
+	}
+	payload := map[string]any{
+		"host_id":  hostID,
+		"vendor":   vendor,
+		"source":   source,
+		"raw_text": rawText,
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	return e.PostRaw(ctx, "ncm/config", "application/json", body)
+}
+
 // RegisterK8sNode registra o nó no backend (POST /k8s/register, Bearer) →
 // cria o noc_host + check k8s.kubelet (faz o nó aparecer em "Aplicações").
 // Devolve o host_id (bigint como string) pra taggear as métricas de pod.
