@@ -1133,6 +1133,7 @@ func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.Ing
 
 	runtime := checks.New(ctx, log, checks.Default, out)
 	checks.SetDeviceMetadataPusher(exporter)
+	checks.SetDeviceConfigPusher(exporter) // NCM: check device.config_backup manda a running-config coletada
 	runtime.SetWorkerPools(5, 10)
 	runtime.SetJitter(1000)
 	runtime.SetTagger(checks.NewTagger(config.DefaultTaggerBudget, log))
