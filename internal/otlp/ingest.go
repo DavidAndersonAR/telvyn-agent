@@ -308,7 +308,7 @@ func (e *IngestExporter) PostDeviceMetadata(ctx context.Context, hostID string, 
 // que sanitiza → versiona por hash em noc_device_config. v1 é SÓ LEITURA — o
 // agente nunca reescreve o equipamento. host_id é o bigint do noc_host (string;
 // o backend coage). vendor orienta a sanitização de linhas voláteis no backend.
-func (e *IngestExporter) PostDeviceConfig(ctx context.Context, hostID, vendor, source, rawText string) error {
+func (e *IngestExporter) PostDeviceConfig(ctx context.Context, hostID, vendor, source, rawText, hostKey string) error {
 	if rawText == "" {
 		return nil
 	}
@@ -317,6 +317,10 @@ func (e *IngestExporter) PostDeviceConfig(ctx context.Context, hostID, vendor, s
 		"vendor":   vendor,
 		"source":   source,
 		"raw_text": rawText,
+	}
+	// TOFU: reporta a host key SSH observada pro backend fixar (só no 1º backup).
+	if hostKey != "" {
+		payload["host_key"] = hostKey
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
