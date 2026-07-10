@@ -9,6 +9,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/ispwatch/collector/internal/k8smeta"
 )
 
 // AdmissionReview / Pod minimalista — só os campos que consumimos.
@@ -203,15 +205,15 @@ func candidateWorkloads(pod podMeta) []string {
 		out = append(out, w)
 	}
 	if pod.Metadata.Name != "" {
-		add(workloadOf(pod.Metadata.Name))
+		add(k8smeta.WorkloadOf(pod.Metadata.Name))
 	}
 	if gn := pod.Metadata.GenerateName; gn != "" {
-		add(workloadOf(gn + "00000"))                // Deployment: "app-<rs>-" → "app"
-		add(workloadOf(strings.TrimSuffix(gn, "-"))) // StatefulSet generateName "app-"
+		add(k8smeta.WorkloadOf(gn + "00000"))                // Deployment: "app-<rs>-" → "app"
+		add(k8smeta.WorkloadOf(strings.TrimSuffix(gn, "-"))) // StatefulSet generateName "app-"
 	}
 	for _, o := range pod.Metadata.OwnerReferences {
-		add(workloadOf(o.Name))            // StatefulSet/DaemonSet name
-		add(workloadOf(o.Name + "-00000")) // ReplicaSet "app-<rs>" → "app"
+		add(k8smeta.WorkloadOf(o.Name))            // StatefulSet/DaemonSet name
+		add(k8smeta.WorkloadOf(o.Name + "-00000")) // ReplicaSet "app-<rs>" → "app"
 	}
 	return out
 }
@@ -402,67 +404,3 @@ func itoa(i int) string {
 	return string(buf[pos:])
 }
 
-// workloadOf deriva o nome do workload (Deployment/StatefulSet/DaemonSet) a
-// partir do nome do pod. MESMA heurística do scraper quarkus e do frontend
-// (lib/workload.ts):
-//
-//	backend-7959f7697-z6psv → backend   (Deployment: -<rsHash>-<podHash>)
-//	postgres-0              → postgres   (StatefulSet: -<ordinal>)
-//
-// Idempotente pra nomes que já são workload.
-func workloadOf(pod string) string {
-	if pod == "" {
-		return pod
-	}
-	parts := strings.Split(pod, "-")
-	if len(parts) < 2 {
-		return pod
-	}
-	last := parts[len(parts)-1]
-	if !isPodSuffix(last) && !isAllDigits(last) {
-		return pod
-	}
-	end := len(parts) - 1
-	if end >= 2 && isReplicaSetHash(parts[end-1]) {
-		end--
-	}
-	return strings.Join(parts[:end], "-")
-}
-
-func isAlnumLower(s string) bool {
-	if s == "" {
-		return false
-	}
-	for _, c := range s {
-		if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
-			return false
-		}
-	}
-	return true
-}
-
-func isAllDigits(s string) bool {
-	if s == "" {
-		return false
-	}
-	for _, c := range s {
-		if c < '0' || c > '9' {
-			return false
-		}
-	}
-	return true
-}
-
-func isPodSuffix(s string) bool { return len(s) == 5 && isAlnumLower(s) }
-
-func isReplicaSetHash(s string) bool {
-	if len(s) < 8 || len(s) > 10 || !isAlnumLower(s) {
-		return false
-	}
-	for _, c := range s {
-		if c >= '0' && c <= '9' {
-			return true
-		}
-	}
-	return false
-}
