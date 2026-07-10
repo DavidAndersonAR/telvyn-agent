@@ -176,11 +176,11 @@ func (h *HTTPReceiver) SetTraceSampler(fn func(traceID string, statusCode int32,
 	h.traceSampler = fn
 }
 
-// PodIPResolver resolve um IP de origem em (namespace, pod). Implementado pelo
-// ebpf.PodResolverImpl (índice do kubelet, atualizado a cada 30s). Só ResolveIP
-// interessa aqui — o stamping OTLP é sempre pelo IP de quem abriu a conexão.
+// PodIPResolver resolve um IP de origem no pod (namespace, pod, workload, node).
+// Implementado pelo ebpf.PodResolverImpl (índice do kubelet, atualizado a cada
+// 30s). O stamping OTLP é sempre pelo IP de quem abriu a conexão.
 type PodIPResolver interface {
-	ResolveIP(ip string) (namespace, pod string, ok bool)
+	ResolveIPMeta(ip string) (namespace, pod, workload, node string, ok bool)
 }
 
 // SetPodResolver liga o carimbo de pod/namespace por IP de origem (item 1). Sem
@@ -312,16 +312,16 @@ func (h *HTTPReceiver) tapAndSampleJSON(body []byte, clientIP string) (outBody [
 	}
 	// Resolve o pod emissor pelo IP de origem UMA vez (todos os resourceSpans do
 	// request vêm da mesma conexão = mesmo pod). Só preenche o que faltar.
-	var rNs, rPod string
+	var rNs, rPod, rWorkload, rNode string
 	var rok bool
 	if h.resolver != nil {
-		rNs, rPod, rok = h.resolver.ResolveIP(clientIP)
+		rNs, rPod, rWorkload, rNode, rok = h.resolver.ResolveIPMeta(clientIP)
 	}
 	injected := false
 	var allSpans []*collectorv1.Span
 	for ri := range doc.ResourceSpans {
 		rs := &doc.ResourceSpans[ri]
-		var service, env, namespace, pod string
+		var service, env, namespace, pod, wlAttr, nodeAttr string
 		if len(rs.Resource) > 0 {
 			var rf otlpResourceFields
 			if json.Unmarshal(rs.Resource, &rf) == nil {
@@ -330,6 +330,8 @@ func (h *HTTPReceiver) tapAndSampleJSON(body []byte, clientIP string) (outBody [
 				env = attrs["deployment.environment"]
 				namespace = attrs["k8s.namespace.name"]
 				pod = attrs["k8s.pod.name"]
+				wlAttr = attrs["k8s.deployment.name"]
+				nodeAttr = attrs["k8s.node.name"]
 				if service == "" {
 					service = pod
 				}
@@ -338,21 +340,25 @@ func (h *HTTPReceiver) tapAndSampleJSON(body []byte, clientIP string) (outBody [
 		// Carimbo por IP: preenche namespace/pod ausentes no resource (pro corpo
 		// encaminhado) e nas vars locais (pra cópia de stats). A app que já
 		// anuncia tem prioridade.
-		if rok && (namespace == "" || pod == "") {
+		if rok {
 			needNs := namespace == ""
 			needPod := pod == ""
-			if newRaw, changed := enrichJSONResource(rs.Resource, rNs, rPod, needNs, needPod); changed {
-				rs.Resource = newRaw
-				if needNs {
-					namespace = rNs
+			needWl := wlAttr == ""
+			needNode := nodeAttr == ""
+			if needNs || needPod || needWl || needNode {
+				if newRaw, changed := enrichJSONResource(rs.Resource, rNs, rPod, rWorkload, rNode, needNs, needPod, needWl, needNode); changed {
+					rs.Resource = newRaw
+					if needNs {
+						namespace = rNs
+					}
+					if needPod {
+						pod = rPod
+					}
+					if service == "" {
+						service = pod
+					}
+					injected = true
 				}
-				if needPod {
-					pod = rPod
-				}
-				if service == "" {
-					service = pod
-				}
-				injected = true
 			}
 		}
 		for si := range rs.ScopeSpans {
@@ -448,15 +454,16 @@ func clientIPFromRequest(r *http.Request) string {
 	return host
 }
 
-// enrichResourceAttrsProto injeta k8s.namespace.name/k8s.pod.name nos resource
-// attributes (protobuf) quando ausentes, resolvendo o IP de origem → pod. A app
-// que já anuncia esses atributos tem prioridade. Retorna true se mexeu em algo.
+// enrichResourceAttrsProto injeta k8s.namespace.name / k8s.pod.name /
+// k8s.deployment.name / k8s.node.name nos resource attributes (protobuf) quando
+// ausentes, resolvendo o IP de origem → pod. A app que já anuncia cada atributo
+// tem prioridade. Retorna true se mexeu em algo.
 func (h *HTTPReceiver) enrichResourceAttrsProto(req *tracepb.ExportTraceServiceRequest, clientIP string) bool {
 	if h.resolver == nil || req == nil {
 		return false
 	}
-	ns, pod, ok := h.resolver.ResolveIP(clientIP)
-	if !ok || (ns == "" && pod == "") {
+	ns, pod, workload, node, ok := h.resolver.ResolveIPMeta(clientIP)
+	if !ok || (ns == "" && pod == "" && workload == "" && node == "") {
 		return false
 	}
 	injected := false
@@ -467,7 +474,7 @@ func (h *HTTPReceiver) enrichResourceAttrsProto(req *tracepb.ExportTraceServiceR
 		if rs.Resource == nil {
 			rs.Resource = &resourcepb.Resource{}
 		}
-		haveNs, havePod := false, false
+		haveNs, havePod, haveWl, haveNode := false, false, false, false
 		for _, a := range rs.Resource.Attributes {
 			switch a.GetKey() {
 			case "k8s.namespace.name":
@@ -477,6 +484,14 @@ func (h *HTTPReceiver) enrichResourceAttrsProto(req *tracepb.ExportTraceServiceR
 			case "k8s.pod.name":
 				if a.GetValue().GetStringValue() != "" {
 					havePod = true
+				}
+			case "k8s.deployment.name":
+				if a.GetValue().GetStringValue() != "" {
+					haveWl = true
+				}
+			case "k8s.node.name":
+				if a.GetValue().GetStringValue() != "" {
+					haveNode = true
 				}
 			}
 		}
@@ -488,14 +503,23 @@ func (h *HTTPReceiver) enrichResourceAttrsProto(req *tracepb.ExportTraceServiceR
 			rs.Resource.Attributes = append(rs.Resource.Attributes, kv("k8s.pod.name", pod))
 			injected = true
 		}
+		if !haveWl && workload != "" {
+			rs.Resource.Attributes = append(rs.Resource.Attributes, kv("k8s.deployment.name", workload))
+			injected = true
+		}
+		if !haveNode && node != "" {
+			rs.Resource.Attributes = append(rs.Resource.Attributes, kv("k8s.node.name", node))
+			injected = true
+		}
 	}
 	return injected
 }
 
-// enrichJSONResource adiciona k8s.namespace.name/k8s.pod.name ao bloco resource
-// (OTLP/JSON cru) preservando os demais campos e os spans verbatim (que ficam
-// como json.RawMessage no doc). Retorna o resource reescrito e se mudou algo.
-func enrichJSONResource(raw json.RawMessage, ns, pod string, needNs, needPod bool) (json.RawMessage, bool) {
+// enrichJSONResource adiciona k8s.namespace.name / k8s.pod.name /
+// k8s.deployment.name / k8s.node.name ao bloco resource (OTLP/JSON cru)
+// preservando os demais campos e os spans verbatim (que ficam como
+// json.RawMessage no doc). Retorna o resource reescrito e se mudou algo.
+func enrichJSONResource(raw json.RawMessage, ns, pod, workload, node string, needNs, needPod, needWorkload, needNode bool) (json.RawMessage, bool) {
 	m := map[string]json.RawMessage{}
 	if len(raw) > 0 {
 		if err := json.Unmarshal(raw, &m); err != nil {
@@ -515,6 +539,14 @@ func enrichJSONResource(raw json.RawMessage, ns, pod string, needNs, needPod boo
 	}
 	if needPod && pod != "" {
 		attrs = append(attrs, kvJSON("k8s.pod.name", pod))
+		changed = true
+	}
+	if needWorkload && workload != "" {
+		attrs = append(attrs, kvJSON("k8s.deployment.name", workload))
+		changed = true
+	}
+	if needNode && node != "" {
+		attrs = append(attrs, kvJSON("k8s.node.name", node))
 		changed = true
 	}
 	if !changed {
