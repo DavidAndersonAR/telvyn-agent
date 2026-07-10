@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/ispwatch/collector/internal/ebpf/cgroup"
+	"github.com/ispwatch/collector/internal/k8smeta"
 )
 
 // KubeletPodLister resolve container_id → (namespace, pod). Implementada
@@ -49,6 +50,8 @@ type PodIndex struct {
 type NamespacedName struct {
 	Namespace string
 	Pod       string
+	Workload  string // Deployment/StatefulSet/DaemonSet derivado (ownerRef → k8smeta.WorkloadOf)
+	Node      string // spec.nodeName do pod
 }
 
 // PodSvcMeta carrega a unified service tagging lida das labels do pod
@@ -173,6 +176,23 @@ func (r *PodResolverImpl) ResolveIP(ip string) (string, string, bool) {
 	return pod.Namespace, pod.Pod, true
 }
 
+// ResolveIPMeta é como ResolveIP mas devolve também workload e node do pod.
+// Usado pelo enricher OTLP (carimba k8s.deployment.name / k8s.node.name além de
+// namespace/pod). NÃO substitui ResolveIP — o bridge eBPF usa a assinatura
+// enxuta (namespace, pod, ok).
+func (r *PodResolverImpl) ResolveIPMeta(ip string) (namespace, pod, workload, node string, ok bool) {
+	if ip == "" {
+		return "", "", "", "", false
+	}
+	r.mu.RLock()
+	nn, found := r.ipToPod[ip]
+	r.mu.RUnlock()
+	if !found {
+		return "", "", "", "", false
+	}
+	return nn.Namespace, nn.Pod, nn.Workload, nn.Node, true
+}
+
 // ServiceForPod devolve a unified service tagging (service/version/env) lida das
 // labels do pod — pra carimbar os logs com o MESMO service dos traces (igual
 // Datadog). ok=false quando o pod não tem a label tags.datadoghq.com/service;
@@ -281,7 +301,12 @@ func (h *httpPodLister) List(ctx context.Context) (PodIndex, error) {
 	byIP := make(map[string]NamespacedName, len(list.Items)*2)
 	byNsPod := make(map[string]PodSvcMeta, len(list.Items))
 	for _, p := range list.Items {
-		ns := NamespacedName{Namespace: p.Metadata.Namespace, Pod: p.Metadata.Name}
+		ns := NamespacedName{
+			Namespace: p.Metadata.Namespace,
+			Pod:       p.Metadata.Name,
+			Workload:  deriveWorkload(p.Metadata.Name, p.Metadata.OwnerReferences),
+			Node:      p.Spec.NodeName,
+		}
 		// unified service tagging: lê as labels tags.datadoghq.com/* do pod
 		// (convenção Datadog) pra carimbar o log com o mesmo service dos traces.
 		if svc := p.Metadata.Labels["tags.datadoghq.com/service"]; svc != "" {
@@ -325,14 +350,40 @@ func stripContainerIDPrefix(s string) string {
 	return s
 }
 
+// deriveWorkload resolve o workload (Deployment/StatefulSet/DaemonSet) do pod a
+// partir dos ownerReferences, caindo na heurística por nome do pod quando não
+// houver owner reconhecível. Deployment vem via ReplicaSet ("app-<rsHash>" →
+// "app"); StatefulSet/DaemonSet/Job vêm pelo nome do owner direto.
+func deriveWorkload(podName string, owners []podOwnerRef) string {
+	for _, o := range owners {
+		switch o.Kind {
+		case "ReplicaSet":
+			return k8smeta.WorkloadOf(o.Name + "-00000")
+		case "StatefulSet", "DaemonSet", "Job":
+			return k8smeta.WorkloadOf(o.Name)
+		}
+	}
+	return k8smeta.WorkloadOf(podName)
+}
+
+// podOwnerRef — subset de metadata.ownerReferences[] do kubelet /pods.
+type podOwnerRef struct {
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+}
+
 // kubeletPodList — subset do PodList do kubelet /pods.
 type kubeletPodList struct {
 	Items []struct {
 		Metadata struct {
-			Name      string            `json:"name"`
-			Namespace string            `json:"namespace"`
-			Labels    map[string]string `json:"labels"`
+			Name            string            `json:"name"`
+			Namespace       string            `json:"namespace"`
+			Labels          map[string]string `json:"labels"`
+			OwnerReferences []podOwnerRef     `json:"ownerReferences"`
 		} `json:"metadata"`
+		Spec struct {
+			NodeName string `json:"nodeName"`
+		} `json:"spec"`
 		Status struct {
 			PodIP  string `json:"podIP"`
 			PodIPs []struct {
