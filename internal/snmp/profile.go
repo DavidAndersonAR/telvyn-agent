@@ -477,7 +477,12 @@ func (p *Profile) Collect(ctx context.Context, c *Client, hostID string, staticT
 // direto, ou GET do OID convertido para string. Fail-soft: campo que falhar é
 // omitido. Devolve mapa vazio se não houver bloco metadata.
 func (p *Profile) CollectDeviceMetadata(ctx context.Context, c *Client) map[string]string {
-	out := make(map[string]string)
+	// Base GENÉRICA: identidade por OIDs PADRÃO (SNMPv2-MIB + ENTITY-MIB) que
+	// qualquer fabricante responde. Vale mesmo pra perfil SEM bloco metadata —
+	// os 174 convertidos do Datadog não trazem metadata, então sem esta base a
+	// identidade ficaria vazia pra todo mundo. Um perfil que declare metadata
+	// sobrescreve campo a campo (precedência do perfil).
+	out := collectGenericIdentity(ctx, c)
 	if p.Metadata == nil {
 		return out
 	}
@@ -499,6 +504,72 @@ func (p *Profile) CollectDeviceMetadata(ctx context.Context, c *Client) map[stri
 		s := strings.TrimSpace(pduString(pdus[0]))
 		if s != "" {
 			out[field] = s
+		}
+	}
+	return out
+}
+
+// versionRe extrai um token de versão (ex.: "6.48.3", "v7.0.5", "15.1") do
+// sysDescr quando o device não expõe entPhysicalSoftwareRev. Best-effort.
+var versionRe = regexp.MustCompile(`\bv?\d+\.\d+(?:\.\d+)*\b`)
+
+// collectGenericIdentity lê a identidade do device por OIDs PADRÃO, sem depender
+// de perfil vendor — fiel ao "generic device metadata" do Datadog NDM:
+//   - sys_object_id ← sysObjectID (SNMPv2-MIB, universal)
+//   - model/serial_number/version ← ENTITY-MIB entPhysical* do índice 1 (chassi
+//     na esmagadora maioria dos equipamentos de chassi único; best-effort)
+//   - version (fallback) ← token de versão extraído do sysDescr
+//
+// Chaves batem com os campos aceitos pelo backend (/ingest/v1/device-metadata:
+// model, serial_number, version→os_version, sys_object_id). Campo que não
+// responder é omitido — nunca grava string vazia (o upsert é COALESCE, então
+// omitir preserva o que já existe).
+func collectGenericIdentity(ctx context.Context, c *Client) map[string]string {
+	out := make(map[string]string)
+	if c == nil {
+		return out
+	}
+	get := func(oid string) string {
+		pdus, err := c.Get(ctx, []string{oid})
+		if err != nil || len(pdus) == 0 {
+			return ""
+		}
+		// OID ausente no device (gosnmp devolve Value=nil pra NoSuchObject/
+		// NoSuchInstance/EndOfMibView): trata como vazio — senão pduString
+		// renderiza "<nil>" e sujaria a identidade (ex.: entPhysical num device
+		// que não expõe ENTITY-MIB). Guarda também a string "<nil>" por garantia.
+		if pdus[0].Value == nil {
+			return ""
+		}
+		if s := strings.TrimSpace(pduString(pdus[0])); s != "<nil>" {
+			return s
+		}
+		return ""
+	}
+	if v := get("1.3.6.1.2.1.1.2.0"); v != "" { // sysObjectID
+		out["sys_object_id"] = strings.TrimPrefix(v, ".")
+	}
+	if v := get("1.3.6.1.2.1.47.1.1.1.1.13.1"); v != "" { // entPhysicalModelName.1
+		out["model"] = v
+	}
+	if v := get("1.3.6.1.2.1.47.1.1.1.1.11.1"); v != "" { // entPhysicalSerialNum.1
+		out["serial_number"] = v
+	}
+	// version: entPhysicalSoftwareRev costuma vir "sujo" (ex.: "FortiGate-501E
+	// v5.6.4,build1575…") — extrai o token de versão; se não houver token, usa
+	// o texto cru; se o OID nem responder, tenta o sysDescr.
+	if sw := get("1.3.6.1.2.1.47.1.1.1.1.10.1"); sw != "" { // entPhysicalSoftwareRev.1
+		if m := versionRe.FindString(sw); m != "" {
+			out["version"] = strings.TrimPrefix(m, "v")
+		} else {
+			out["version"] = sw
+		}
+	}
+	if out["version"] == "" {
+		if d := get("1.3.6.1.2.1.1.1.0"); d != "" { // sysDescr → versão best-effort
+			if m := versionRe.FindString(d); m != "" {
+				out["version"] = strings.TrimPrefix(m, "v")
+			}
 		}
 	}
 	return out

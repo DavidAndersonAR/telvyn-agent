@@ -1,13 +1,15 @@
 # IspWatch SNMP profile — generic-snmpv2.
 #
 # Fallback explicito quando o sysObjectID do device nao casa nenhum perfil
-# vendor especifico. Carrega so o que esta na SNMPv2-MIB / HOST-RESOURCES-MIB
-# padrao — qualquer agente SNMP minimamente conformante responde.
+# vendor especifico. Carrega so o que esta na SNMPv2-MIB / IF-MIB /
+# HOST-RESOURCES-MIB padrao — qualquer agente SNMP minimamente conformante
+# responde.
 #
-# IMPORTANTE: este perfil NAO coleta ifTable pra evitar duplicacao com perfis
-# vendor (que tambem cobrem ifTable com nomes proprios). Quando NENHUM template
-# vendor estiver linkado e voce quiser metricas de interface no formato
-# generico, use um template separado tipo "snmp.if-table-generic".
+# Coleta o ifTable/ifXTable PADRAO (RFC 2863) pra que um equipamento de marca
+# desconhecida (que nao casa nenhum dos perfis vendor) ainda mostre interfaces
+# e trafego na lente de Device. Nao ha duplicacao com perfis vendor: cada
+# device usa UM perfil so (ou o vendor por sysObjectID, ou este fallback),
+# nunca os dois ao mesmo tempo.
 #
 # A entrada sysobjectid abaixo (1.3.6.1.4.1.0) e propositalmente um OID
 # invalido (enterprise 0 nao existe) — nunca casa em auto-detect. Este
@@ -25,6 +27,80 @@ metrics:
     symbol:
       oid: 1.3.6.1.2.1.1.3.0
       name: snmp.sys.uptime
+
+  # Interfaces — IF-MIB ifTable/ifXTable padrao (RFC 2863). O agente canoniza
+  # por OID -> snmp.if.*, entao trafego/erros/descartes/status/velocidade
+  # aparecem mesmo num equipamento sem perfil vendor.
+  - mib: IF-MIB
+    symbol:
+      oid: 1.3.6.1.2.1.2.1.0
+      name: ifNumber
+  - mib: IF-MIB
+    table:
+      oid: 1.3.6.1.2.1.2.2
+      name: ifTable
+    symbols:
+      - oid: 1.3.6.1.2.1.2.2.1.14
+        name: ifInErrors
+      - oid: 1.3.6.1.2.1.2.2.1.13
+        name: ifInDiscards
+      - oid: 1.3.6.1.2.1.2.2.1.20
+        name: ifOutErrors
+      - oid: 1.3.6.1.2.1.2.2.1.19
+        name: ifOutDiscards
+    metric_tags:
+      - tag: interface_name
+        symbol:
+          oid: 1.3.6.1.2.1.2.2.1.2
+          name: ifDescr
+  - mib: IF-MIB
+    table:
+      oid: 1.3.6.1.2.1.2.2
+      name: ifTable
+    symbols:
+      - oid: 1.3.6.1.2.1.2.2.1.7
+        name: ifAdminStatus
+      - oid: 1.3.6.1.2.1.2.2.1.8
+        name: ifOperStatus
+      - oid: 1.3.6.1.2.1.2.2.1.5
+        name: ifSpeed
+      - oid: 1.3.6.1.2.1.2.2.1.4
+        name: ifMtu
+    metric_tags:
+      - tag: interface_name
+        symbol:
+          oid: 1.3.6.1.2.1.2.2.1.2
+          name: ifDescr
+  - mib: IF-MIB
+    table:
+      oid: 1.3.6.1.2.1.31.1.1
+      name: ifXTable
+    symbols:
+      - oid: 1.3.6.1.2.1.31.1.1.1.6
+        name: ifHCInOctets
+      - oid: 1.3.6.1.2.1.31.1.1.1.10
+        name: ifHCOutOctets
+    metric_tags:
+      - tag: interface_name
+        symbol:
+          oid: 1.3.6.1.2.1.31.1.1.1.1
+          name: ifName
+      - tag: interface_alias
+        symbol:
+          oid: 1.3.6.1.2.1.31.1.1.1.18
+          name: ifAlias
+  - mib: IF-MIB
+    table:
+      oid: 1.3.6.1.2.1.31.1.1
+      name: ifXTable
+    symbols:
+      - oid: 1.3.6.1.2.1.31.1.1.1.15
+        name: ifHighSpeed
+    metric_tags:
+      - tag: interface_name
+        symbol:
+          oid: 1.3.6.1.2.1.31.1.1.1.1
+          name: ifName
 
 discovery_rules:
   # CPU por core — HOST-RESOURCES-MIB::hrProcessorTable
