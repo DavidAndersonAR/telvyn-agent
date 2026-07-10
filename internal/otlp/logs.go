@@ -7,10 +7,16 @@
 //     OTLP/proto pra evitar pull de dep nova no backend Quarkus — o REST
 //     resource consome direto via Jackson. Mantemos as semantics OTLP
 //     (severity_number, body, attributes) e os field names canônicos.
-//   • Batch send a cada 2s OU a cada 100 records, o que vier primeiro.
+//   • Batch send a cada LogsBatchFlushInterval (2s) OU assim que o buffer
+//     junta um batch cheio (LogsBatchMaxRecords) — o que vier primeiro. O
+//     gatilho por tamanho (flushSignal) é o que absorve rajada: sem ele, uma
+//     rajada só drena no próximo tick, e o buffer estoura à toa mesmo com o
+//     backend ocioso.
 //
-// Sem WAL: logs são best-effort. Channel-full = drop silencioso com
-// counter agent_logs_dropped_total.
+// Sem WAL: logs são best-effort. Buffer cheio (> LogsBufferMaxRecords) =
+// dropa os mais antigos (FIFO), conta em droppedTotal (agent_logs_dropped_total)
+// e loga um WARN agregado no máx 1×/s (pra uma rajada de N drops não virar N
+// linhas de log).
 
 package otlp
 
@@ -32,10 +38,18 @@ import (
 )
 
 const (
-	// LogsBatchMaxRecords — max records por POST. Mantemos baixo (100) pra
-	// evitar requests grandes; backend persiste por linha mesmo, então
-	// não compensa empacotar 1000.
+	// LogsBatchMaxRecords — max records por POST E limiar do flush por tamanho:
+	// quando o buffer junta esse tanto, o Push acorda o flusher na hora (em vez
+	// de esperar o tick). Mantemos baixo (100) pra evitar requests grandes;
+	// backend persiste por linha mesmo, então não compensa empacotar 1000.
 	LogsBatchMaxRecords = 100
+
+	// LogsBufferMaxRecords — teto do buffer em memória (rede de segurança pra
+	// quando o backend está lento/fora e o flush não drena a tempo). Acima
+	// disso, dropa os mais antigos. 40× o batch (~4MB com linhas típicas <1KB)
+	// dá folga de rajada suficiente sem virar risco de OOM. Era 4× (400), curto
+	// demais: só ~2s de absorção a 200 linhas/s.
+	LogsBufferMaxRecords = 40 * LogsBatchMaxRecords
 
 	// LogsBatchFlushInterval — flush periódico mesmo com pouco volume,
 	// pra UI ver logs com latência ≤ 2s.
@@ -78,12 +92,21 @@ type LogsExporter struct {
 	mu  sync.Mutex
 	buf []LogRecord
 
+	// flushSignal acorda o Run pra flush imediato quando o buffer junta um
+	// batch cheio (LogsBatchMaxRecords). Buffered(1): coalesce — uma rajada de
+	// N pushes gera no máx 1 sinal pendente, e cada flush drena o buffer todo.
+	flushSignal chan struct{}
+
 	// Counters — drenados pelo publisher de self-metrics.
 	linesTotal   atomic.Int64
 	bytesTotal   atomic.Int64
 	droppedTotal atomic.Int64
 	sentBatches  atomic.Int64
 	sendFailures atomic.Int64
+
+	// Rate-limit do WARN de overflow: agrega os drops e loga no máx 1×/s.
+	overflowPending  atomic.Int64
+	lastOverflowWarn atomic.Int64
 }
 
 // NewLogsExporter constrói o exporter. endpoint = https://host:port (sem
@@ -120,7 +143,8 @@ func NewLogsExporter(endpoint, tenantID, collectorID string, certPath, keyPath, 
 			Transport: &http.Transport{TLSClientConfig: tlsCfg},
 			Timeout:   LogsRequestTimeout,
 		},
-		log: log.With("component", "otlp-logs"),
+		flushSignal: make(chan struct{}, 1),
+		log:         log.With("component", "otlp-logs"),
 	}, nil
 }
 
@@ -129,26 +153,60 @@ func NewLogsExporter(endpoint, tenantID, collectorID string, certPath, keyPath, 
 // Reusa Push/Run/flush/overflow/Stats do exporter mTLS.
 func NewIngestLogsExporter(ingest *IngestExporter, log *slog.Logger) *LogsExporter {
 	return &LogsExporter{
-		ingest:     ingest,
-		httpClient: &http.Client{Timeout: LogsRequestTimeout},
-		log:        log.With("component", "otlp-logs-ingest"),
+		ingest:      ingest,
+		httpClient:  &http.Client{Timeout: LogsRequestTimeout},
+		flushSignal: make(chan struct{}, 1),
+		log:         log.With("component", "otlp-logs-ingest"),
 	}
 }
 
-// Push adiciona records ao buffer interno. Não bloqueia — overflow >4x
-// batch size dropa do início (FIFO), same pattern do span Forwarder.
+// Push adiciona records ao buffer interno. Nunca bloqueia (o tailer não pode
+// travar): acima de LogsBufferMaxRecords dropa os mais antigos (FIFO). Ao juntar
+// um batch cheio, sinaliza o Run pra flush imediato — sem esperar o ticker.
 func (e *LogsExporter) Push(rec LogRecord) {
 	e.mu.Lock()
-	defer e.mu.Unlock()
 	e.buf = append(e.buf, rec)
 	e.linesTotal.Add(1)
 	e.bytesTotal.Add(int64(len(rec.Body)))
-	if cap := LogsBatchMaxRecords * 4; len(e.buf) > cap {
-		drop := len(e.buf) - cap
+	var drop int
+	if len(e.buf) > LogsBufferMaxRecords {
+		drop = len(e.buf) - LogsBufferMaxRecords
 		e.buf = e.buf[drop:]
-		e.droppedTotal.Add(int64(drop))
-		e.log.Warn("logs buffer overflow, dropped oldest", "dropped", drop, "buffered", len(e.buf))
 	}
+	buffered := len(e.buf)
+	full := buffered >= LogsBatchMaxRecords
+	e.mu.Unlock()
+
+	// Flush por tamanho: non-blocking. Se já há um flush sinalizado, ignora
+	// (o flush drena o buffer todo de qualquer forma).
+	if full {
+		select {
+		case e.flushSignal <- struct{}{}:
+		default:
+		}
+	}
+	if drop > 0 {
+		e.droppedTotal.Add(int64(drop))
+		e.warnOverflow(drop, buffered)
+	}
+}
+
+// warnOverflow loga o overflow no máx 1×/s, agregando quantos records foram
+// dropados no intervalo — uma rajada de 400 drops vira 1 linha, não 400. O
+// número exato de perdas fica em droppedTotal (fonte de verdade pro alerta).
+func (e *LogsExporter) warnOverflow(drop, buffered int) {
+	e.overflowPending.Add(int64(drop))
+	now := time.Now().UnixNano()
+	last := e.lastOverflowWarn.Load()
+	if now-last < int64(time.Second) {
+		return
+	}
+	if !e.lastOverflowWarn.CompareAndSwap(last, now) {
+		return // outra goroutine já pegou a janela deste segundo
+	}
+	dropped := e.overflowPending.Swap(0)
+	e.log.Warn("logs buffer overflow, dropped oldest",
+		"dropped", dropped, "buffered", buffered, "cap", LogsBufferMaxRecords)
 }
 
 // Run loops flushing periodicamente até ctx ser cancelado. Best-effort
@@ -162,6 +220,9 @@ func (e *LogsExporter) Run(ctx context.Context) {
 			e.flush(context.Background()) // best-effort
 			return
 		case <-ticker.C:
+			e.flush(ctx)
+		case <-e.flushSignal:
+			// Buffer juntou um batch cheio antes do tick — drena já.
 			e.flush(ctx)
 		}
 	}
