@@ -35,6 +35,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ispwatch/collector/internal/k8smeta"
 )
 
 const (
@@ -195,7 +197,7 @@ func (s *Server) poll(ctx context.Context) {
 		}
 		wl := e.Workload
 		if wl == "" {
-			wl = workloadOf(e.Pod)
+			wl = k8smeta.WorkloadOf(e.Pod)
 		}
 		next[e.Namespace+"/"+wl] = struct{}{}
 	}
