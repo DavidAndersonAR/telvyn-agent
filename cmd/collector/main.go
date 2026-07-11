@@ -25,6 +25,7 @@ import (
 	"github.com/ispwatch/collector/internal/apm/sampler"
 	"github.com/ispwatch/collector/internal/apm/statsfwd"
 	"github.com/ispwatch/collector/internal/checks"
+	"github.com/ispwatch/collector/internal/clusteragent"
 	"github.com/ispwatch/collector/internal/config"
 	"github.com/ispwatch/collector/internal/configcache"
 	"github.com/ispwatch/collector/internal/configpull"
@@ -868,6 +869,52 @@ func runIngestMode(ingestURL string) {
 				startSbomScan(ctx, log, exporter, nodeHostID)
 			} else {
 				log.Debug("sbom scan desativado (set ISPWATCH_SBOM_SCAN=1 pra habilitar)")
+			}
+		}
+	}
+
+	// Cluster Agent (modo k8s.cluster, 1 réplica): fala com o API server
+	// in-cluster e faz LIST periódico dos Events do cluster inteiro (OOMKilled,
+	// BackOff, FailedScheduling, Unhealthy…) → push certless pro noc_k8s_event
+	// (timeline na cluster page). É a visão cross-node que o DaemonSet (kubelet
+	// local) não alcança. RBAC dedicado -cluster (events get/list/watch).
+	if strings.EqualFold(getenvOr("ISPWATCH_AGENT_KIND", ""), "k8s.cluster") {
+		apiURL := strings.TrimSpace(getenvOr("ISPWATCH_K8S_API_URL", ""))
+		if apiURL == "" {
+			if h := strings.TrimSpace(os.Getenv("KUBERNETES_SERVICE_HOST")); h != "" {
+				apiURL = "https://" + h + ":" + getenvOr("KUBERNETES_SERVICE_PORT", "443")
+			}
+		}
+		if apiURL == "" {
+			log.Warn("k8s.cluster: KUBERNETES_SERVICE_HOST ausente — cluster-agent desativado (fora de um cluster?)")
+		} else {
+			interval := 30 * time.Second
+			if v := strings.TrimSpace(getenvOr("ISPWATCH_CLUSTER_INTERVAL_SEC", "")); v != "" {
+				if n, err := strconv.Atoi(v); err == nil && n > 0 {
+					interval = time.Duration(n) * time.Second
+				}
+			}
+			eventLimit := 0
+			if v := strings.TrimSpace(getenvOr("ISPWATCH_CLUSTER_EVENT_LIMIT", "")); v != "" {
+				if n, err := strconv.Atoi(v); err == nil && n > 0 {
+					eventLimit = n
+				}
+			}
+			caCfg := clusteragent.Config{
+				APIServerURL:  apiURL,
+				TokenFile:     getenvOr("ISPWATCH_K8S_TOKEN_FILE", "/var/run/secrets/kubernetes.io/serviceaccount/token"),
+				CAFile:        getenvOr("ISPWATCH_K8S_CA_FILE", "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"),
+				Insecure:      getenvOr("ISPWATCH_K8S_INSECURE", "0") == "1",
+				Cluster:       cluster,
+				Interval:      interval,
+				IncludeNormal: getenvOr("ISPWATCH_CLUSTER_EVENTS_INCLUDE_NORMAL", "0") == "1",
+				EventLimit:    eventLimit,
+			}
+			if ca, err := clusteragent.New(caCfg, exporter, log); err != nil {
+				log.Error("k8s.cluster: cluster-agent init falhou", "err", err)
+			} else {
+				go ca.Run(ctx)
+				log.Info("k8s.cluster: cluster-agent ativo (watch de eventos do API server)", "api", apiURL)
 			}
 		}
 	}

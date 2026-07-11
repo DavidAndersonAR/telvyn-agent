@@ -134,6 +134,33 @@ webhook:
   service:
     port: 443
 
+# Cluster Agent (modo k8s.cluster): 1 réplica que fala com o API server e faz
+# LIST dos Events do cluster (OOMKilled/BackOff/FailedScheduling/Unhealthy…) →
+# timeline no portal (noc_k8s_event). Complementa o DaemonSet (que só vê o
+# kubelet local). Desligado por default — operador habilita explicitamente.
+# Usa a MESMA imagem do agent, modo k8s.cluster, com SA/ClusterRole DEDICADOS
+# (-cluster) de RBAC read-only cluster-wide. Endurecido (non-root, RO rootfs).
+clusterAgent:
+  enabled: false
+  # Período do LIST de eventos no API server (segundos). Default 30s.
+  intervalSeconds: 30
+  # Manda também eventos type=Normal (Scheduled/Pulled/…). Default false =
+  # só Warning (OOMKilled/BackOff/FailedScheduling/…), timeline enxuta.
+  includeNormalEvents: false
+  # Verificação TLS contra o API server. "0" = usa o CA do serviceaccount
+  # (recomendado). "1" só em lab onde o CA não bate.
+  apiInsecure: "0"
+  # Tolerations do Deployment (1 réplica, pode rodar em qualquer nó schedulável).
+  # Default vazio = respeita taints normais (não força control-plane).
+  tolerations: []
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 192Mi
+
 # Scanner de vulnerabilidade de APLICAÇÃO (camada 2/3, toggle estilo Datadog).
 # Quando habilitado, o agent roda o Trivy embarcado pra GERAR o SBOM (lista de
 # bibliotecas) de cada imagem rodando no nó e manda só a lista pro gateway
