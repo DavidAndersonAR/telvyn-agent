@@ -26,12 +26,15 @@ metadata:
   labels:
     {{- include "ispwatch-agent.clusterLabels" . | nindent 4 }}
 rules:
-  # Least-privilege: o v1 SÓ faz LIST dos Events do cluster (pod→workload é
-  # heurística de string, sem lookup no API server). Quando a F1 ler labels de
-  # ns/nó ou fizer lookup RS→Deployment, adiciona-se pods/namespaces/nodes/apps
-  # AQUI — não antes (nada de conceder o que o código não chama).
+  # Least-privilege: concede só o que o cluster-agent realmente chama.
+  # - events: timeline de eventos (F2).
+  # - pods: kube-state (contagem por namespace/fase → k8s.namespace.pod_count).
+  # - apps/deployments: saúde de workload (réplicas desired/ready/available).
   - apiGroups: [""]
-    resources: ["events"]
+    resources: ["events", "pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
     verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
