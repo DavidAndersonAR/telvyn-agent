@@ -473,11 +473,16 @@ func (p *Profile) Collect(ctx context.Context, c *Client, hostID string, staticT
 	return out, nil
 }
 
-// CollectDeviceMetadata resolve os campos de metadata.device: valor estático
-// direto, ou GET do OID convertido para string. Fail-soft: campo que falhar é
-// omitido. Devolve mapa vazio se não houver bloco metadata.
+// CollectDeviceMetadata resolve a identidade do device (vendor/model/serial/OS…):
+//  1. BASE derivada de OIDs padrão (sysDescr, sysObjectID, ENTITY-MIB) — vale pra
+//     QUALQUER device, mesmo sem bloco metadata no profile (a maioria dos 174
+//     profiles Datadog só declara `type:`, sem identidade).
+//  2. OVERLAY do bloco metadata do profile, que é AUTORITATIVO (sobrepõe o
+//     derivado): valor estático direto, ou GET do OID → string.
+//
+// Fail-soft em tudo: campo que não responder é omitido.
 func (p *Profile) CollectDeviceMetadata(ctx context.Context, c *Client) map[string]string {
-	out := make(map[string]string)
+	out := deriveStandardMetadata(ctx, c)
 	if p.Metadata == nil {
 		return out
 	}
@@ -502,6 +507,153 @@ func (p *Profile) CollectDeviceMetadata(ctx context.Context, c *Client) map[stri
 		}
 	}
 	return out
+}
+
+// OIDs padrão de identidade (SNMPv2-MIB + ENTITY-MIB) — respondidos por
+// praticamente qualquer device SNMP, independentemente de profile de vendor.
+const (
+	oidSysDescr    = "1.3.6.1.2.1.1.1.0"        // sysDescr
+	oidSysObjectID = "1.3.6.1.2.1.1.2.0"        // sysObjectID
+	oidEntModel    = "1.3.6.1.2.1.47.1.1.1.1.13" // entPhysicalModelName
+	oidEntSerial   = "1.3.6.1.2.1.47.1.1.1.1.11" // entPhysicalSerialNum
+	oidEntSoftware = "1.3.6.1.2.1.47.1.1.1.1.10" // entPhysicalSoftwareRev
+)
+
+var reVersion = regexp.MustCompile(`\d+\.\d+(?:\.\d+)*`)
+
+// deriveStandardMetadata deriva a identidade do device de OIDs padrão. Serve de
+// BASE (o profile sobrepõe). Campos: sys_object_id + vendor (do enterprise
+// number), os_name/version (de sysDescr), model/serial_number/version (do
+// ENTITY-MIB). Fail-soft: o que não responder fica de fora.
+func deriveStandardMetadata(ctx context.Context, c *Client) map[string]string {
+	out := make(map[string]string)
+	if pdus, err := c.Get(ctx, []string{oidSysDescr, oidSysObjectID}); err == nil {
+		for _, pd := range pdus {
+			name := strings.TrimPrefix(pd.Name, ".")
+			switch {
+			case strings.HasPrefix(name, "1.3.6.1.2.1.1.1"): // sysDescr
+				if osn, osv := parseSysDescr(pduString(pd)); osn != "" {
+					out["os_name"] = osn
+					if osv != "" {
+						out["version"] = osv
+					}
+				}
+			case strings.HasPrefix(name, "1.3.6.1.2.1.1.2"): // sysObjectID
+				soid := strings.TrimSpace(pduString(pd))
+				if soid != "" {
+					out["sys_object_id"] = soid
+					if v := vendorFromSysObjectID(soid); v != "" {
+						out["vendor"] = v
+					}
+				}
+			}
+		}
+	}
+	// ENTITY-MIB: colunas walked, primeira linha não-vazia (o chassi é a 1ª
+	// entidade física na maioria dos devices). Autoritativo quando responde.
+	if m := walkFirstNonEmpty(ctx, c, oidEntModel); m != "" {
+		out["model"] = m
+	}
+	if s := walkFirstNonEmpty(ctx, c, oidEntSerial); s != "" {
+		out["serial_number"] = s
+	}
+	if sw := walkFirstNonEmpty(ctx, c, oidEntSoftware); sw != "" {
+		out["version"] = sw // ENTITY software rev é mais preciso que o parse do sysDescr
+	}
+	return out
+}
+
+// walkFirstNonEmpty faz WalkAll numa coluna e devolve o primeiro valor string
+// não-vazio. Vazio em erro ou coluna sem resposta.
+func walkFirstNonEmpty(ctx context.Context, c *Client, root string) string {
+	pdus, err := c.WalkAll(ctx, root)
+	if err != nil {
+		return ""
+	}
+	for _, pd := range pdus {
+		if s := strings.TrimSpace(pduString(pd)); s != "" {
+			return s
+		}
+	}
+	return ""
+}
+
+// parseSysDescr extrai (os_name, os_version) do sysDescr pra vendors comuns.
+// Heurística conservadora: só reconhece padrões conhecidos; senão devolve vazio
+// (o ENTITY-MIB / profile preenchem o resto).
+func parseSysDescr(d string) (osName, osVersion string) {
+	d = strings.TrimSpace(d)
+	if d == "" {
+		return "", ""
+	}
+	ver := reVersion.FindString(d)
+	l := strings.ToLower(d)
+	switch {
+	case strings.Contains(l, "routeros"):
+		return "RouterOS", ver
+	case strings.Contains(l, "ios xe"):
+		return "IOS XE", ver
+	case strings.Contains(l, "nx-os"):
+		return "NX-OS", ver
+	case strings.Contains(l, "cisco ios"), strings.Contains(l, "cisco internetwork operating system"):
+		return "IOS", ver
+	case strings.Contains(l, "junos"):
+		return "Junos", ver
+	case strings.Contains(l, "arubaos"):
+		return "ArubaOS", ver
+	case strings.Contains(l, "fortios"), strings.Contains(l, "fortigate"):
+		return "FortiOS", ver
+	case strings.Contains(l, "vyos"):
+		return "VyOS", ver
+	case strings.Contains(l, "linux"):
+		return "Linux", ver
+	}
+	return "", ""
+}
+
+// vendorFromSysObjectID mapeia o enterprise number (1.3.6.1.4.1.<N>…) pro nome
+// do vendor. Só os IANA PEN de rede mais comuns (conservador).
+func vendorFromSysObjectID(oid string) string {
+	const ent = "1.3.6.1.4.1."
+	o := strings.TrimPrefix(strings.TrimSpace(oid), ".")
+	if !strings.HasPrefix(o, ent) {
+		return ""
+	}
+	n := o[len(ent):]
+	if i := strings.IndexByte(n, '.'); i > 0 {
+		n = n[:i]
+	}
+	switch n {
+	case "9":
+		return "Cisco"
+	case "2011":
+		return "Huawei"
+	case "14988":
+		return "MikroTik"
+	case "2636":
+		return "Juniper"
+	case "674":
+		return "Dell"
+	case "11":
+		return "HP"
+	case "25506":
+		return "H3C"
+	case "12356":
+		return "Fortinet"
+	case "14823":
+		return "Aruba"
+	case "1916":
+		return "Extreme"
+	case "1991":
+		return "Brocade"
+	case "3375":
+		return "F5"
+	case "8072":
+		return "Net-SNMP"
+	case "2352":
+		return "Nokia"
+	}
+	return ""
 }
 
 // executeDiscoveryRule walks keys, walks items, joins por rowSuffix e devolve
