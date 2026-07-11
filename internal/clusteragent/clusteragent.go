@@ -30,11 +30,14 @@ import (
 	"time"
 
 	"github.com/ispwatch/collector/internal/k8smeta"
+	collectorv1 "github.com/ispwatch/collector/proto/v1"
 )
 
-// EventPusher é o subset do IngestExporter usado aqui (facilita fake em teste).
-type EventPusher interface {
+// Ingest é o subset do IngestExporter usado aqui (facilita fake em teste):
+// eventos (timeline) + métricas kube-state (pods por fase, réplicas de deployment).
+type Ingest interface {
 	PostK8sEvents(ctx context.Context, payload map[string]any) error
+	PostMetrics(ctx context.Context, metrics []*collectorv1.Metric) error
 }
 
 // Config do cluster-agent. APIServerURL vazio desativa (sem in-cluster config).
@@ -47,14 +50,15 @@ type Config struct {
 	Interval      time.Duration // período do LIST (default 30s)
 	IncludeNormal bool          // manda também eventos type=Normal (default só Warning)
 	EventLimit    int           // ?limit= do LIST (default 1000)
+	KubeState     bool          // emite métricas kube-state (pods por fase + deployments)
 }
 
-// Agent faz o loop de coleta+push dos eventos do cluster.
+// Agent faz o loop de coleta+push do cluster (eventos + kube-state).
 type Agent struct {
 	cfg       Config
 	tokenFile string
 	client    *http.Client
-	pusher    EventPusher
+	ingest    Ingest
 	log       *slog.Logger
 }
 
@@ -64,7 +68,7 @@ const (
 )
 
 // New monta o cliente TLS contra o API server. Erro só em CA ilegível.
-func New(cfg Config, pusher EventPusher, log *slog.Logger) (*Agent, error) {
+func New(cfg Config, ingest Ingest, log *slog.Logger) (*Agent, error) {
 	if log == nil {
 		log = slog.Default()
 	}
@@ -99,16 +103,17 @@ func New(cfg Config, pusher EventPusher, log *slog.Logger) (*Agent, error) {
 			Timeout:   15 * time.Second,
 			Transport: &http.Transport{TLSClientConfig: tlsCfg},
 		},
-		pusher: pusher,
+		ingest: ingest,
 		log:    log.With("component", "cluster-agent"),
 	}, nil
 }
 
-// Run dispara o loop de LIST no intervalo configurado. Bloqueia até ctx cancelar.
+// Run dispara o loop de coleta no intervalo configurado. Bloqueia até ctx cancelar.
 func (a *Agent) Run(ctx context.Context) {
 	a.log.Info("cluster-agent iniciando", "api", a.cfg.APIServerURL,
-		"interval", a.cfg.Interval, "cluster", a.cfg.Cluster, "include_normal", a.cfg.IncludeNormal)
-	a.tick(ctx)
+		"interval", a.cfg.Interval, "cluster", a.cfg.Cluster,
+		"include_normal", a.cfg.IncludeNormal, "kube_state", a.cfg.KubeState)
+	a.collect(ctx)
 	ticker := time.NewTicker(a.cfg.Interval)
 	defer ticker.Stop()
 	for {
@@ -116,12 +121,20 @@ func (a *Agent) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			a.tick(ctx)
+			a.collect(ctx)
 		}
 	}
 }
 
-func (a *Agent) tick(ctx context.Context) {
+// collect roda um ciclo: eventos (timeline) + kube-state (métricas de estado).
+func (a *Agent) collect(ctx context.Context) {
+	a.pushEvents(ctx)
+	if a.cfg.KubeState {
+		a.pushKubeState(ctx)
+	}
+}
+
+func (a *Agent) pushEvents(ctx context.Context) {
 	events, err := a.listEvents(ctx)
 	if err != nil {
 		a.log.Warn("LIST events falhou", "err", err)
@@ -133,58 +146,183 @@ func (a *Agent) tick(ctx context.Context) {
 		a.log.Debug("nenhum evento relevante no ciclo")
 		return
 	}
-	if err := a.pusher.PostK8sEvents(ctx, payload); err != nil {
+	if err := a.ingest.PostK8sEvents(ctx, payload); err != nil {
 		a.log.Warn("push de eventos falhou", "err", err, "count", n)
 		return
 	}
 	a.log.Info("eventos do cluster enviados", "count", n)
 }
 
-// listEvents faz GET /api/v1/events?limit=N no API server, paginando via
-// continue token (cap defensivo de páginas pra não varrer um cluster gigante
-// num v1 sem watch).
+// pushKubeState coleta contagem de pods por (namespace, fase) + réplicas de
+// deployment (desired/ready/available) e empurra como métricas VM. As tags
+// casam o contrato do backend: kube_cluster_name + pod_phase/kube_namespace/
+// kube_deployment (tenant_id é injetado server-side pelo token). O nome usa
+// prefixo k8s. → o backend renomeia namespace→kube_namespace e o ponto vira
+// underscore no VM (k8s.namespace.pod_count → k8s_namespace_pod_count).
+func (a *Agent) pushKubeState(ctx context.Context) {
+	var metrics []*collectorv1.Metric
+	if m, err := a.collectPodPhases(ctx); err != nil {
+		a.log.Warn("kube-state pods falhou", "err", err)
+	} else {
+		metrics = append(metrics, m...)
+	}
+	if m, err := a.collectDeployments(ctx); err != nil {
+		a.log.Warn("kube-state deployments falhou", "err", err)
+	} else {
+		metrics = append(metrics, m...)
+	}
+	if len(metrics) == 0 {
+		return
+	}
+	if err := a.ingest.PostMetrics(ctx, metrics); err != nil {
+		a.log.Warn("kube-state push falhou", "err", err, "count", len(metrics))
+		return
+	}
+	a.log.Info("kube-state enviado", "metrics", len(metrics))
+}
+
+// collectPodPhases faz LIST cluster-wide de pods e conta por (namespace, fase)
+// → uma série k8s.namespace.pod_count por combinação.
+func (a *Agent) collectPodPhases(ctx context.Context) ([]*collectorv1.Metric, error) {
+	counts := map[[2]string]int{} // {namespace, phase} → count
+	err := a.apiGetPaged(ctx, "/api/v1/pods", func(body []byte) (string, error) {
+		var list podList
+		if err := json.Unmarshal(body, &list); err != nil {
+			return "", fmt.Errorf("decode pods: %w", err)
+		}
+		for _, p := range list.Items {
+			phase := p.Status.Phase
+			if phase == "" {
+				phase = "Unknown"
+			}
+			counts[[2]string{p.Metadata.Namespace, phase}]++
+		}
+		return list.Metadata.Continue, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	metrics := make([]*collectorv1.Metric, 0, len(counts))
+	for k, n := range counts {
+		metrics = append(metrics, a.metric("k8s.namespace.pod_count", float64(n), map[string]string{
+			"kube_cluster_name": a.cfg.Cluster,
+			"kube_namespace":    k[0],
+			"pod_phase":         k[1],
+		}))
+	}
+	return metrics, nil
+}
+
+// collectDeployments faz LIST cluster-wide de deployments e emite as 3 séries
+// de réplica por workload (desired/ready/available) — a saúde do rollout.
+func (a *Agent) collectDeployments(ctx context.Context) ([]*collectorv1.Metric, error) {
+	var metrics []*collectorv1.Metric
+	err := a.apiGetPaged(ctx, "/apis/apps/v1/deployments", func(body []byte) (string, error) {
+		var list deploymentList
+		if err := json.Unmarshal(body, &list); err != nil {
+			return "", fmt.Errorf("decode deployments: %w", err)
+		}
+		for _, d := range list.Items {
+			base := map[string]string{
+				"kube_cluster_name": a.cfg.Cluster,
+				"kube_namespace":    d.Metadata.Namespace,
+				"kube_deployment":   d.Metadata.Name,
+			}
+			desired := 0
+			if d.Spec.Replicas != nil {
+				desired = *d.Spec.Replicas
+			}
+			metrics = append(metrics,
+				a.metric("k8s.deployment.replicas_desired", float64(desired), base),
+				a.metric("k8s.deployment.replicas_ready", float64(d.Status.ReadyReplicas), base),
+				a.metric("k8s.deployment.replicas_available", float64(d.Status.AvailableReplicas), base),
+			)
+		}
+		return list.Metadata.Continue, nil
+	})
+	return metrics, err
+}
+
+// metric monta um gauge com uma CÓPIA das tags (evita compartilhar o map base
+// entre séries). tenant_id/host_id ficam de fora — o backend injeta o tenant
+// pelo token e a métrica é tag-based (sem host).
+func (a *Agent) metric(name string, val float64, tags map[string]string) *collectorv1.Metric {
+	t := make(map[string]string, len(tags))
+	for k, v := range tags {
+		t[k] = v
+	}
+	return &collectorv1.Metric{
+		MetricName: name,
+		Value:      val,
+		Tags:       t,
+		Source:     "k8s.cluster",
+	}
+}
+
+// listEvents faz LIST paginado de /api/v1/events e devolve os Events crus.
 func (a *Agent) listEvents(ctx context.Context) ([]coreEvent, error) {
-	token := a.readToken()
-	base := strings.TrimRight(a.cfg.APIServerURL, "/") + "/api/v1/events"
 	var all []coreEvent
+	err := a.apiGetPaged(ctx, "/api/v1/events", func(body []byte) (string, error) {
+		var list coreEventList
+		if err := json.Unmarshal(body, &list); err != nil {
+			return "", fmt.Errorf("decode events: %w", err)
+		}
+		all = append(all, list.Items...)
+		return list.Metadata.Continue, nil
+	})
+	return all, err
+}
+
+const maxListPages = 10
+
+// apiGetPaged faz GET paginado (continue token) num recurso do API server,
+// chamando decodePage por página (que devolve o próximo continue token). Cap
+// defensivo de páginas pra não varrer um cluster gigante num v1 sem watch.
+func (a *Agent) apiGetPaged(ctx context.Context, path string, decodePage func(body []byte) (cont string, err error)) error {
+	base := strings.TrimRight(a.cfg.APIServerURL, "/") + path
 	cont := ""
-	for page := 0; page < 10; page++ {
+	for page := 0; page < maxListPages; page++ {
 		url := fmt.Sprintf("%s?limit=%d", base, a.cfg.EventLimit)
 		if cont != "" {
 			url += "&continue=" + cont
 		}
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		body, err := a.apiGet(ctx, url)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		if token != "" {
-			req.Header.Set("Authorization", "Bearer "+token)
-		}
-		req.Header.Set("Accept", "application/json")
-		resp, err := a.client.Do(req)
+		cont, err = decodePage(body)
 		if err != nil {
-			return all, err
+			return err
 		}
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 32<<20))
-		resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			return all, fmt.Errorf("API server /events status %d: %s", resp.StatusCode, snippet(body))
-		}
-		var list coreEventList
-		if err := json.Unmarshal(body, &list); err != nil {
-			return all, fmt.Errorf("decode events: %w", err)
-		}
-		all = append(all, list.Items...)
-		cont = list.Metadata.Continue
 		if cont == "" {
-			break
-		}
-		if page == 9 {
-			a.log.Warn("LIST events truncado (>10 páginas) — cluster muito grande pro v1 sem watch",
-				"coletados", len(all))
+			return nil
 		}
 	}
-	return all, nil
+	a.log.Warn("LIST truncado (>páginas) — cluster grande demais pro v1 sem watch", "path", path)
+	return nil
+}
+
+// apiGet faz um GET autenticado (SA token relido) no API server e devolve o
+// corpo (cap 32MB). Erro em status != 200.
+func (a *Agent) apiGet(ctx context.Context, rawURL string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	if token := a.readToken(); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	req.Header.Set("Accept", "application/json")
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 32<<20))
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return body, fmt.Errorf("API server GET status %d: %s", resp.StatusCode, snippet(body))
+	}
+	return body, nil
 }
 
 // buildPayload mapeia os eventos crus → shape do endpoint, filtra por
@@ -335,6 +473,43 @@ type coreEvent struct {
 
 type coreEventList struct {
 	Items    []coreEvent `json:"items"`
+	Metadata struct {
+		Continue string `json:"continue"`
+	} `json:"metadata"`
+}
+
+// ---- shapes de kube-state (subset) ----
+
+type podList struct {
+	Items []struct {
+		Metadata struct {
+			Namespace string `json:"namespace"`
+		} `json:"metadata"`
+		Status struct {
+			Phase string `json:"phase"`
+		} `json:"status"`
+	} `json:"items"`
+	Metadata struct {
+		Continue string `json:"continue"`
+	} `json:"metadata"`
+}
+
+type deploymentList struct {
+	Items []struct {
+		Metadata struct {
+			Namespace string `json:"namespace"`
+			Name      string `json:"name"`
+		} `json:"metadata"`
+		Spec struct {
+			Replicas *int `json:"replicas"`
+		} `json:"spec"`
+		Status struct {
+			Replicas          int `json:"replicas"`
+			ReadyReplicas     int `json:"readyReplicas"`
+			AvailableReplicas int `json:"availableReplicas"`
+			UpdatedReplicas   int `json:"updatedReplicas"`
+		} `json:"status"`
+	} `json:"items"`
 	Metadata struct {
 		Continue string `json:"continue"`
 	} `json:"metadata"`
