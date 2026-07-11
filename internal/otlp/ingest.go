@@ -165,6 +165,22 @@ func (e *IngestExporter) PostSnmpTrap(ctx context.Context, trap map[string]any) 
 	return e.PostRaw(ctx, "snmptrap", "application/json", body)
 }
 
+// PostK8sEvents encaminha um lote de eventos do Kubernetes pro gateway
+// (noc_k8s_event, Cluster Agent F2). O payload já vem no shape do endpoint
+// {"cluster": ..., "events": [{...}]}; o backend deriva o tenant do token e
+// deduplica por (cluster, namespace, pod, reason, involved_name) agregando o
+// count nativo do k8s. Molde de PostSnmpTrap — JSON + Bearer, check 2xx.
+func (e *IngestExporter) PostK8sEvents(ctx context.Context, payload map[string]any) error {
+	if len(payload) == 0 {
+		return nil
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	return e.PostRaw(ctx, "k8s/events", "application/json", body)
+}
+
 // ---- Logs (OTLP JSON) -------------------------------------------------
 
 // Shapes JSON do OTLP logs export (resourceLogs → scopeLogs → logRecords).
