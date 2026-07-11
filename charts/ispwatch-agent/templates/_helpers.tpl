@@ -23,3 +23,19 @@ app.kubernetes.io/component: agent
 app.kubernetes.io/name: {{ include "ispwatch-agent.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
+
+{{/* Cluster Agent (component=cluster-agent) — labels próprias pra não duplicar
+     a chave app.kubernetes.io/component do helper .labels (que fixa =agent). */}}
+{{- define "ispwatch-agent.clusterLabels" -}}
+app.kubernetes.io/name: {{ include "ispwatch-agent.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" }}
+app.kubernetes.io/component: cluster-agent
+{{- end -}}
+
+{{- define "ispwatch-agent.clusterSelectorLabels" -}}
+app.kubernetes.io/name: {{ include "ispwatch-agent.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/component: cluster-agent
+{{- end -}}
