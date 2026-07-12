@@ -6,6 +6,7 @@ import (
 	"debug/gosym"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -29,24 +30,29 @@ import (
 // não tem símbolo ELF → o JFR cobre Java; frames sem frame-pointer saem truncados
 // (limite do unwinder do kernel, não da simbolização).
 type symbolizer struct {
-	modCache  map[string]*modSyms   // chave dev:inode → símbolos (nil = parseado, sem símbolo)
-	mapsCache map[uint32][]procMap  // por flush; limpo no resetWindow
+	modCache  *modLRU              // dev:inode → símbolos (nil = parseado, sem símbolo); LRU limitado
+	mapsCache map[uint32][]procMap // por flush; limpo no resetWindow
 }
+
+// maxModCache: teto de módulos (dev:inode) no cache LRU. Cada entrada é o índice
+// LEVE de um módulo (nome+offset das funções), não a Table do gosym. Cobre
+// folgadamente a contagem de binários distintos de um nó real; num nó denso a LRU
+// descarta o menos-recém-usado em vez de zerar o cache inteiro.
+const maxModCache = 4096
 
 func newSymbolizer() *symbolizer {
 	return &symbolizer{
-		modCache:  make(map[string]*modSyms),
+		modCache:  newModLRU(maxModCache),
 		mapsCache: make(map[uint32][]procMap),
 	}
 }
 
 // resetWindow zera o cache de maps (chamado a cada flush). O cache de módulos
-// (caro) persiste entre janelas — símbolos de um arquivo não mudam.
+// (caro) persiste entre janelas — símbolos de um arquivo não mudam — e se
+// auto-limita pela LRU (maxModCache), então NÃO é zerado aqui. O backstop antigo
+// (zerar tudo ao passar de 4096) causava reparse em massa no nó denso.
 func (s *symbolizer) resetWindow() {
 	s.mapsCache = make(map[uint32][]procMap)
-	if len(s.modCache) > 4096 { // backstop: não cresce sem limite
-		s.modCache = make(map[string]*modSyms)
-	}
 }
 
 // user devolve o nome da função do IP no processo pid. Sempre devolve algo:
@@ -90,11 +96,11 @@ func (s *symbolizer) modFor(pid uint32, mapPath string) *modSyms {
 			key = strconv.FormatUint(sys.Dev, 16) + ":" + strconv.FormatUint(sys.Ino, 10)
 		}
 	}
-	if mod, ok := s.modCache[key]; ok {
+	if mod, ok := s.modCache.get(key); ok {
 		return mod
 	}
 	mod := buildModSyms(full)
-	s.modCache[key] = mod // cacheia inclusive nil (negativo)
+	s.modCache.put(key, mod) // cacheia inclusive nil (negativo)
 	return mod
 }
 
@@ -232,12 +238,19 @@ func buildModSyms(path string) *modSyms {
 	return m
 }
 
-// maxPclnSize: teto do .gopclntab pra extrair via gosym. Só serviços-pod chegam
-// aqui (o flush pula host/kernel antes de simbolizar), então é generoso o
-// suficiente pra cobrir até um traefik. A Table é construída e DESCARTADA (só o
-// índice leve fica), então o custo é transitório; o teto é só uma rede de
-// segurança contra um binário patológico. Acima dele: cai no nome do módulo.
-const maxPclnSize = 32 << 20 // 32 MiB
+// maxPclnSize: teto do .gopclntab pra extrair via gosym. Só binários de serviço-pod
+// chegam aqui (o flush pula host/kernel gigantes ANTES de simbolizar), e a Table do
+// gosym é construída e DESCARTADA (fica só o índice leve — ver goSymEntries), então
+// o custo é transitório e o GC dirigido (ver largePcln) o solta na hora. 96 MiB
+// cobre os maiores binários Go de serviço que rodam de fato num cluster — traefik
+// (~61 MiB de .gopclntab) e rancher (~85 MiB) — com o pico do parse (~140 MiB) ainda
+// sob o limite de 1Gi do DaemonSet. Acima dele: cai no nome do módulo (rede de
+// segurança contra binário patológico).
+const maxPclnSize = 96 << 20 // 96 MiB
+
+// largePcln: acima do teto antigo o parse é "grande" e aciona um GC dirigido pra
+// soltar o transitório (bytes da seção + Table do gosym) na hora.
+const largePcln = 32 << 20 // 32 MiB
 
 // goSymEntries extrai {off,size,name} do .gopclntab de um binário Go (presente
 // até em stripped). Constrói a gosym.Table SÓ pra ler a lista de funções e a
@@ -276,6 +289,17 @@ func goSymEntries(f *elf.File, vaddrToOff func(uint64) uint64) (entries []symEnt
 			size = fn.End - fn.Entry
 		}
 		entries = append(entries, symEntry{off: vaddrToOff(fn.Entry), size: size, name: fn.Name})
+	}
+	// .gopclntab grande (traefik e afins): os bytes da seção que lemos + a Table
+	// transitória do gosym chegam a dezenas de MiB. Já extraímos o índice leve
+	// (entries, que NÃO referencia data — os nomes são strings próprias); solta o
+	// transitório na hora pra que binários grandes em sequência na mesma janela não
+	// empilhem rumo ao limite de memória do DaemonSet. Só dispara acima do teto
+	// antigo — o caminho comum (binário pequeno) não paga o GC.
+	if sec.Size > largePcln {
+		data = nil
+		tab = nil
+		runtime.GC()
 	}
 	return entries
 }
