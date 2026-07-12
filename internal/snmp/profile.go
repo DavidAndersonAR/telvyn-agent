@@ -903,7 +903,17 @@ func resolveTableTags(row map[string]gosnmp.SnmpPDU, tags []ProfileMetricTag) ma
 // pduString converte uma PDU para string adequada pra tag. OctetString
 // vira string; numericos viram fmt.Sprintf("%d"); resto vira fmt.Sprintf("%v").
 func pduString(p gosnmp.SnmpPDU) string {
+	// OIDs que o device não implementa voltam como NoSuchObject/NoSuchInstance/
+	// EndOfMibView (ou Null) com Value nil. Sem tratar, o default cairia em
+	// fmt.Sprintf("%v", nil) = a string literal "<nil>", que vazava pro inventário
+	// (Modelo/Serial/OS = "<nil>"). Vazio é o correto: o campo fica de fora.
+	switch p.Type {
+	case gosnmp.NoSuchObject, gosnmp.NoSuchInstance, gosnmp.EndOfMibView, gosnmp.Null:
+		return ""
+	}
 	switch v := p.Value.(type) {
+	case nil:
+		return ""
 	case string:
 		return v
 	case []byte:
