@@ -48,6 +48,7 @@ type GroupedStats struct {
 	TopLevel            bool
 	Source              string // "otlp" (instrumentado) | "ebpf" (zero-código)
 	DbSystem            string // protocolo de datastore detectado (eBPF): postgresql/redis/… ou ""
+	Namespace           string // namespace do pod (serviços eBPF); "" se desconhecido
 	OkSummary           []byte // DDSketch (nanos) das latências OK; nil se vazio
 	ErrorSummary        []byte // DDSketch (nanos) das latências de erro; nil se vazio
 }
@@ -68,8 +69,12 @@ type groupStats struct {
 	errors          uint64
 	durationSumNano uint64
 	topLevel        bool
-	okSketch        *ddsketch.DDSketch
-	errSketch       *ddsketch.DDSketch
+	// namespace do pod NÃO entra na bucketKey (é funcionalmente determinado pelo
+	// service → não inflaria cardinalidade, mas mantê-lo fora da chave evita
+	// dividir um mesmo service caso um span venha sem namespace). first-wins.
+	namespace string
+	okSketch  *ddsketch.DDSketch
+	errSketch *ddsketch.DDSketch
 }
 
 // Concentrator acumula stats de forma thread-safe. Add roda no hot path (Push);
@@ -123,8 +128,13 @@ func (c *Concentrator) Add(s *collectorv1.Span) {
 			okSketch:  newSketch(),
 			errSketch: newSketch(),
 			topLevel:  s.Kind == 2 || s.Kind == 5, // SERVER ou CONSUMER = span de entrada
+			namespace: s.Namespace,
 		}
 		groups[k] = g
+	} else if g.namespace == "" && s.Namespace != "" {
+		// Preenche o namespace se o 1º span do grupo veio sem ele (é o mesmo
+		// service, logo o mesmo pod/namespace).
+		g.namespace = s.Namespace
 	}
 	g.hits++
 	g.durationSumNano += uint64(dur)
@@ -161,6 +171,7 @@ func (c *Concentrator) Flush() []GroupedStats {
 				TopLevel:            g.topLevel,
 				Source:              k.source,
 				DbSystem:            k.dbSystem,
+				Namespace:           g.namespace,
 				OkSummary:           encodeSketch(g.okSketch),
 				ErrorSummary:        encodeSketch(g.errSketch),
 			})
