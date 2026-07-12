@@ -40,4 +40,5 @@ message ApmGroupedStats {
   bool top_level = 12;
   string source = 13;         // origem: "otlp" (instrumentado) | "ebpf" (zero-código). Default "otlp".
   string db_system = 14;      // protocolo de datastore detectado pelo eBPF (postgresql/redis/…); "" se não-DB.
+  string namespace = 15;      // namespace do pod (serviços eBPF) → tela trata como pod K8s real. "" se desconhecido.
 }
