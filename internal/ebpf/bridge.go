@@ -205,11 +205,36 @@ func RunBridge(ctx context.Context, events <-chan Event, sink SpanSink, cfg Brid
 	}
 }
 
+// maxL7Latency é o teto de sanidade pra latência de UMA request L7 (HTTP/gRPC/
+// DB-query). Acima disso é quase sempre medição corrompida do kernel (underflow
+// de end-start numa conexão long-lived) e não um request lento real — o Datadog
+// aplica bound parecido nos sinais RED. Streaming/long-poll não são sinal RED e
+// caem aqui de propósito. Ajustável se algum protocolo legítimo estourar.
+const maxL7Latency = 2 * time.Minute
+
+// physicalL7Latency diz se a duração de 1 request L7 é fisicamente plausível.
+// O kernel computa duration = end_ns - start_ns como u64; numa conexão
+// long-lived (pool postgres/redis) a resposta pode ser pareada com o request
+// errado → end < start → UNDERFLOW, e ao virar time.Duration (int64) fica
+// NEGATIVO (o -1.58M ms do cliente) ou inflado pra dezenas de dias (o p95
+// "25.1 d"). Filtramos os dois: <=0 e acima do teto. Isola o guard pra teste.
+func physicalL7Latency(d time.Duration) bool {
+	return d > 0 && d <= maxL7Latency
+}
+
 // buildSpan converte 1 Event do tracer em 1 collectorv1.Span. Retorna nil
 // quando o protocolo não tem decoder ainda ou quando o payload está vazio.
 func buildSpan(ev Event, parsers *parsersByConn, conns *connTracker, cfg BridgeConfig) *collectorv1.Span {
 	r := ev.L7Request
 	if r == nil {
+		return nil
+	}
+
+	// Guard de latência L7 não-física: descarta o dado corrompido do kernel na
+	// ORIGEM (não conta hit nem latência) antes de envenenar o DDSketch. buildSpan
+	// é o único conversor evento→span, então isto limpa noc_span E o stats eBPF
+	// (main.go: conc.Add(sp)) de uma vez só.
+	if !physicalL7Latency(r.Duration) {
 		return nil
 	}
 
