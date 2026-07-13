@@ -91,6 +91,7 @@ func buildPayload(agentVersion string, groups []concentrator.GroupedStats) *coll
 			TopLevel:        g.TopLevel,
 			Source:          g.Source,
 			DbSystem:        g.DbSystem,
+			Namespace:       g.Namespace,
 		})
 	}
 	payload := &collectorv1.ApmStatsPayload{AgentVersion: agentVersion}
