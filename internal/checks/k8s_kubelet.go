@@ -14,6 +14,7 @@
 // Pod-level (tags namespace, pod, node):
 //   - k8s.pod.cpu_usage_nanocores
 //   - k8s.pod.memory_working_set_bytes
+//   - k8s.pod.network_rx_bytes / k8s.pod.network_tx_bytes
 //
 // Container-level (tags namespace, pod, container, node):
 //   - k8s.container.cpu_usage_nanocores
@@ -120,6 +121,12 @@ type kubeletPodSummary struct {
 	Memory struct {
 		WorkingSetBytes *uint64 `json:"workingSetBytes"`
 	} `json:"memory"`
+	// Rede do pod (sandbox netns). No summary do kubelet vem populado no
+	// TOPO (rxBytes/txBytes), diferente do node — que só traz por interface.
+	Network *struct {
+		RxBytes *uint64 `json:"rxBytes"`
+		TxBytes *uint64 `json:"txBytes"`
+	} `json:"network,omitempty"`
 	Containers []struct {
 		Name string `json:"name"`
 		CPU  struct {
@@ -315,6 +322,18 @@ func (c *k8sKubeletCheck) Run(ctx context.Context) ([]*collectorv1.Metric, error
 		if p.Memory.WorkingSetBytes != nil {
 			out = append(out, c.metric(now, "k8s.pod.memory_working_set_bytes",
 				float64(*p.Memory.WorkingSetBytes), podTags))
+		}
+		// Tráfego de rede do pod (counters cumulativos rx/tx do netns) — o
+		// backend aplica rate() pra virar bytes/s na lente de serviço.
+		if p.Network != nil {
+			if p.Network.RxBytes != nil {
+				out = append(out, c.metric(now, "k8s.pod.network_rx_bytes",
+					float64(*p.Network.RxBytes), podTags))
+			}
+			if p.Network.TxBytes != nil {
+				out = append(out, c.metric(now, "k8s.pod.network_tx_bytes",
+					float64(*p.Network.TxBytes), podTags))
+			}
 		}
 		// Pod ephemeral storage (somatório de rootfs + logs + emptyDir local).
 		if p.EphemeralStorage != nil {
