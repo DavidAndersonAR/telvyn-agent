@@ -15,13 +15,20 @@ kubectl create namespace telvyn 2>/dev/null || true
 kubectl -n telvyn create secret generic telvyn-agent-bootstrap \
   --from-literal=token=<SEU_BOOTSTRAP_TOKEN>
 
-# 2. Instala o chart direto do GHCR (OCI)
+# 2. Instala o chart direto do GHCR (OCI) — sem --version instala a mais recente
 helm install telvyn-agent \
-  oci://ghcr.io/davidandersonar/charts/ispwatch-agent --version 0.1.0 \
+  oci://ghcr.io/davidandersonar/charts/ispwatch-agent \
   --namespace telvyn \
   --set bootstrap.enrollUrl='https://<SEU_PORTAL>/api/agents/enroll' \
   --set clusterName=<NOME_DO_CLUSTER>
 ```
+
+Toggles opcionais (`--set`): `logs.enabled=true` (logs de pod),
+`ebpfTracing.enabled=true` (traces L7 zero-código), `profiling.enabled=true`
+(flame graph de CPU), `clusterAgent.enabled=true` (eventos do cluster),
+`sbomScan.enabled=true` (vulnerabilidades de aplicação). Com eBPF/profiler
+ligados o chart aplica automaticamente `resourcesEbpf` (limite 2Gi) e os
+privilégios necessários.
 
 Os nós aparecem no painel ~30s depois com o badge **Kubernetes**.
 

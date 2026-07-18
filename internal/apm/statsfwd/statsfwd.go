@@ -16,8 +16,14 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/ispwatch/collector/internal/apm/concentrator"
+	"github.com/ispwatch/collector/internal/sendbuf"
 	collectorv1 "github.com/ispwatch/collector/proto/v1"
 )
+
+// Teto da fila de reenvio: o payload típico de um flush (10s de buckets) tem
+// poucos KB — 8 MiB cobre dezenas de minutos de backend fora sem risco de
+// memória; acima disso, drop-oldest.
+const maxPendingBytes = 8 << 20
 
 // Forwarder envia APM stats ao endpoint de ingest.
 type Forwarder struct {
@@ -26,6 +32,7 @@ type Forwarder struct {
 	token        string
 	agentVersion string
 	log          *slog.Logger
+	pending      *sendbuf.Queue
 }
 
 // New cria um Forwarder. baseURL é a raiz do ingest (ex.: https://telvyn.../).
@@ -42,10 +49,14 @@ func New(client *http.Client, baseURL, token, agentVersion string, log *slog.Log
 		token:        token,
 		agentVersion: agentVersion,
 		log:          log.With("component", "apm-stats-forwarder"),
+		pending:      sendbuf.New("apm-stats", maxPendingBytes, log),
 	}
 }
 
 // Send converte os grupos em ApmStatsPayload e faz POST. No-op se vazio.
+// Falha de rede/5xx NÃO perde o bucket: o corpo fica retido (sendbuf) e é
+// reenviado no próximo tick. 401/429 descartam com aviso claro (retry não
+// conserta token revogado nem franquia estourada).
 func (f *Forwarder) Send(ctx context.Context, groups []concentrator.GroupedStats) error {
 	if len(groups) == 0 {
 		return nil
@@ -54,6 +65,21 @@ func (f *Forwarder) Send(ctx context.Context, groups []concentrator.GroupedStats
 	if err != nil {
 		return fmt.Errorf("marshal apm stats: %w", err)
 	}
+	if f.pending.Blocked() {
+		return nil // cool-down de token/franquia — o aviso claro já saiu no log
+	}
+	f.pending.Flush(ctx, f.post)
+	if err := f.post(ctx, body); err != nil {
+		f.pending.Offer(body, err)
+		return fmt.Errorf("post apm stats: %w", err)
+	}
+	f.log.Debug("apm stats enviados", "groups", len(groups), "bytes", len(body))
+	return nil
+}
+
+// post faz o POST de um corpo já serializado. Non-2xx vira StatusError pra
+// fila distinguir rede (retém) de auth/franquia (descarta com aviso).
+func (f *Forwarder) post(ctx context.Context, body []byte) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, f.url, bytes.NewReader(body))
 	if err != nil {
 		return err
@@ -63,13 +89,12 @@ func (f *Forwarder) Send(ctx context.Context, groups []concentrator.GroupedStats
 
 	resp, err := f.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("post apm stats: %w", err)
+		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode/100 != 2 {
-		return fmt.Errorf("apm stats rejeitado: status %d", resp.StatusCode)
+		return &sendbuf.StatusError{Code: resp.StatusCode}
 	}
-	f.log.Debug("apm stats enviados", "groups", len(groups), "bytes", len(body))
 	return nil
 }
 
