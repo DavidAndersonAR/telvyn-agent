@@ -60,6 +60,19 @@ resources:
     cpu: 500m
     memory: 256Mi
 
+# Recursos usados NO LUGAR de `resources` quando eBPF está ligado
+# (ebpfTracing.enabled e/ou profiling.enabled). O footprint é maior:
+# o L7 adiciona ~50-100MB RSS e a simbolização de binários Go grandes
+# no profiler tem picos transitórios de ~1Gi. Com 256Mi o pod é
+# OOMKilled — por isso o degrau automático.
+resourcesEbpf:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 2Gi
+
 # Tolerations + nodeSelector defaults: 1 pod em cada nó (incluindo control-
 # plane). Kubelet metrics são per-node.
 tolerations:
@@ -102,6 +115,18 @@ ebpfTracing:
   # Em k3d/lab o cert do kubelet é self-signed. Em prod com CA mounted
   # via serviceaccount: "0" e seta kubeletCAFile no token mount.
   kubeletInsecure: "1"
+
+# Profiler contínuo de CPU (flame graph, eBPF). Quando habilitado, o agent
+# amostra pilhas de CPU do nó inteiro (perf_event 49Hz), atribui cada amostra
+# ao pod/serviço e manda janelas folded pro gateway (/api/ingest/v1/profile).
+# Complementa o JFR (Java): o eBPF cobre Go/C/Rust/etc sem instrumentar.
+#
+# Mesmos requisitos de privilégio do eBPF L7 (kernel com BTF, privileged,
+# root, hostPID) — o chart aplica isso automaticamente. Só tem efeito no
+# modo ingest (ingest.url setado). Independente de ebpfTracing (pode ligar
+# um sem o outro).
+profiling:
+  enabled: false
 
 # Mutating Webhook que injeta -javaagent OTel em pods marcados pela UI
 # (mode=java_javaagent). Desligado por default — operador habilita
