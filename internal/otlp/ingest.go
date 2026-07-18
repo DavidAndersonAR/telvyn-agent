@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/ispwatch/collector/internal/sendbuf"
@@ -42,6 +43,11 @@ type IngestExporter struct {
 	clusterName string
 	client      *http.Client
 	log         *slog.Logger
+	// UUID do noc_collector deste agente (SetCollectorID). Vai no header
+	// X-Ispwatch-Collector — o gateway valida (∈ tenant) e carimba as
+	// self-metrics com o collector_id REAL em vez do sintético por token.
+	// atomic: setado depois que goroutines de envio já podem estar rodando.
+	collectorID atomic.Value
 	// Retenção das métricas nativas do host quando o backend está fora
 	// (rollout/rede). Só métricas: spans/logs de app que passam pelo PostRaw
 	// já têm backpressure próprio (o receiver devolve 502 e o SDK reenvia).
@@ -83,6 +89,9 @@ func (e *IngestExporter) PostRaw(ctx context.Context, signal, contentType string
 	}
 	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("Authorization", "Bearer "+e.token)
+	if cid, _ := e.collectorID.Load().(string); cid != "" {
+		req.Header.Set("X-Ispwatch-Collector", cid)
+	}
 	resp, err := e.client.Do(req)
 	if err != nil {
 		return err
@@ -391,6 +400,50 @@ func (e *IngestExporter) RegisterK8sNode(ctx context.Context, cluster, node, nod
 	defer resp.Body.Close()
 	if resp.StatusCode/100 != 2 {
 		return "", fmt.Errorf("k8s register: HTTP %d", resp.StatusCode)
+	}
+	var out struct {
+		HostID json.Number `json:"host_id"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return "", err
+	}
+	return out.HostID.String(), nil
+}
+
+// SetCollectorID guarda o UUID do noc_collector deste agente — todo POST
+// subsequente leva o header X-Ispwatch-Collector (o gateway valida e usa
+// pra carimbar o collector_id real nas self-metrics).
+func (e *IngestExporter) SetCollectorID(id string) {
+	if id = strings.TrimSpace(id); id != "" {
+		e.collectorID.Store(id)
+	}
+}
+
+// RegisterDockerHost registra a MÁQUINA docker no backend (POST /host/register,
+// Bearer) → cria o noc_app_host (install_mode=docker) + check docker.host, e
+// amarra o collector deste agente à máquina (self-metrics dela). Devolve o
+// host_id (bigint como string) pra taggear as métricas de container.
+//
+// Princípio (David): a máquina é INVENTÁRIO/contexto — a aplicação segue
+// identificada pelo serviço, nunca pela máquina.
+func (e *IngestExporter) RegisterDockerHost(ctx context.Context, hostname, collectorID string) (string, error) {
+	payload := map[string]string{
+		"hostname": hostname, "install_mode": "docker", "collector_id": collectorID,
+	}
+	body, _ := json.Marshal(payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, e.base+"/host/register", bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+e.token)
+	resp, err := e.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode/100 != 2 {
+		return "", fmt.Errorf("host register: HTTP %d", resp.StatusCode)
 	}
 	var out struct {
 		HostID json.Number `json:"host_id"`
