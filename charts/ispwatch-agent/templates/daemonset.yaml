@@ -27,10 +27,10 @@ spec:
       # resolve nomes públicos via upstream.
       dnsPolicy: ClusterFirstWithHostNet
       {{- end }}
-      {{- if .Values.ebpfTracing.enabled }}
-      # eBPF L7 tracing exige hostPID pra resolver pid → container via
-      # /proc do host (cgroup parsing). Sem isso o resolver vê só PIDs do
-      # próprio pod, não dos workloads sendo traçados.
+      {{- if or .Values.ebpfTracing.enabled .Values.profiling.enabled }}
+      # eBPF (L7 tracing e/ou CPU profiler) exige hostPID pra resolver
+      # pid → container via /proc do host (cgroup parsing). Sem isso o
+      # resolver vê só PIDs do próprio pod, não dos workloads do nó.
       hostPID: true
       {{- end }}
       {{- if .Values.priorityClassName }}
@@ -123,6 +123,12 @@ spec:
             - name: ISPWATCH_KUBELET_INSECURE
               value: {{ .Values.ebpfTracing.kubeletInsecure | default "1" | quote }}
             {{- end }}
+            {{- if .Values.profiling.enabled }}
+            # Profiler contínuo de CPU (eBPF perf_event → flame graph por
+            # pod/serviço no portal). Só tem efeito no modo ingest.
+            - name: ISPWATCH_PROFILING_ENABLED
+              value: "1"
+            {{- end }}
             {{- if .Values.sbomScan.enabled }}
             # Vulnerabilidade de aplicação (camada 2/3): Trivy gera o SBOM das
             # imagens rodando e o agent manda a lista pro gateway (/sbom).
@@ -175,17 +181,21 @@ spec:
               readOnly: true
             {{- end }}
           resources:
+            {{- if or .Values.ebpfTracing.enabled .Values.profiling.enabled }}
+            {{- toYaml .Values.resourcesEbpf | nindent 12 }}
+            {{- else }}
             {{- toYaml .Values.resources | nindent 12 }}
+            {{- end }}
           securityContext:
-            {{- if .Values.ebpfTracing.enabled }}
+            {{- if or .Values.ebpfTracing.enabled .Values.profiling.enabled }}
             # eBPF exige privileged ou capabilities específicas. Privileged
             # é mais simples e compatível com kernel/distro diversos —
             # tradeoff: o agent já roda como hostNetwork+hostPID, escopo
             # de impacto similar.
             privileged: true
-            # eBPF kprobes precisam de CAP_SYS_ADMIN, e o image USER do
-            # Dockerfile (ispwatch uid 10001) não tem capabilities mesmo
-            # com privileged. Override pra root só quando ebpf ativo.
+            # eBPF kprobes/perf_event precisam de CAP_SYS_ADMIN, e o image
+            # USER do Dockerfile (ispwatch uid 10001) não tem capabilities
+            # mesmo com privileged. Override pra root só quando eBPF ativo.
             runAsUser: 0
             runAsGroup: 0
             readOnlyRootFilesystem: false
