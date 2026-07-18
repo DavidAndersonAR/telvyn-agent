@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ispwatch/collector/internal/sendbuf"
 	collectorv1 "github.com/ispwatch/collector/proto/v1"
 	"google.golang.org/protobuf/encoding/protojson"
 
@@ -41,6 +42,10 @@ type IngestExporter struct {
 	clusterName string
 	client      *http.Client
 	log         *slog.Logger
+	// Retenção das métricas nativas do host quando o backend está fora
+	// (rollout/rede). Só métricas: spans/logs de app que passam pelo PostRaw
+	// já têm backpressure próprio (o receiver devolve 502 e o SDK reenvia).
+	metricsPending *sendbuf.Queue
 }
 
 // NewIngestExporter. base = URL do gateway (com ou sem /api/ingest/v1 — a
@@ -52,12 +57,13 @@ func NewIngestExporter(base, token, hostID, clusterName string, log *slog.Logger
 		base = base + "/api/ingest/v1"
 	}
 	return &IngestExporter{
-		base:        base,
-		token:       strings.TrimSpace(token),
-		hostID:      hostID,
-		clusterName: clusterName,
-		client:      &http.Client{Timeout: 20 * time.Second},
-		log:         log.With("component", "ingest-exporter"),
+		base:           base,
+		token:          strings.TrimSpace(token),
+		hostID:         hostID,
+		clusterName:    clusterName,
+		client:         &http.Client{Timeout: 20 * time.Second},
+		log:            log.With("component", "ingest-exporter"),
+		metricsPending: sendbuf.New("host-metrics", 8<<20, log),
 	}
 }
 
@@ -83,7 +89,13 @@ func (e *IngestExporter) PostRaw(ctx context.Context, signal, contentType string
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode/100 != 2 {
-		return fmt.Errorf("ingest %s: HTTP %d", signal, resp.StatusCode)
+		// Token revogado/inválido: loga a mensagem clara (rate-limited) pra
+		// TODOS os sinais que passam por aqui — sem isso o operador só via
+		// um "HTTP 401" genérico em loop, sem saber que era o token.
+		if resp.StatusCode == 401 || resp.StatusCode == 403 {
+			e.metricsPending.NoteAuthFailure(resp.StatusCode)
+		}
+		return fmt.Errorf("ingest %s: %w", signal, &sendbuf.StatusError{Code: resp.StatusCode})
 	}
 	return nil
 }
@@ -149,7 +161,20 @@ func (e *IngestExporter) PostMetrics(ctx context.Context, metrics []*collectorv1
 	if err != nil {
 		return err
 	}
-	return e.PostRaw(ctx, "metrics", "application/json", body)
+	// Falha de rede/5xx retém o corpo pra reenvio no próximo lote (os pontos
+	// têm timestamp — chegar atrasado no VM não corrompe nada). 401/429
+	// descartam com aviso claro via sendbuf.
+	if e.metricsPending.Blocked() {
+		return nil
+	}
+	e.metricsPending.Flush(ctx, func(fctx context.Context, b []byte) error {
+		return e.PostRaw(fctx, "metrics", "application/json", b)
+	})
+	if err := e.PostRaw(ctx, "metrics", "application/json", body); err != nil {
+		e.metricsPending.Offer(body, err)
+		return err
+	}
+	return nil
 }
 
 // PostSnmpTrap encaminha um SNMP trap já parseado pro backend (noc_device_event).
