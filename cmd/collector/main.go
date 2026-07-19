@@ -898,6 +898,29 @@ func runIngestMode(ingestURL string) {
 		}
 	}
 
+	// Linux puro (systemd): registra a MÁQUINA (→ noc_app_host install_mode=linux
+	// + check linux.system, aparece em "Aplicações" igual o nó k8s / a máquina
+	// docker) e roda o check linux.system LOCAL (CPU/mem/disco/rede da máquina)
+	// com o host_id retornado. Espelho exato do ramo docker acima — a máquina é
+	// inventário/contexto de infra; a APLICAÇÃO segue identificada pelo serviço
+	// (uuid), nunca pela máquina.
+	if strings.EqualFold(getenvOr("ISPWATCH_AGENT_KIND", ""), "linux") {
+		collectorID := ""
+		if cid, _, err := exporter.RegisterCollector(ctx, hostID, []string{"metrics", "checks"}); err != nil {
+			log.Warn("linux: registro de collector falhou — sigo sem vínculo máquina↔collector", "err", err)
+		} else {
+			collectorID = cid
+			exporter.SetCollectorID(cid)
+		}
+		linuxHostID, err := exporter.RegisterLinuxHost(ctx, hostID, collectorID)
+		if err != nil {
+			log.Warn("linux register falhou — sigo só com métricas de host", "err", err)
+		} else {
+			log.Info("máquina linux registrada", "host_id", linuxHostID, "hostname", hostID)
+			startLinuxSystemCheck(ctx, log, out, linuxHostID)
+		}
+	}
+
 	// Cluster Agent (modo k8s.cluster, 1 réplica): fala com o API server
 	// in-cluster e faz LIST periódico dos Events do cluster inteiro (OOMKilled,
 	// BackOff, FailedScheduling, Unhealthy…) → push certless pro noc_k8s_event
@@ -1370,6 +1393,62 @@ func startDockerCheck(ctx context.Context, log *slog.Logger, out chan<- []*colle
 		}
 	}()
 	clog.Info("docker.host check started (local)", "interval", "60s")
+}
+
+// startLinuxSystemCheck roda o check linux.system LOCAL no modo ingest (espelho
+// do startDockerCheck): mede CPU/mem/disco/rede da máquina via gopsutil e emite
+// as métricas com o host_id da máquina Linux registrada. Saem pelo mesmo canal
+// `out` (→ PostMetrics Bearer). A 1ª amostra de CPU só firma a baseline (delta),
+// então cpu.* aparece a partir do 2º tick — comportamento normal do check.
+func startLinuxSystemCheck(ctx context.Context, log *slog.Logger, out chan<- []*collectorv1.Metric, hostID string) {
+	factory, ok := checks.Default.Get("linux.system")
+	if !ok {
+		log.Warn("linux.system check factory ausente")
+		return
+	}
+	cfg := &collectorv1.CheckConfig{
+		CheckId:   "linux.system-" + hostID,
+		CheckType: "linux.system",
+		HostId:    hostID,
+		Enabled:   true,
+		Interval:  durationpb.New(30 * time.Second),
+	}
+	chk, err := factory(cfg)
+	if err != nil {
+		log.Warn("linux.system check não subiu", "err", err)
+		return
+	}
+	clog := log.With("component", "linux-system", "host_id", hostID)
+	go func() {
+		runOnce := func() {
+			ms, err := chk.Run(ctx)
+			if err != nil {
+				clog.Debug("linux.system run error", "err", err)
+				return
+			}
+			if len(ms) == 0 {
+				return
+			}
+			select {
+			case out <- ms:
+			case <-ctx.Done():
+			default:
+				clog.Warn("linux.system out channel full, dropping", "count", len(ms))
+			}
+		}
+		runOnce()
+		t := time.NewTicker(30 * time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+				runOnce()
+			}
+		}
+	}()
+	clog.Info("linux.system check started (local)", "interval", "30s")
 }
 
 func getenvOr(key, def string) string {

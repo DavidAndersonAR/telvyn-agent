@@ -8,7 +8,11 @@ Wants=network-online.target
 Type=simple
 User=ispwatch
 Group=ispwatch
-ExecStart=/usr/local/bin/ispwatch-agent --config /etc/ispwatch/agent.yaml
+# Config vem do EnvironmentFile (modelo certless/Bearer: ISPWATCH_INGEST_URL +
+# ISPWATCH_INGEST_TOKEN + ISPWATCH_AGENT_KIND + toggles). O '-' torna a ausência
+# não-fatal. O binário não tem flag --config; toda config é por env var.
+EnvironmentFile=-/etc/ispwatch/agent.env
+ExecStart=/usr/local/bin/ispwatch-agent
 Restart=on-failure
 RestartSec=10s
 StartLimitInterval=60s

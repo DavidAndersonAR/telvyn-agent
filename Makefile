@@ -73,7 +73,6 @@ clean:
 #   ispwatch-agent-<version>-<goos>-<goarch>/
 #     ispwatch-agent              (binário Go, static via CGO_ENABLED=0)
 #     ispwatch-agent.service      (systemd unit, copiado de packaging/)
-#     config-template.yaml        (idem)
 #     LICENSE-NOTICE.md           (idem)
 # ----------------------------------------------------------------------
 VERSION ?= dev-$(shell date +%s)
@@ -89,7 +88,6 @@ release-ci:
 	  go build -trimpath -ldflags="-s -w -X main.Version=$(VERSION)" \
 	  -o $(DIST_DIR)/ispwatch-agent ./cmd/collector
 	cp packaging/ispwatch-agent.service $(DIST_DIR)/
-	cp packaging/config-template.yaml   $(DIST_DIR)/
 	cp packaging/LICENSE-NOTICE.md      $(DIST_DIR)/
 	cd dist && tar -czf $(DIST_NAME).tar.gz $(DIST_NAME)
 	cd dist && sha256sum $(DIST_NAME).tar.gz > $(DIST_NAME).tar.gz.sha256
