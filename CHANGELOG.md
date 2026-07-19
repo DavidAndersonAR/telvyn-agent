@@ -34,11 +34,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   build time via `-ldflags="-X main.Version=${GITHUB_REF_NAME}"`.
 - Reproducible release pipeline: `make release-ci` (CI) and `make release-local`
   (ops) produce identical tarballs `ispwatch-agent-<version>-linux-<arch>.tar.gz`
-  with binary + `ispwatch-agent.service` + `config-template.yaml` +
-  `LICENSE-NOTICE.md`, plus `.sha256` sidecar.
-- GitHub Actions workflow `.github/workflows/release-agent.yml` — tag-triggered
-  (`v*.*.*`) matrix build (`linux/amd64`, `linux/arm64`) publishing the four
-  release assets to a single GitHub Release.
+  with binary + `ispwatch-agent.service` + `LICENSE-NOTICE.md`, plus `.sha256`
+  sidecar.
+- GitHub Actions workflow `.github/workflows/release.yml` — tag-triggered
+  (`v*`) multi-arch build (`linux/amd64`, `linux/arm64`) publishing the tarball
+  assets to a single GitHub Release (what `install.sh` downloads).
+- Certless Linux install: `install.sh` + systemd unit authenticate via ingest
+  Bearer token (`ISPWATCH_INGEST_URL` + `ISPWATCH_INGEST_TOKEN`), config through
+  an `EnvironmentFile` (`/etc/ispwatch/agent.env`) — the mTLS enrollment path
+  and `config-template.yaml` were retired.
 
 ### Changed
 

@@ -427,8 +427,22 @@ func (e *IngestExporter) SetCollectorID(id string) {
 // Princípio (David): a máquina é INVENTÁRIO/contexto — a aplicação segue
 // identificada pelo serviço, nunca pela máquina.
 func (e *IngestExporter) RegisterDockerHost(ctx context.Context, hostname, collectorID string) (string, error) {
+	return e.registerHost(ctx, hostname, "docker", collectorID)
+}
+
+// RegisterLinuxHost registra a MÁQUINA Linux pura (systemd) no backend
+// (install_mode=linux) → cria o noc_app_host + check linux.system. Mesmo
+// contrato do RegisterDockerHost; muda só o modo. Idem princípio: a máquina é
+// inventário/contexto; a aplicação segue identificada pelo serviço.
+func (e *IngestExporter) RegisterLinuxHost(ctx context.Context, hostname, collectorID string) (string, error) {
+	return e.registerHost(ctx, hostname, "linux", collectorID)
+}
+
+// registerHost é o corpo comum do POST /host/register (Bearer): cria/atualiza o
+// noc_app_host da máquina no modo dado e devolve o host_id (bigint como string).
+func (e *IngestExporter) registerHost(ctx context.Context, hostname, installMode, collectorID string) (string, error) {
 	payload := map[string]string{
-		"hostname": hostname, "install_mode": "docker", "collector_id": collectorID,
+		"hostname": hostname, "install_mode": installMode, "collector_id": collectorID,
 	}
 	body, _ := json.Marshal(payload)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, e.base+"/host/register", bytes.NewReader(body))

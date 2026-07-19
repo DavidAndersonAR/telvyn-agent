@@ -1,48 +1,74 @@
 #!/usr/bin/env bash
-# IspWatch Agent — script canônico de instalação Linux.
+# Telvyn / IspWatch Agent — script canônico de instalação Linux (systemd).
 # Inspirado em DataDog/agent-linux-install-script (Apache-2.0).
 # Atribuição: ver LICENSE-NOTICE.md neste diretório.
+#
+# Modelo CERTLESS/INGEST (Datadog-style): o agent autentica no gateway
+# /api/ingest/v1 com Bearer token (iwI_) sobre HTTPS — sem enrollment, sem
+# mTLS, sem cert por máquina. O antigo caminho mTLS ("Plan 09") foi removido.
+#
+# Uso (o portal gera o comando pronto na tela "Instalar agent"):
+#   curl -fsSL <este script> | \
+#     ISPWATCH_INGEST_URL='https://telvyn.suaempresa.com' \
+#     ISPWATCH_INGEST_TOKEN='iwI_...' \
+#     ISPWATCH_AGENT_KIND=linux \
+#     sudo -E bash
 
 set -euo pipefail
 
 # === Config ============================================================
+# Obrigatórios (Bearer certless):
+#   ISPWATCH_INGEST_URL    base do portal (https://...); o agent normaliza o
+#                          sufixo /api/ingest/v1 sozinho.
+#   ISPWATCH_INGEST_TOKEN  token iwI_ (Bearer).
+# Opcionais:
+#   ISPWATCH_AGENT_KIND    linux (default) — registra a máquina como host de app.
+#   ISPWATCH_HOSTNAME      nome reportado (default: FQDN da máquina).
+#   qualquer ISPWATCH_*/COLLECTOR_LOG_LEVEL extra é repassado ao agente (toggles).
 ISPWATCH_AGENT_VERSION="${ISPWATCH_AGENT_VERSION:-latest}"
-ISPWATCH_SITE="${ISPWATCH_SITE:-api.ispwatch.com}"
-GITHUB_REPO="${ISPWATCH_GITHUB_REPO:-ispwatch/agent}"
+ISPWATCH_AGENT_KIND="${ISPWATCH_AGENT_KIND:-linux}"
+GITHUB_REPO="${ISPWATCH_GITHUB_REPO:-DavidAndersonAR/telvyn-agent}"
 # ISPWATCH_DOWNLOAD_BASE permite redirecionar para mirror/dev local sem
-# editar o script (usado pelos smoke tests e pela VM dev no checkpoint).
+# editar o script (usado pelos smoke tests e por VMs de dev).
 ISPWATCH_DOWNLOAD_BASE="${ISPWATCH_DOWNLOAD_BASE:-https://github.com/${GITHUB_REPO}/releases/download}"
 
 INSTALL_DIR="/usr/local/bin"
 ETC_DIR="/etc/ispwatch"
 LIB_DIR="/var/lib/ispwatch"
 LOG_DIR="/var/log/ispwatch"
+ENV_FILE="${ETC_DIR}/agent.env"
 UNIT_PATH="/etc/systemd/system/ispwatch-agent.service"
 
 # === Validação =========================================================
-# ISPWATCH_ENROLL_TOKEN é obrigatório. Sem ele a enrollment exchange
-# (Plan 09) não pode trocar token por cert mTLS.
-if [[ -z "${ISPWATCH_ENROLL_TOKEN:-}" ]]; then
-    echo "ERROR: ISPWATCH_ENROLL_TOKEN environment variable is required." >&2
+# No modelo certless, INGEST_URL + INGEST_TOKEN são obrigatórios (substituem
+# o antigo ISPWATCH_ENROLL_TOKEN do fluxo mTLS).
+missing=""
+[[ -z "${ISPWATCH_INGEST_URL:-}" ]]   && missing="${missing} ISPWATCH_INGEST_URL"
+[[ -z "${ISPWATCH_INGEST_TOKEN:-}" ]] && missing="${missing} ISPWATCH_INGEST_TOKEN"
+if [[ -n "$missing" ]]; then
+    echo "ERROR: variável(is) de ambiente obrigatória(s) ausente(s):${missing}" >&2
     echo "" >&2
-    # Pitfall 6: sem -E, sudo limpa o environment e perde o token mesmo
-    # que o operador tenha exportado a variável.
-    echo "Hint: did you forget 'sudo -E'? Without -E, sudo strips environment vars." >&2
+    # Sem -E, sudo limpa o environment e perde as vars mesmo que o operador
+    # as tenha exportado.
+    echo "Dica: esqueceu o 'sudo -E'? Sem -E, o sudo descarta as env vars." >&2
     echo "" >&2
-    echo "  curl -L <URL> | ISPWATCH_ENROLL_TOKEN=xxx sudo -E bash" >&2
+    echo "  curl -fsSL <URL> | \\" >&2
+    echo "    ISPWATCH_INGEST_URL='https://telvyn.suaempresa.com' \\" >&2
+    echo "    ISPWATCH_INGEST_TOKEN='iwI_...' \\" >&2
+    echo "    sudo -E bash" >&2
     exit 1
 fi
 
 if [[ $EUID -ne 0 ]]; then
-    echo "ERROR: must run as root (use 'sudo -E')." >&2
+    echo "ERROR: precisa rodar como root (use 'sudo -E')." >&2
     exit 1
 fi
 
 # === Traps =============================================================
 on_error() {
     local lineno=$1
-    echo "FATAL: install failed at line ${lineno}" >&2
-    # Sem cleanup parcial — deixa o estado pra operador inspecionar.
+    echo "FATAL: install falhou na linha ${lineno}" >&2
+    # Sem cleanup parcial — deixa o estado pro operador inspecionar.
     exit 1
 }
 on_exit() {
@@ -63,41 +89,41 @@ detect_distro() {
     fi
 }
 DISTRO=$(detect_distro)
-echo "Detected distro: $DISTRO"
+echo "Distro detectada: $DISTRO"
 
 ARCH=$(uname -m)
 case "$ARCH" in
     x86_64)         GO_ARCH=amd64 ;;
     aarch64|arm64)  GO_ARCH=arm64 ;;
-    *)              echo "ERROR: unsupported arch $ARCH" >&2; exit 1 ;;
+    *)              echo "ERROR: arquitetura não suportada: $ARCH (só amd64/arm64)" >&2; exit 1 ;;
 esac
-echo "Detected arch: $GO_ARCH"
+echo "Arquitetura detectada: $GO_ARCH"
 
 # === Sanidade systemd ==================================================
 # systemd < 247 não suporta algumas directives modernas (ProcSubset=pid,
-# RestrictNamespaces granular). Não falha o install — apenas avisa, o
-# kernel ignora directives desconhecidas com warning.
+# RestrictNamespaces granular). Não falha o install — apenas avisa; o kernel
+# ignora directives desconhecidas com warning.
 if command -v systemctl >/dev/null 2>&1; then
     SD_VER=$(systemctl --version | head -1 | awk '{print $2}')
     if [[ "$SD_VER" =~ ^[0-9]+$ ]] && [[ "$SD_VER" -lt 247 ]]; then
-        echo "WARN: systemd $SD_VER detected; some hardening directives require >= 247." >&2
-        echo "      Agent will still install and run, but with reduced sandbox." >&2
+        echo "WARN: systemd $SD_VER detectado; algumas directives de hardening exigem >= 247." >&2
+        echo "      O agent instala e roda mesmo assim, com sandbox reduzido." >&2
     fi
 else
-    echo "ERROR: systemctl not found — IspWatch agent requires systemd." >&2
+    echo "ERROR: systemctl não encontrado — o agent IspWatch requer systemd." >&2
     exit 1
 fi
 
 # === Idempotência ======================================================
-# Detecta install existente e aborta com hint claro (reinstall manual
-# até ter modo --upgrade — deferido para fase futura).
+# Detecta install existente e aborta com hint claro (reinstall manual até ter
+# modo --upgrade — deferido para fase futura).
 if [[ -f "$INSTALL_DIR/ispwatch-agent" ]] || [[ -f "$UNIT_PATH" ]]; then
-    echo "WARN: existing IspWatch agent detected." >&2
-    echo "      To reinstall, first remove:" >&2
+    echo "WARN: instalação existente do agent IspWatch detectada." >&2
+    echo "      Para reinstalar, remova antes:" >&2
     echo "        sudo systemctl disable --now ispwatch-agent || true" >&2
     echo "        sudo rm -f $INSTALL_DIR/ispwatch-agent $UNIT_PATH" >&2
     echo "        sudo systemctl daemon-reload" >&2
-    echo "      Then re-run this installer." >&2
+    echo "      Depois rode o instalador de novo." >&2
     exit 1
 fi
 
@@ -107,13 +133,13 @@ if [[ "$ISPWATCH_AGENT_VERSION" == "latest" ]]; then
         "https://api.github.com/repos/$GITHUB_REPO/releases/latest" \
         | grep '"tag_name"' | head -1 | cut -d'"' -f4)
     if [[ -z "$VERSION" ]]; then
-        echo "ERROR: could not resolve latest version from GitHub Releases." >&2
+        echo "ERROR: não consegui resolver a última versão via GitHub Releases." >&2
         exit 1
     fi
 else
     VERSION="$ISPWATCH_AGENT_VERSION"
 fi
-echo "Installing IspWatch Agent ${VERSION} for linux-${GO_ARCH}"
+echo "Instalando o agent IspWatch ${VERSION} para linux-${GO_ARCH}"
 
 TARBALL="ispwatch-agent-${VERSION}-linux-${GO_ARCH}.tar.gz"
 URL="${ISPWATCH_DOWNLOAD_BASE}/${VERSION}/${TARBALL}"
@@ -125,12 +151,11 @@ TMP_SHA="/tmp/ispwatch-install-${VERSION}-${GO_ARCH}.sha256"
 curl --proto '=https' --retry 5 --retry-delay 5 -fsSL -o "$TMP_TARBALL" "$URL"
 curl --proto '=https' --retry 5 --retry-delay 5 -fsSL -o "$TMP_SHA" "${URL}.sha256"
 
-# sha256sum -c espera o arquivo no diretório corrente. Mover o sidecar
-# pra um working dir temporário evita conflito com nomes absolutos.
+# sha256sum -c espera o arquivo no diretório corrente. Mover o sidecar pra um
+# working dir temporário evita conflito com nomes absolutos.
 WORK_DIR=$(mktemp -d /tmp/ispwatch-install-XXXXXX)
 cp "$TMP_TARBALL" "${WORK_DIR}/${TARBALL}"
-# O .sha256 publicado pelo release pipeline contém apenas o basename do
-# tarball. Copiamos o sidecar e validamos dentro do WORK_DIR.
+# O .sha256 publicado pelo release pipeline contém apenas o basename do tarball.
 cp "$TMP_SHA" "${WORK_DIR}/${TARBALL}.sha256"
 (cd "$WORK_DIR" && sha256sum -c "${TARBALL}.sha256")
 
@@ -145,15 +170,14 @@ mkdir -p "$ETC_DIR" "$LIB_DIR" "$LOG_DIR"
 tar -xzf "${WORK_DIR}/${TARBALL}" -C "$WORK_DIR"
 EXTRACTED_DIR=$(find "$WORK_DIR" -maxdepth 1 -type d -name "ispwatch-agent-${VERSION}-*" | head -1)
 if [[ -z "$EXTRACTED_DIR" ]]; then
-    echo "ERROR: extracted dir not found in $WORK_DIR." >&2
+    echo "ERROR: diretório extraído não encontrado em $WORK_DIR." >&2
     exit 1
 fi
 
 install -m 0755 -o root -g root "$EXTRACTED_DIR/ispwatch-agent" "$INSTALL_DIR/ispwatch-agent"
-install -m 0640 -o root -g ispwatch "$EXTRACTED_DIR/config-template.yaml" "$ETC_DIR/agent.yaml"
 install -m 0644 "$EXTRACTED_DIR/ispwatch-agent.service" "$UNIT_PATH"
 
-# Permissões finais — exatamente o que CONTEXT.md trava.
+# Permissões finais dos diretórios.
 chown -R ispwatch:ispwatch "$LIB_DIR" "$LOG_DIR"
 chmod 0700 "$LIB_DIR"
 chmod 0750 "$LOG_DIR"
@@ -163,34 +187,58 @@ chmod 0750 "$ETC_DIR"
 # Cleanup do work dir (o trap on_exit cobre os /tmp/ispwatch-install-*.*).
 rm -rf "$WORK_DIR"
 
-# === Substituição de placeholders no config ============================
+# === EnvironmentFile do agent (certless) ===============================
+# O systemd lê este arquivo (EnvironmentFile) e injeta as vars no processo do
+# agent. Modo 0640 root:ispwatch: contém o token iwI_ (segredo), legível só
+# pelo root e pelo usuário do serviço.
 HOSTNAME_VALUE="${ISPWATCH_HOSTNAME:-$(hostname -f 2>/dev/null || hostname)}"
-# Usar pipe como separador no sed evita conflito com / em paths/URLs.
-sed -i \
-    -e "s|__ENROLL_TOKEN__|${ISPWATCH_ENROLL_TOKEN}|g" \
-    -e "s|__SITE__|${ISPWATCH_SITE}|g" \
-    -e "s|__HOSTNAME__|${HOSTNAME_VALUE}|g" \
-    "$ETC_DIR/agent.yaml"
+
+umask 077
+{
+    echo "# Gerado por install.sh — modelo certless (Bearer iwI_)."
+    echo "# Edite à vontade e rode: sudo systemctl restart ispwatch-agent"
+    echo "ISPWATCH_INGEST_URL=${ISPWATCH_INGEST_URL}"
+    echo "ISPWATCH_INGEST_TOKEN=${ISPWATCH_INGEST_TOKEN}"
+    echo "ISPWATCH_AGENT_KIND=${ISPWATCH_AGENT_KIND}"
+    echo "ISPWATCH_NODE_NAME=${HOSTNAME_VALUE}"
+    # Cursor dos logs (se ligados) fica sob o dir gravável do serviço; o default
+    # do binário (/var/lib/ispwatch-collector) cai fora do ReadWritePaths da unit.
+    echo "ISPWATCH_LOGS_CURSOR_PATH=${LIB_DIR}/log_cursors.json"
+} > "$ENV_FILE"
+
+# Repasse dos toggles: qualquer ISPWATCH_*/COLLECTOR_LOG_LEVEL que o operador
+# passou (via sudo -E) vai pro agent.env, MENOS as vars de controle do próprio
+# instalador (já consumidas acima). Mantém o contrato "1 agente, toggles" sem
+# este script precisar conhecer cada capability — evita a defasagem que
+# quebrava a instalação quando o front ganhava um toggle novo.
+INSTALLER_VARS=" ISPWATCH_AGENT_VERSION ISPWATCH_GITHUB_REPO ISPWATCH_DOWNLOAD_BASE ISPWATCH_INSTALL_ONLY ISPWATCH_HOSTNAME ISPWATCH_ENROLL_TOKEN ISPWATCH_SITE ISPWATCH_DOCKER_INTEGRATION ISPWATCH_INGEST_URL ISPWATCH_INGEST_TOKEN ISPWATCH_AGENT_KIND ISPWATCH_NODE_NAME ISPWATCH_LOGS_CURSOR_PATH "
+for name in $(compgen -v); do
+    case "$name" in
+        ISPWATCH_*|COLLECTOR_LOG_LEVEL) ;;
+        *) continue ;;
+    esac
+    case "$INSTALLER_VARS" in *" $name "*) continue ;; esac
+    printf '%s=%s\n' "$name" "${!name}" >> "$ENV_FILE"
+done
+umask 022
+
+chown root:ispwatch "$ENV_FILE"
+chmod 0640 "$ENV_FILE"
 
 # === Docker integration (opt-in) =======================================
-# Phase 4 Plan 07 — `docker.host` check exige que o usuário `ispwatch` seja
-# membro do grupo `docker` (acesso a /var/run/docker.sock). Esse grupo é
+# ISPWATCH_DOCKER_INTEGRATION=true dá ao usuário `ispwatch` acesso ao socket
+# do Docker (/var/run/docker.sock) via grupo `docker`. Esse grupo é
 # root-equivalente no host (membros podem montar / como root via container);
-# por isso é opt-in via env var explícita. Default OFF.
-#
-# Operacional: após habilitar, o agent service precisa ser reiniciado pra
-# herdar a nova membership de grupo (`systemctl restart ispwatch-agent`).
+# por isso é opt-in explícito. Default OFF.
 if [[ "${ISPWATCH_DOCKER_INTEGRATION:-false}" == "true" ]]; then
-    # groupadd -f cria o grupo se ainda não existir (em hosts sem Docker
-    # instalado). Quando o operador instalar Docker depois, o grupo é o
-    # mesmo (gid pode mudar, mas pertinência permanece pelo nome).
+    # groupadd -f cria o grupo se ainda não existir (hosts sem Docker). Quando
+    # o operador instalar Docker depois, o grupo é o mesmo (gid pode mudar, mas
+    # a pertinência permanece pelo nome).
     groupadd -f docker >/dev/null 2>&1 || true
     usermod -aG docker ispwatch
-    echo "Docker integration habilitada: usuário 'ispwatch' adicionado ao grupo 'docker'."
+    echo "Integração Docker habilitada: usuário 'ispwatch' adicionado ao grupo 'docker'."
     echo "AVISO de segurança: membros do grupo 'docker' têm acesso root-equivalente"
-    echo "                    ao daemon Docker (T-04-07-02). Audite quem mais está no grupo."
-    echo "Após reiniciar o serviço o check docker.host poderá conectar ao socket:"
-    echo "  sudo systemctl restart ispwatch-agent"
+    echo "                    ao daemon Docker. Audite quem mais está no grupo."
 fi
 
 # === Start =============================================================
@@ -198,11 +246,11 @@ systemctl daemon-reload
 if [[ "${ISPWATCH_INSTALL_ONLY:-}" != "true" ]]; then
     systemctl enable --now ispwatch-agent.service
     echo ""
-    echo "OK — ispwatch-agent installed and started."
-    echo "Check status: systemctl status ispwatch-agent"
-    echo "Logs:         journalctl -u ispwatch-agent -f"
+    echo "OK — ispwatch-agent instalado e iniciado (kind=${ISPWATCH_AGENT_KIND})."
+    echo "Status: systemctl status ispwatch-agent"
+    echo "Logs:   journalctl -u ispwatch-agent -f"
 else
     echo ""
-    echo "OK — ispwatch-agent installed (ISPWATCH_INSTALL_ONLY=true; not started)."
-    echo "Start manually: sudo systemctl enable --now ispwatch-agent"
+    echo "OK — ispwatch-agent instalado (ISPWATCH_INSTALL_ONLY=true; não iniciado)."
+    echo "Iniciar: sudo systemctl enable --now ispwatch-agent"
 fi
