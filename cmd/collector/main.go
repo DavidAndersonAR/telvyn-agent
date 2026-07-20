@@ -918,6 +918,12 @@ func runIngestMode(ingestURL string) {
 		} else {
 			log.Info("máquina linux registrada", "host_id", linuxHostID, "hostname", hostID)
 			startLinuxSystemCheck(ctx, log, out, linuxHostID)
+			// Descoberta de serviços locais (processos que escutam porta +
+			// CPU/mem) → a lente de Máquina mostra "o que roda aqui". Toggle
+			// ISPWATCH_HOST_SERVICES (ligado por padrão).
+			if hostServicesEnabled() {
+				startHostServicesReport(ctx, log, exporter, linuxHostID)
+			}
 		}
 	}
 
