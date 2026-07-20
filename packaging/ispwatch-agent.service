@@ -8,7 +8,11 @@ Wants=network-online.target
 Type=simple
 User=ispwatch
 Group=ispwatch
-ExecStart=/usr/local/bin/ispwatch-agent --config /etc/ispwatch/agent.yaml
+# Config vem do EnvironmentFile (modelo certless/Bearer: ISPWATCH_INGEST_URL +
+# ISPWATCH_INGEST_TOKEN + ISPWATCH_AGENT_KIND + toggles). O '-' torna a ausência
+# não-fatal. O binário não tem flag --config; toda config é por env var.
+EnvironmentFile=-/etc/ispwatch/agent.env
+ExecStart=/usr/local/bin/ispwatch-agent
 Restart=on-failure
 RestartSec=10s
 StartLimitInterval=60s
@@ -18,8 +22,15 @@ StartLimitBurst=5
 # CAP_NET_RAW libera ICMP ping sem privilegio root (Plan 03-03 depende).
 # CAP_NET_BIND_SERVICE permite bind em portas < 1024 caso algum check
 # precise (margem futura — checks atuais não bindam portas baixas).
-AmbientCapabilities=CAP_NET_RAW CAP_NET_BIND_SERVICE
-CapabilityBoundingSet=CAP_NET_RAW CAP_NET_BIND_SERVICE
+# Descoberta de serviços (host/services): pra mapear socket→pid e medir CPU/mem
+# o agente lê /proc/<pid>/fd + /proc/<pid>/stat de processos ALHEIOS. Isso exige
+# DUAS caps (senão só enxerga a si mesmo):
+#   · CAP_SYS_PTRACE     — passa no ptrace_may_access (PTRACE_MODE_READ).
+#   · CAP_DAC_READ_SEARCH — fura a permissão DAC do /proc/<pid>/fd (modo 0500
+#                           dono do processo). Sem ela o open do dir dá EACCES.
+# Read-only de /proc — não chamamos ptrace() (bloqueado por @debug abaixo).
+AmbientCapabilities=CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_PTRACE CAP_DAC_READ_SEARCH
+CapabilityBoundingSet=CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_PTRACE CAP_DAC_READ_SEARCH
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
@@ -33,8 +44,14 @@ ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectKernelLogs=true
 ProtectControlGroups=true
-ProtectProc=invisible
-ProcSubset=pid
+# default (sem hidepid): a descoberta de serviços precisa LISTAR e LER os outros
+# processos em /proc pra mapear socket→pid e medir CPU/mem. Com hidepid (invisible
+# /ptraceable) o readdir de /proc some com eles; CAP_SYS_PTRACE (acima) garante a
+# leitura do /proc/<pid>/fd alheio. O agente segue NÃO-root.
+ProtectProc=default
+# ProcSubset fica no DEFAULT (all): 'pid' esconde /proc/net (sockets que
+# escutam, lidos pela descoberta) e /proc/stat + /proc/meminfo (lidos pelo
+# linux.system). Um agente de observabilidade de host precisa desses arquivos.
 # Assumption A9: AF_NETLINK é obrigatório porque gopsutil + checks de
 # socket usam netlink pra ler stats do kernel. Sem ele alguns checks
 # falham com erro críptico EAFNOSUPPORT.

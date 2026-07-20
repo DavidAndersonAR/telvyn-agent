@@ -1,0 +1,54 @@
+name: release
+
+# Publica os tarballs de instalação Linux (amd64 + arm64) como assets de um
+# GitHub Release — é o que o packaging/install.sh baixa (certless). Dispara em
+# tags v* ou manualmente. A imagem/chart continuam no publish.yml.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tag da release, com o v (ex: v0.3.0)'
+        required: true
+        default: 'v0.3.0'
+
+permissions:
+  contents: write   # criar o Release + subir assets
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Resolve version
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            v="${GITHUB_REF#refs/tags/}"
+          else
+            v="${{ github.event.inputs.version }}"
+          fi
+          # O nome do asset embute a versão COM o v (bate com o tag_name que o
+          # install.sh resolve via GitHub API). Ex: ispwatch-agent-v0.3.0-linux-amd64.tar.gz
+          if ! printf '%s' "$v" | grep -Eq '^v[0-9A-Za-z._-]+$'; then
+            echo "::error::versão '$v' inválida (esperado vX.Y.Z)"; exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "Version=$v"
+
+      - name: Build multi-arch tarballs
+        run: make release-multiarch VERSION=${{ steps.vars.outputs.version }}
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.version }}
+          files: |
+            dist/*.tar.gz
+            dist/*.tar.gz.sha256
