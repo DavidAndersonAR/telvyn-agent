@@ -215,6 +215,21 @@ func (e *IngestExporter) PostK8sEvents(ctx context.Context, payload map[string]a
 	return e.PostRaw(ctx, "k8s/events", "application/json", body)
 }
 
+// PostHostServices encaminha os serviços descobertos numa máquina (processos que
+// escutam porta, com CPU/mem) pro gateway (noc_host_service — o "o que roda aqui"
+// da lente de Máquina). Payload {"host_id": N, "services": [{...}]}; o backend
+// deriva o tenant do token e faz replace-snapshot por host. Molde de PostK8sEvents.
+func (e *IngestExporter) PostHostServices(ctx context.Context, payload map[string]any) error {
+	if len(payload) == 0 {
+		return nil
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	return e.PostRaw(ctx, "host/services", "application/json", body)
+}
+
 // ---- Logs (OTLP JSON) -------------------------------------------------
 
 // Shapes JSON do OTLP logs export (resourceLogs → scopeLogs → logRecords).
