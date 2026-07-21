@@ -1106,10 +1106,22 @@ func runIngestMode(ingestURL string) {
 		log.Debug("checagens agendadas desativadas (set ISPWATCH_CHECKS_ENABLED=1 pra habilitar)")
 	}
 
-	if err := rec.Start(ctx); err != nil {
-		log.Error("ingest mode: otlp http receiver falhou", "err", err)
-		os.Exit(1)
+	// Receiver OTLP/HTTP: bind NÃO-FATAL (estilo Datadog). Se a porta está
+	// ocupada (outro processo no host), o agente loga e SEGUE — métricas, logs,
+	// checks e o node-system continuam. Um receptor opcional não derruba o
+	// processo. Desliga de propósito com ISPWATCH_OTLP_HTTP_DISABLE=1; muda de
+	// porta com ISPWATCH_OTLP_HTTP_PORT.
+	if getenvOr("ISPWATCH_OTLP_HTTP_DISABLE", "0") == "1" {
+		log.Info("otlp http receiver desligado via ISPWATCH_OTLP_HTTP_DISABLE")
+	} else {
+		go func() {
+			if err := rec.Start(ctx); err != nil {
+				log.Warn("otlp http receiver não subiu — sigo sem ele (porta ocupada?)",
+					"err", err, "addr", httpAddr)
+			}
+		}()
 	}
+	<-ctx.Done()
 }
 
 // startIngestPodLogs monta o pipeline de logs de pod no modo ingest: um
