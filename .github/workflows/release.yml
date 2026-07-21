@@ -42,6 +42,19 @@ jobs:
           echo "version=$v" >> "$GITHUB_OUTPUT"
           echo "Version=$v"
 
+      # Os stubs proto (proto/v1/*.pb.go) são gitignored — o Dockerfile os
+      # regenera no build, então o publish.yml funciona; aqui precisamos fazer
+      # o mesmo antes do go build, senão falta o pacote proto/v1 e o build quebra.
+      - name: Install protoc + gen plugins
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends protobuf-compiler
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Generate proto stubs
+        run: make proto
+
       - name: Build multi-arch tarballs
         run: make release-multiarch VERSION=${{ steps.vars.outputs.version }}
 
