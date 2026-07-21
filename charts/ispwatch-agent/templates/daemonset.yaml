@@ -157,6 +157,12 @@ spec:
               mountPath: /var/lib/ispwatch-collector
             - name: tmp
               mountPath: /tmp
+            # machine-id do HOST (dedup por machine-id: funde o nó com o agente
+            # Linux do MESMO box físico numa máquina só). Em container o
+            # /etc/machine-id é o do container — por isso o host vem montado aqui.
+            - name: machineid
+              mountPath: /host/etc/machine-id
+              readOnly: true
             {{- if .Values.logs.enabled }}
             # Logs de pod (CRI). /var/log/pods tem os arquivos reais de log
             # de todos os pods do nó; read-only basta.
@@ -224,6 +230,10 @@ spec:
           emptyDir: {}
         - name: tmp
           emptyDir: {}
+        - name: machineid
+          hostPath:
+            path: /etc/machine-id
+            type: File
         {{- if .Values.logs.enabled }}
         - name: varlogpods
           hostPath:

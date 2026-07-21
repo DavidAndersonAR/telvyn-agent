@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -400,6 +401,9 @@ func (e *IngestExporter) PostDeviceConfig(ctx context.Context, hostID, vendor, s
 func (e *IngestExporter) RegisterK8sNode(ctx context.Context, cluster, node, nodeIP, k8sVersion string) (string, error) {
 	payload := map[string]string{
 		"cluster": cluster, "node": node, "node_ip": nodeIP, "k8s_version": k8sVersion,
+		// Nó roda em container → machine-id do HOST (montado em /host), nunca o do
+		// container. É o mesmo /etc/machine-id que o agente Linux do box lê → funde.
+		"machine_id": machineID(true),
 	}
 	body, _ := json.Marshal(payload)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, e.base+"/k8s/register", bytes.NewReader(body))
@@ -453,11 +457,34 @@ func (e *IngestExporter) RegisterLinuxHost(ctx context.Context, hostname, collec
 	return e.registerHost(ctx, hostname, "linux", collectorID)
 }
 
+// machineID lê o id ESTÁVEL da máquina física (dedup por alias no backend: 2
+// agentes no mesmo box → 1 máquina). No systemd (Linux direto no host) é o
+// /etc/machine-id. Em CONTAINER (docker/k8s) o /etc/machine-id é o do container e
+// fundiria nós diferentes por engano — então só vale o host montado em
+// /host/etc/machine-id (o DaemonSet/compose monta read-only). Vazio se não achar:
+// o backend degrada (host fica sozinho na lista), nunca funde errado.
+func machineID(containerized bool) string {
+	paths := []string{"/etc/machine-id", "/var/lib/dbus/machine-id"}
+	if containerized {
+		paths = []string{"/host/etc/machine-id"}
+	}
+	for _, p := range paths {
+		if b, err := os.ReadFile(p); err == nil {
+			if id := strings.TrimSpace(string(b)); id != "" {
+				return id
+			}
+		}
+	}
+	return ""
+}
+
 // registerHost é o corpo comum do POST /host/register (Bearer): cria/atualiza o
 // noc_app_host da máquina no modo dado e devolve o host_id (bigint como string).
 func (e *IngestExporter) registerHost(ctx context.Context, hostname, installMode, collectorID string) (string, error) {
 	payload := map[string]string{
 		"hostname": hostname, "install_mode": installMode, "collector_id": collectorID,
+		// docker roda em container; linux (systemd) roda direto no host.
+		"machine_id": machineID(installMode != "linux"),
 	}
 	body, _ := json.Marshal(payload)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, e.base+"/host/register", bytes.NewReader(body))
