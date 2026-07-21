@@ -1101,9 +1101,25 @@ func runIngestMode(ingestURL string) {
 		log.Debug("checagens agendadas desativadas (set ISPWATCH_CHECKS_ENABLED=1 pra habilitar)")
 	}
 
+	// Receiver OTLP/HTTP (4318) — caminho de ENTRADA opcional, não o coração do
+	// agent: self-metrics, APM stats, eBPF, logs, traps e checks já rodam em
+	// goroutine acima e seguem vivos sem ele. Dois motivos pra não subir o
+	// receiver, nenhum fatal — em ambos bloqueamos em ctx.Done() pra manter o
+	// processo (e todas as coletas) no ar até o SIGTERM:
+	//   (a) desligado de propósito via ISPWATCH_OTLP_HTTP_DISABLE=1 (mesmo toggle
+	//       do caminho enrolled/mTLS lá em cima);
+	//   (b) a porta 4318 já está tomada — 2 agentes no mesmo box (dedup por
+	//       machine-id: DaemonSet k8s + systemd Linux). Antes era os.Exit(1) e o
+	//       2º agente entrava em crash-loop no systemd; agora ele coexiste, só
+	//       sem o receiver duplicado.
+	if getenvOr("ISPWATCH_OTLP_HTTP_DISABLE", "0") == "1" {
+		log.Info("ingest mode: otlp http receiver desligado via ISPWATCH_OTLP_HTTP_DISABLE (seguindo sem ele)")
+		<-ctx.Done()
+		return
+	}
 	if err := rec.Start(ctx); err != nil {
-		log.Error("ingest mode: otlp http receiver falhou", "err", err)
-		os.Exit(1)
+		log.Warn("ingest mode: otlp http receiver indisponível — seguindo sem ele (porta 4318 em uso? 2 agentes no mesmo host)", "err", err)
+		<-ctx.Done()
 	}
 }
 
