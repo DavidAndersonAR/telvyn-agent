@@ -863,6 +863,11 @@ func runIngestMode(ingestURL string) {
 			log.Info("k8s node registrado", "host_id", nodeHostID, "node", hostID)
 			startKubeletCheck(ctx, log, out, nodeHostID)
 
+			// CPU/mem/load do NÓ via /host/proc → cpu%/mem% na tela Servidores.
+			// O kubelet só dá uso (cores/bytes); o /proc do host dá a % real,
+			// igual o Datadog. Reporta sob o host_id do nó (não é __self__).
+			checks.StartNodeSystem(ctx, log, out, nodeHostID, "/host/proc", 30*time.Second)
+
 			// Vulnerabilidade de aplicação (camada 2/3, toggle): Trivy gera o SBOM
 			// das imagens rodando no nó e o agente manda só a lista pro gateway.
 			if getenvOr("ISPWATCH_SBOM_SCAN", "0") == "1" {
