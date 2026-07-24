@@ -823,7 +823,7 @@ func runIngestMode(ingestURL string) {
 		cancel()
 	}()
 
-	exporter := otlp.NewIngestExporter(ingestURL, token, hostID, cluster, log)
+	exporter := otlp.NewIngestExporter(ingestURL, token, hostID, cluster, Version, log)
 
 	// Métricas do próprio host (CPU/mem/disco/rede) → OTLP /metrics.
 	out := make(chan []*collectorv1.Metric, 256)

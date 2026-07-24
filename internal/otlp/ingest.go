@@ -42,6 +42,7 @@ type IngestExporter struct {
 	token       string
 	hostID      string
 	clusterName string
+	version     string // versão do binário (ldflags) — vai no registro, base do aviso de atualização
 	client      *http.Client
 	log         *slog.Logger
 	// UUID do noc_collector deste agente (SetCollectorID). Vai no header
@@ -57,8 +58,8 @@ type IngestExporter struct {
 
 // NewIngestExporter. base = URL do gateway (com ou sem /api/ingest/v1 — a
 // gente normaliza). token = ingest token iwI_. hostID/cluster viram resource
-// attrs nas métricas convertidas.
-func NewIngestExporter(base, token, hostID, clusterName string, log *slog.Logger) *IngestExporter {
+// attrs nas métricas convertidas. version = build da flag -ldflags (main.Version).
+func NewIngestExporter(base, token, hostID, clusterName, version string, log *slog.Logger) *IngestExporter {
 	base = strings.TrimRight(strings.TrimSpace(base), "/")
 	if !strings.HasSuffix(base, "/api/ingest/v1") {
 		base = base + "/api/ingest/v1"
@@ -68,6 +69,7 @@ func NewIngestExporter(base, token, hostID, clusterName string, log *slog.Logger
 		token:          strings.TrimSpace(token),
 		hostID:         hostID,
 		clusterName:    clusterName,
+		version:        version,
 		client:         &http.Client{Timeout: 20 * time.Second},
 		log:            log.With("component", "ingest-exporter"),
 		metricsPending: sendbuf.New("host-metrics", 8<<20, log),
@@ -404,6 +406,9 @@ func (e *IngestExporter) RegisterK8sNode(ctx context.Context, cluster, node, nod
 		// Nó roda em container → machine-id do HOST (montado em /host), nunca o do
 		// container. É o mesmo /etc/machine-id que o agente Linux do box lê → funde.
 		"machine_id": machineID(true),
+		// Versão do próprio agente — grava em noc_app_host.agent_version, base do
+		// aviso de "desatualizado" na tela Servidores.
+		"agent_version": e.version,
 	}
 	body, _ := json.Marshal(payload)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, e.base+"/k8s/register", bytes.NewReader(body))
@@ -485,6 +490,9 @@ func (e *IngestExporter) registerHost(ctx context.Context, hostname, installMode
 		"hostname": hostname, "install_mode": installMode, "collector_id": collectorID,
 		// docker roda em container; linux (systemd) roda direto no host.
 		"machine_id": machineID(installMode != "linux"),
+		// Versão do próprio agente — grava em noc_app_host.agent_version, base do
+		// aviso de "desatualizado" na tela Servidores.
+		"agent_version": e.version,
 	}
 	body, _ := json.Marshal(payload)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, e.base+"/host/register", bytes.NewReader(body))
