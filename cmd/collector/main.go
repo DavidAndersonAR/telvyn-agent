@@ -1269,14 +1269,23 @@ func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.Ing
 		Transport: bearerRoundTripper{token: token, rt: http.DefaultTransport},
 	}
 
+	// F2b — só o Linux systemd tem o helper root de upgrade. Nos outros modos
+	// (k8s/docker) o marcador fica vazio → o agente ignora should_update (k8s/docker
+	// atualizam via helm/docker, decisão F3). Path override via env pra testes.
+	updateMarker := ""
+	if strings.EqualFold(getenvOr("ISPWATCH_AGENT_KIND", ""), "linux") {
+		updateMarker = getenvOr("ISPWATCH_UPDATE_MARKER_PATH", "/var/lib/ispwatch/update-requested")
+	}
+
 	go func() {
 		if err := configpull.Run(ctx, configpull.Config{
-			Endpoint:     base,
-			CollectorID:  collectorID,
-			TenantID:     tenantID,
-			PollInterval: time.Duration(pollSecs) * time.Second,
-			HTTPClient:   bearerClient,
-			Logger:       log,
+			Endpoint:         base,
+			CollectorID:      collectorID,
+			TenantID:         tenantID,
+			PollInterval:     time.Duration(pollSecs) * time.Second,
+			HTTPClient:       bearerClient,
+			Logger:           log,
+			UpdateMarkerPath: updateMarker,
 		}, runtime); err != nil {
 			log.Warn("config pull (ingest) encerrou", "err", err)
 		}

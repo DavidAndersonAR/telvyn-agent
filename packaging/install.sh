@@ -196,6 +196,60 @@ fi
 install -m 0755 -o root -g root "$EXTRACTED_DIR/ispwatch-agent" "$INSTALL_DIR/ispwatch-agent"
 install -m 0644 "$EXTRACTED_DIR/ispwatch-agent.service" "$UNIT_PATH"
 
+# === F2b: helper de atualização remota (privilegiado) ==================
+# O agente roda SEM privilégio (User=ispwatch) e não pode trocar o próprio
+# binário nem se reiniciar. Igual ao Datadog (que delega ao package manager),
+# quem APLICA o upgrade é um componente ROOT à parte — este helper. Fluxo:
+#   config-pull manda should_update → agente escreve /var/lib/ispwatch/update-requested
+#   → o .path (root) observa → dispara o .service (root) → roda o upgrade oficial.
+# O marcador NÃO carrega payload (sem versão/URL vindo do servidor): um agente
+# comprometido não faz o root rodar comando arbitrário — o helper roda SEMPRE o
+# mesmo install.sh pinado, com o binário SHA256-verificado. Instalado/atualizado
+# tanto no install novo quanto no upgrade (idempotente).
+UPGRADE_SCRIPT_URL="${ISPWATCH_INSTALL_SCRIPT_URL:-https://raw.githubusercontent.com/${GITHUB_REPO}/main/packaging/install.sh}"
+cat > "$INSTALL_DIR/ispwatch-agent-upgrade" <<EOF
+#!/usr/bin/env bash
+# Gerado por install.sh (F2b). Roda como ROOT via ispwatch-agent-update.service.
+set -euo pipefail
+logger -t ispwatch-agent-upgrade "atualização disparada — rodando upgrade oficial"
+curl --proto '=https' --retry 5 --retry-delay 5 -fsSL "${UPGRADE_SCRIPT_URL}" | ISPWATCH_UPGRADE=true bash
+logger -t ispwatch-agent-upgrade "upgrade concluído"
+EOF
+chmod 0755 "$INSTALL_DIR/ispwatch-agent-upgrade"
+chown root:root "$INSTALL_DIR/ispwatch-agent-upgrade"
+
+cat > /etc/systemd/system/ispwatch-agent-update.service <<'EOF'
+[Unit]
+Description=IspWatch Agent — helper de atualização (root, F2b)
+Documentation=https://docs.ispwatch.com/agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/ispwatch-agent-upgrade
+# Remove o marcador ao fim (sucesso OU falha) pra rearmar o .path e não repetir.
+ExecStopPost=-/bin/rm -f /var/lib/ispwatch/update-requested
+TimeoutStartSec=300
+EOF
+
+cat > /etc/systemd/system/ispwatch-agent-update.path <<'EOF'
+[Unit]
+Description=IspWatch Agent — observa pedido de atualização remota (F2b)
+
+[Path]
+# O agente (sem privilégio) escreve este arquivo quando o config-pull manda
+# should_update. A EXISTÊNCIA dispara o .service root (o gatilho não tem payload).
+PathExists=/var/lib/ispwatch/update-requested
+Unit=ispwatch-agent-update.service
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now ispwatch-agent-update.path
+
 # === Upgrade: binário+unit trocados → reinicia e sai ===================
 # Preserva o agent.env (token/config/toggles) — não passa pela reescrita abaixo.
 # Espelha o que o Datadog faz: trocar o binário nunca mexe na config do operador.
