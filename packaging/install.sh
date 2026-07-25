@@ -27,6 +27,11 @@ set -euo pipefail
 #   qualquer ISPWATCH_*/COLLECTOR_LOG_LEVEL extra é repassado ao agente (toggles).
 ISPWATCH_AGENT_VERSION="${ISPWATCH_AGENT_VERSION:-latest}"
 ISPWATCH_AGENT_KIND="${ISPWATCH_AGENT_KIND:-linux}"
+# ISPWATCH_UPGRADE=true → modo ATUALIZAÇÃO (F2a): troca o binário + a unit de uma
+# instalação existente e reinicia, SEM reescrever o agent.env (preserva token,
+# config e toggles do operador). Não exige INGEST_URL/TOKEN (já estão no env file).
+# Comando pronto: curl -fsSL <URL> | ISPWATCH_UPGRADE=true sudo -E bash
+ISPWATCH_UPGRADE="${ISPWATCH_UPGRADE:-false}"
 GITHUB_REPO="${ISPWATCH_GITHUB_REPO:-DavidAndersonAR/telvyn-agent}"
 # ISPWATCH_DOWNLOAD_BASE permite redirecionar para mirror/dev local sem
 # editar o script (usado pelos smoke tests e por VMs de dev).
@@ -42,21 +47,24 @@ UNIT_PATH="/etc/systemd/system/ispwatch-agent.service"
 # === Validação =========================================================
 # No modelo certless, INGEST_URL + INGEST_TOKEN são obrigatórios (substituem
 # o antigo ISPWATCH_ENROLL_TOKEN do fluxo mTLS).
-missing=""
-[[ -z "${ISPWATCH_INGEST_URL:-}" ]]   && missing="${missing} ISPWATCH_INGEST_URL"
-[[ -z "${ISPWATCH_INGEST_TOKEN:-}" ]] && missing="${missing} ISPWATCH_INGEST_TOKEN"
-if [[ -n "$missing" ]]; then
-    echo "ERROR: variável(is) de ambiente obrigatória(s) ausente(s):${missing}" >&2
-    echo "" >&2
-    # Sem -E, sudo limpa o environment e perde as vars mesmo que o operador
-    # as tenha exportado.
-    echo "Dica: esqueceu o 'sudo -E'? Sem -E, o sudo descarta as env vars." >&2
-    echo "" >&2
-    echo "  curl -fsSL <URL> | \\" >&2
-    echo "    ISPWATCH_INGEST_URL='https://telvyn.suaempresa.com' \\" >&2
-    echo "    ISPWATCH_INGEST_TOKEN='iwI_...' \\" >&2
-    echo "    sudo -E bash" >&2
-    exit 1
+# No modo upgrade, INGEST_URL/TOKEN vêm do agent.env existente — não exigir.
+if [[ "$ISPWATCH_UPGRADE" != "true" ]]; then
+    missing=""
+    [[ -z "${ISPWATCH_INGEST_URL:-}" ]]   && missing="${missing} ISPWATCH_INGEST_URL"
+    [[ -z "${ISPWATCH_INGEST_TOKEN:-}" ]] && missing="${missing} ISPWATCH_INGEST_TOKEN"
+    if [[ -n "$missing" ]]; then
+        echo "ERROR: variável(is) de ambiente obrigatória(s) ausente(s):${missing}" >&2
+        echo "" >&2
+        # Sem -E, sudo limpa o environment e perde as vars mesmo que o operador
+        # as tenha exportado.
+        echo "Dica: esqueceu o 'sudo -E'? Sem -E, o sudo descarta as env vars." >&2
+        echo "" >&2
+        echo "  curl -fsSL <URL> | \\" >&2
+        echo "    ISPWATCH_INGEST_URL='https://telvyn.suaempresa.com' \\" >&2
+        echo "    ISPWATCH_INGEST_TOKEN='iwI_...' \\" >&2
+        echo "    sudo -E bash" >&2
+        exit 1
+    fi
 fi
 
 if [[ $EUID -ne 0 ]]; then
@@ -114,16 +122,27 @@ else
     exit 1
 fi
 
-# === Idempotência ======================================================
-# Detecta install existente e aborta com hint claro (reinstall manual até ter
-# modo --upgrade — deferido para fase futura).
+# === Idempotência / upgrade ============================================
+# Instalação nova aborta se já existe (evita sobrescrever config). O modo
+# ISPWATCH_UPGRADE=true (F2a) inverte isso: EXIGE uma instalação pra atualizar.
+INSTALLED=false
 if [[ -f "$INSTALL_DIR/ispwatch-agent" ]] || [[ -f "$UNIT_PATH" ]]; then
+    INSTALLED=true
+fi
+if [[ "$ISPWATCH_UPGRADE" == "true" ]]; then
+    if [[ "$INSTALLED" != "true" ]]; then
+        echo "ERROR: ISPWATCH_UPGRADE=true, mas não há instalação do agent aqui pra atualizar." >&2
+        echo "       Rode o instalador normal (sem ISPWATCH_UPGRADE) primeiro." >&2
+        exit 1
+    fi
+    echo "Modo upgrade: instalação existente detectada — troco o binário e reinicio (config preservada)."
+elif [[ "$INSTALLED" == "true" ]]; then
     echo "WARN: instalação existente do agent IspWatch detectada." >&2
-    echo "      Para reinstalar, remova antes:" >&2
+    echo "      Para ATUALIZAR no lugar (preserva token/config), rode com ISPWATCH_UPGRADE=true:" >&2
+    echo "        curl -fsSL <URL> | ISPWATCH_UPGRADE=true sudo -E bash" >&2
+    echo "      Ou, para reinstalar do zero, remova antes:" >&2
     echo "        sudo systemctl disable --now ispwatch-agent || true" >&2
-    echo "        sudo rm -f $INSTALL_DIR/ispwatch-agent $UNIT_PATH" >&2
-    echo "        sudo systemctl daemon-reload" >&2
-    echo "      Depois rode o instalador de novo." >&2
+    echo "        sudo rm -f $INSTALL_DIR/ispwatch-agent $UNIT_PATH && sudo systemctl daemon-reload" >&2
     exit 1
 fi
 
@@ -176,6 +195,78 @@ fi
 
 install -m 0755 -o root -g root "$EXTRACTED_DIR/ispwatch-agent" "$INSTALL_DIR/ispwatch-agent"
 install -m 0644 "$EXTRACTED_DIR/ispwatch-agent.service" "$UNIT_PATH"
+
+# === F2b: helper de atualização remota (privilegiado) ==================
+# O agente roda SEM privilégio (User=ispwatch) e não pode trocar o próprio
+# binário nem se reiniciar. Igual ao Datadog (que delega ao package manager),
+# quem APLICA o upgrade é um componente ROOT à parte — este helper. Fluxo:
+#   config-pull manda should_update → agente escreve /var/lib/ispwatch/update-requested
+#   → o .path (root) observa → dispara o .service (root) → roda o upgrade oficial.
+# O marcador NÃO carrega payload (sem versão/URL vindo do servidor): um agente
+# comprometido não faz o root rodar comando arbitrário — o helper roda SEMPRE o
+# mesmo install.sh pinado, com o binário SHA256-verificado. Instalado/atualizado
+# tanto no install novo quanto no upgrade (idempotente).
+UPGRADE_SCRIPT_URL="${ISPWATCH_INSTALL_SCRIPT_URL:-https://raw.githubusercontent.com/${GITHUB_REPO}/main/packaging/install.sh}"
+cat > "$INSTALL_DIR/ispwatch-agent-upgrade" <<EOF
+#!/usr/bin/env bash
+# Gerado por install.sh (F2b). Roda como ROOT via ispwatch-agent-update.service.
+set -euo pipefail
+# Apaga o marcador ANTES do upgrade: o install.sh (chamado abaixo) re-liga o
+# .path, e se o marcador ainda existisse o .path re-dispararia este .service →
+# loop. Removendo primeiro, o re-enable não re-dispara. O ExecStopPost do
+# .service é rede de segurança pro caso de falha antes daqui.
+rm -f /var/lib/ispwatch/update-requested
+logger -t ispwatch-agent-upgrade "atualização disparada — rodando upgrade oficial"
+curl --proto '=https' --retry 5 --retry-delay 5 -fsSL "${UPGRADE_SCRIPT_URL}" | ISPWATCH_UPGRADE=true bash
+logger -t ispwatch-agent-upgrade "upgrade concluído"
+EOF
+chmod 0755 "$INSTALL_DIR/ispwatch-agent-upgrade"
+chown root:root "$INSTALL_DIR/ispwatch-agent-upgrade"
+
+cat > /etc/systemd/system/ispwatch-agent-update.service <<'EOF'
+[Unit]
+Description=IspWatch Agent — helper de atualização (root, F2b)
+Documentation=https://docs.ispwatch.com/agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/ispwatch-agent-upgrade
+# Remove o marcador ao fim (sucesso OU falha) pra rearmar o .path e não repetir.
+ExecStopPost=-/bin/rm -f /var/lib/ispwatch/update-requested
+TimeoutStartSec=300
+EOF
+
+cat > /etc/systemd/system/ispwatch-agent-update.path <<'EOF'
+[Unit]
+Description=IspWatch Agent — observa pedido de atualização remota (F2b)
+
+[Path]
+# O agente (sem privilégio) escreve este arquivo quando o config-pull manda
+# should_update. A EXISTÊNCIA dispara o .service root (o gatilho não tem payload).
+PathExists=/var/lib/ispwatch/update-requested
+Unit=ispwatch-agent-update.service
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now ispwatch-agent-update.path
+
+# === Upgrade: binário+unit trocados → reinicia e sai ===================
+# Preserva o agent.env (token/config/toggles) — não passa pela reescrita abaixo.
+# Espelha o que o Datadog faz: trocar o binário nunca mexe na config do operador.
+if [[ "$ISPWATCH_UPGRADE" == "true" ]]; then
+    rm -rf "$WORK_DIR"
+    systemctl daemon-reload
+    systemctl restart ispwatch-agent.service
+    echo ""
+    echo "OK — ispwatch-agent atualizado para ${VERSION} e reiniciado (config preservada)."
+    echo "Status: systemctl status ispwatch-agent"
+    exit 0
+fi
 
 # Permissões finais dos diretórios.
 chown -R ispwatch:ispwatch "$LIB_DIR" "$LOG_DIR"
