@@ -55,6 +55,11 @@ type Config struct {
 
 	HTTPClient *http.Client // se setado, é usado direto (testes injetam mock)
 	Logger     *slog.Logger
+
+	// F2b — caminho do marcador de atualização. Quando o servidor manda
+	// should_update, o agente escreve este arquivo (na sua ReadWritePath); um
+	// helper systemd ROOT observa e roda o upgrade. Vazio desliga a feature.
+	UpdateMarkerPath string
 }
 
 // Run inicia o loop em foreground (bloqueante). Chamar em goroutine.
@@ -118,6 +123,11 @@ type pullResponse struct {
 	// só manda no caminho não-short-circuit; o agente faz replace atômico do
 	// overlay dinâmico. Ausente nas versões antigas do backend (json zero = nil).
 	SnmpProfiles []pulledProfile `json:"snmp_profiles"`
+
+	// F2b — atualização remota. O backend seta true UMA vez (serve-once) quando o
+	// operador clica "Atualizar agora". O agente (sem privilégio) só escreve um
+	// marcador; um helper systemd ROOT lê e roda o upgrade. Ausente = false.
+	ShouldUpdate bool `json:"should_update"`
 }
 
 // pulledProfile é um perfil SNMP custom entregue pelo config-pull.
@@ -138,6 +148,21 @@ type pulledCheck struct {
 	IntervalSeconds int32  `json:"interval_seconds"`
 	ConfigVersion   int64  `json:"config_version"`
 	DisabledMetrics string `json:"disabled_metrics"` // JSON array of metric names, e.g. ["snmp_if_in_octets"]
+}
+
+// writeUpdateMarker escreve o marcador de atualização (F2b). Grava atômico
+// (temp + rename) pra o helper systemd nunca ver um arquivo pela metade. O
+// conteúdo é só um timestamp informativo — o gatilho é a EXISTÊNCIA do arquivo
+// (systemd PathExists); nenhum dado do servidor (versão/URL) entra aqui, então
+// um agente comprometido não consegue mandar o root rodar comando arbitrário:
+// o helper roda sempre o mesmo upgrade oficial SHA-verificado.
+func writeUpdateMarker(path string) error {
+	tmp := path + ".tmp"
+	content := []byte("requested_at=" + time.Now().UTC().Format(time.RFC3339) + "\n")
+	if err := os.WriteFile(tmp, content, 0o644); err != nil {
+		return err
+	}
+	return os.Rename(tmp, path)
 }
 
 func pullOnce(
@@ -175,6 +200,18 @@ func pullOnce(
 	var r pullResponse
 	if err := json.Unmarshal(body, &r); err != nil {
 		return fmt.Errorf("parse response: %w", err)
+	}
+
+	// F2b — atualização remota solicitada. O servidor faz serve-once, então isto
+	// vem true UMA vez. O agente (sem privilégio) só escreve o marcador; quem
+	// aplica o upgrade é o helper systemd root. Vem ANTES do short-circuit: o
+	// flag independe de ter mudança de config.
+	if r.ShouldUpdate && cfg.UpdateMarkerPath != "" {
+		if err := writeUpdateMarker(cfg.UpdateMarkerPath); err != nil {
+			log.Warn("config pull: escrita do marcador de update falhou", "path", cfg.UpdateMarkerPath, "err", err)
+		} else {
+			log.Info("config pull: atualização solicitada — marcador escrito (helper root aplica)", "path", cfg.UpdateMarkerPath)
+		}
 	}
 
 	// Curto-circuito: nada mudou
