@@ -211,6 +211,11 @@ cat > "$INSTALL_DIR/ispwatch-agent-upgrade" <<EOF
 #!/usr/bin/env bash
 # Gerado por install.sh (F2b). Roda como ROOT via ispwatch-agent-update.service.
 set -euo pipefail
+# Apaga o marcador ANTES do upgrade: o install.sh (chamado abaixo) re-liga o
+# .path, e se o marcador ainda existisse o .path re-dispararia este .service →
+# loop. Removendo primeiro, o re-enable não re-dispara. O ExecStopPost do
+# .service é rede de segurança pro caso de falha antes daqui.
+rm -f /var/lib/ispwatch/update-requested
 logger -t ispwatch-agent-upgrade "atualização disparada — rodando upgrade oficial"
 curl --proto '=https' --retry 5 --retry-delay 5 -fsSL "${UPGRADE_SCRIPT_URL}" | ISPWATCH_UPGRADE=true bash
 logger -t ispwatch-agent-upgrade "upgrade concluído"
