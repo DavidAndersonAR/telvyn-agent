@@ -23,7 +23,7 @@ spec:
       {{- if .Values.hostNetwork }}
       # Sob hostNetwork o pod herda o resolv.conf do nó e perde o DNS do
       # cluster (CoreDNS). ClusterFirstWithHostNet recupera a resolução de
-      # service names (ex: backend.ispwatch.svc do enroll/gRPC) e ainda
+      # service names (ex: o gateway de ingest in-cluster) e ainda
       # resolve nomes públicos via upstream.
       dnsPolicy: ClusterFirstWithHostNet
       {{- end }}
@@ -63,13 +63,12 @@ spec:
                   fieldPath: metadata.namespace
             - name: ISPWATCH_CLUSTER
               value: {{ .Values.clusterName | quote }}
-            {{- if .Values.ingest.url }}
             # Modo ingest certless (Datadog-style): manda OTLP+Bearer pro
             # gateway /api/ingest/v1. Sem enrollment, sem mTLS, sem cert.
             - name: ISPWATCH_INGEST_URL
-              value: {{ .Values.ingest.url | quote }}
+              value: {{ required "values.ingest.url é obrigatório (modo certless)" .Values.ingest.url | quote }}
             - name: ISPWATCH_INGEST_TOKEN
-              value: {{ required "values.ingest.token é obrigatório quando ingest.url está setado" .Values.ingest.token | quote }}
+              value: {{ required "values.ingest.token é obrigatório (modo certless)" .Values.ingest.token | quote }}
             # Coleta de k8s no modo ingest: registra o nó + roda o kubelet
             # check local (pods/containers). O SA token é montado em
             # /var/run/secrets/.../token; kubelet self-signed → insecure.
@@ -81,27 +80,6 @@ spec:
               value: "/var/run/secrets/kubernetes.io/serviceaccount/token"
             - name: ISPWATCH_KUBELET_INSECURE
               value: "1"
-            {{- else }}
-            - name: ISPWATCH_AGENT_KIND
-              value: {{ .Values.bootstrap.agentKind | default "k8s.node" | quote }}
-            # Bootstrap enrollment — entrypoint detecta esses envs e dispara
-            # /api/agents/enroll na primeira inicialização do pod. Resultado
-            # (cert/key/ca/identity.env) salvo no WAL emptyDir e reusado em
-            # restarts subsequentes do mesmo pod.
-            - name: ISPWATCH_BOOTSTRAP_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: {{ required "values.bootstrap.tokenSecretName is required" .Values.bootstrap.tokenSecretName }}
-                  key: token
-            - name: ISPWATCH_ENROLL_URL
-              value: {{ required "values.bootstrap.enrollUrl is required" .Values.bootstrap.enrollUrl | quote }}
-            {{- if .Values.bootstrap.insecureTls }}
-            - name: ISPWATCH_ENROLL_INSECURE_TLS
-              value: "1"
-            {{- end }}
-            - name: ISPWATCH_PKI_DIR
-              value: "/var/lib/ispwatch-collector/pki"
-            {{- end }}
             - name: COLLECTOR_LOG_LEVEL
               value: {{ .Values.logLevel | default "info" | quote }}
             {{- if .Values.logs.enabled }}

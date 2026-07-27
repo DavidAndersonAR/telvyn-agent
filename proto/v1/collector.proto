@@ -11,53 +11,12 @@ import "google/protobuf/struct.proto";
 import "google/protobuf/duration.proto";
 
 // =====================================================================
-// CollectorService runs on the central IspWatch server.
-// Collector daemons connect TO it over mTLS (reverse tunnel pattern —
-// collectors behind NAT can be reached from the central control plane
-// without inbound firewall rules at the customer side).
-//
-// Streams are long-lived: the collector opens them at startup and keeps
-// them open. Reconnect logic lives in the collector binary (Go).
+// NOTE: the legacy gRPC `service CollectorService` (mTLS reverse-tunnel
+// transport) was removed in the certless migration. The agent now ships
+// telemetry over HTTP/OTLP with a Bearer ingest token. Only the message
+// types below remain — still used by internal/quarkus, internal/configpull
+// and internal/apm via collector.pb.go. Do NOT re-add an RPC service here.
 // =====================================================================
-service CollectorService {
-
-  // Handshake. Sent once at startup and after every reconnect.
-  // Server returns the runtime config (which adapters to enable, batch
-  // sizes, intervals) and a session token used in subsequent streams.
-  rpc Register(RegisterRequest) returns (RegisterResponse);
-
-  // Long-lived metric stream. Collector pushes batches; server acks.
-  // Bidirectional so server can backpressure ("slow down") via ack flow.
-  rpc StreamMetrics(stream MetricBatch) returns (stream MetricAck);
-
-  // Long-lived event stream (state changes — link down, BGP lost, etc).
-  rpc StreamEvents(stream EventBatch) returns (stream EventAck);
-
-  // Reverse channel for MCP-like tool execution.
-  // Collector keeps this stream open; server pushes ToolCommand whenever
-  // the IA causal layer needs to probe the customer environment
-  // (run an SSH command, poll an SNMP OID, etc).
-  // Collector executes locally and returns ToolResult.
-  rpc ToolChannel(stream ToolResult) returns (stream ToolCommand);
-
-  // Periodic health beacon (lag, drops, uptime). Feeds collector_health
-  // hypertable in TimescaleDB.
-  rpc ReportHealth(HealthReport) returns (HealthAck);
-
-  // Periodic topology report. Sent by the LLDP/CDP discover adapter as a
-  // batch (LLDP scans tend to be slow + sparse, not streaming). Server
-  // upserts into topology_edge with last_seen=NOW() and emits property
-  // change audit rows. Returns ack with how many edges were persisted vs
-  // dropped (e.g. unmatched remote chassis_id has no local host).
-  rpc ReportTopology(TopologyReport) returns (TopologyAck);
-
-  // Long-lived span stream. Agent recebe OTLP de pods Java instrumentados
-  // via -javaagent na porta local 4317, converte cada Span do OTLP pro
-  // nosso Span message (subset essencial) e envia em batches pro Quarkus.
-  // O tenant_id é injetado server-side a partir do cert mTLS — agente
-  // nunca declara tenant nos spans.
-  rpc StreamSpans(stream SpanBatch) returns (stream SpanAck);
-}
 
 // ---------------------------------------------------------------------
 // Handshake
