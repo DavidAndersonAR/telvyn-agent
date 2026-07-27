@@ -13,9 +13,8 @@ ARG TARGETARCH
 
 RUN apk add --no-cache git protoc protobuf-dev make ca-certificates
 
-# Pre-install protoc Go plugins.
-RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest \
- && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+# Pre-install protoc Go plugin (messages only — certless, sem serviço gRPC).
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 
 WORKDIR /src
 
@@ -30,7 +29,6 @@ COPY . .
 ENV PATH="/go/bin:${PATH}"
 RUN protoc --proto_path=proto/v1 \
            --go_out=proto/v1 --go_opt=paths=source_relative \
-           --go-grpc_out=proto/v1 --go-grpc_opt=paths=source_relative \
            proto/v1/collector.proto proto/v1/apm_stats.proto
 
 # Static build (CGO_ENABLED=0) so we can run on distroless/scratch.
