@@ -1,8 +1,8 @@
 # Telvyn Agent
 
 Agente de monitoramento do [Telvyn](https://telvyn.com) — coleta métricas,
-logs e traces L7 (eBPF) do host/cluster e envia via mTLS pro servidor Telvyn.
-Um agent por host (cada um troca um bootstrap token por um cert único no boot).
+logs e traces L7 (eBPF) do host/cluster e envia via HTTP/OTLP com um ingest
+token (certless, estilo Datadog) pro servidor Telvyn. Um agent por host.
 
 ## Kubernetes (DaemonSet)
 
@@ -10,16 +10,14 @@ Instala um pod por nó. O comando exato (com seu token e a URL do seu portal)
 é gerado no painel Telvyn em **Monitores → Kubernetes**. Forma geral:
 
 ```bash
-# 1. Secret com o bootstrap token (gerado no painel)
-kubectl create namespace telvyn 2>/dev/null || true
-kubectl -n telvyn create secret generic telvyn-agent-bootstrap \
-  --from-literal=token=<SEU_BOOTSTRAP_TOKEN>
-
-# 2. Instala o chart direto do GHCR (OCI) — sem --version instala a mais recente
+# Instala o chart direto do GHCR (OCI) — sem --version instala a mais recente.
+# Autenticação certless: só a URL do portal + o ingest token (iwI_..., gerado
+# no painel em Monitores → Kubernetes). Sem cert, sem enrollment.
 helm install telvyn-agent \
   oci://ghcr.io/davidandersonar/charts/ispwatch-agent \
-  --namespace telvyn \
-  --set bootstrap.enrollUrl='https://<SEU_PORTAL>/api/agents/enroll' \
+  --namespace telvyn --create-namespace \
+  --set ingest.url='https://<SEU_PORTAL>' \
+  --set ingest.token='<SEU_INGEST_TOKEN>' \
   --set clusterName=<NOME_DO_CLUSTER>
 ```
 
@@ -58,10 +56,8 @@ métricas do próprio container.
 ## Linux (Docker / systemd)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/DavidAndersonAR/telvyn-agent/main/install.sh \
-  | sudo bash -s -- \
-    --enroll-url 'https://<SEU_PORTAL>/api/agents/enroll' \
-    --enroll-token '<SEU_TOKEN>'
+curl -fsSL https://raw.githubusercontent.com/DavidAndersonAR/telvyn-agent/main/packaging/install.sh \
+  | ISPWATCH_INGEST_URL='https://<SEU_PORTAL>' ISPWATCH_INGEST_TOKEN='<SEU_INGEST_TOKEN>' sudo -E bash
 ```
 
 ## Imagens / artefatos
@@ -70,7 +66,7 @@ curl -fsSL https://raw.githubusercontent.com/DavidAndersonAR/telvyn-agent/main/i
 |----------|-------|
 | Imagem   | `ghcr.io/davidandersonar/telvyn-agent:<versão>` (multi-arch amd64/arm64) |
 | Chart    | `oci://ghcr.io/davidandersonar/charts/ispwatch-agent` |
-| Install  | `https://raw.githubusercontent.com/DavidAndersonAR/telvyn-agent/main/install.sh` |
+| Install  | `https://raw.githubusercontent.com/DavidAndersonAR/telvyn-agent/main/packaging/install.sh` |
 
 Publicados pelo workflow [`publish.yml`](.github/workflows/publish.yml) a cada tag `v*`.
 
