@@ -4,8 +4,10 @@
 // Por quê: no modo k8s o agente só coleta o kubelet (que dá USO — nanocores,
 // working_set — mas não capacidade), então a tela Servidores mostrava CPU/mem
 // em cores/bytes em vez de %. O Datadog resolve isso lendo o /proc do nó. Aqui
-// lemos /host/proc (já montado pelo DaemonSet) e emitimos exatamente as três
-// métricas que o endpoint /machines usa pra %: cpu.idle, mem.used_pct, load.5.
+// lemos /host/proc (já montado pelo DaemonSet) e emitimos as três métricas que o
+// endpoint /machines usa pra %: cpu.idle, mem.used_pct, load.5 — mais cpu.usage
+// (= 100 - idle%), o nome canônico compartilhado com os perfis SNMP, pra um único
+// monitor de CPU cobrir equipamento de rede, servidor Linux e nó k8s.
 //
 // Não usa gopsutil de propósito: o gopsutil aponta o host-path por env/context
 // global, o que contaminaria o self-metrics do agente (que precisa ler o /proc
@@ -27,9 +29,9 @@ import (
 )
 
 // StartNodeSystem dispara, em goroutine, um coletor que a cada `interval` lê
-// `procRoot` (ex.: /host/proc) e empurra cpu.idle/mem.used_pct/load.5 sob
-// `hostID` no canal `out`. CPU é delta entre amostras: o 1º tick só guarda a
-// baseline (emite mem+load), o cpu.idle sai a partir do 2º. Sai quando ctx cancela.
+// `procRoot` (ex.: /host/proc) e empurra cpu.idle/cpu.usage/mem.used_pct/load.5
+// sob `hostID` no canal `out`. CPU é delta entre amostras: o 1º tick só guarda a
+// baseline (emite mem+load), o cpu sai a partir do 2º. Sai quando ctx cancela.
 func StartNodeSystem(
 	ctx context.Context,
 	log *slog.Logger,
@@ -54,6 +56,10 @@ func StartNodeSystem(
 			if haveCPU && total > lastTotal {
 				pct := (idle - lastIdle) / (total - lastTotal) * 100
 				ms = append(ms, nodeMetric(now, hostID, "cpu.idle", pct))
+				// cpu.usage — mesmo nome CANÔNICO que os perfis SNMP publicam, pra UM
+				// único monitor "CPU acima de X%" cobrir equipamento de rede, servidor
+				// Linux e nó k8s. O /machines segue usando cpu.idle (não mexemos nele).
+				ms = append(ms, nodeMetric(now, hostID, "cpu.usage", 100-pct))
 			}
 			lastIdle, lastTotal, haveCPU = idle, total, true
 		}
