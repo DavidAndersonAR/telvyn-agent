@@ -2,6 +2,7 @@ package checks
 
 import (
 	"context"
+	"math"
 	"testing"
 	"time"
 
@@ -74,7 +75,8 @@ func TestLinuxSystem_FirstRun_NoCpu_SecondRun_HasCpu(t *testing.T) {
 	}
 	for _, m := range first {
 		if m.MetricName == "cpu.user" || m.MetricName == "cpu.system" ||
-			m.MetricName == "cpu.idle" || m.MetricName == "cpu.iowait" {
+			m.MetricName == "cpu.idle" || m.MetricName == "cpu.iowait" ||
+			m.MetricName == "cpu.usage" {
 			t.Errorf("first Run() emitted cpu metric %q (expected none)", m.MetricName)
 		}
 	}
@@ -94,11 +96,28 @@ func TestLinuxSystem_FirstRun_NoCpu_SecondRun_HasCpu(t *testing.T) {
 		// Treat as skip if no cpu times available (e.g. plan to run on Linux CI).
 		t.Skip("cpu.user not present — gopsutil may not have CPU data on this platform")
 	}
-	for _, name := range []string{"cpu.user", "cpu.system", "cpu.idle"} {
+	for _, name := range []string{"cpu.user", "cpu.system", "cpu.idle", "cpu.usage"} {
 		if !hasMetricName(second, name) {
 			t.Errorf("second Run() missing %q; got metrics: %v", name, allMetricNames(second))
 		}
 	}
+	// cpu.usage tem que ser o complemento exato de cpu.idle — é o que faz um monitor
+	// de "CPU acima de X%" significar a mesma coisa aqui e num equipamento SNMP.
+	idle, okIdle := metricValue(second, "cpu.idle")
+	usage, okUsage := metricValue(second, "cpu.usage")
+	if okIdle && okUsage && math.Abs((idle+usage)-100) > 0.001 {
+		t.Errorf("cpu.idle (%v) + cpu.usage (%v) = %v, esperado 100", idle, usage, idle+usage)
+	}
+}
+
+// metricValue devolve o valor da primeira métrica com esse nome.
+func metricValue(ms []*collectorv1.Metric, name string) (float64, bool) {
+	for _, m := range ms {
+		if m.MetricName == name {
+			return m.Value, true
+		}
+	}
+	return 0, false
 }
 
 // TestLinuxSystem_EmitsMemFamilies verifies that Run() emits mem.used,

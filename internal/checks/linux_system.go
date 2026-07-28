@@ -2,6 +2,8 @@
 //
 // Collects host-level system metrics using gopsutil/v4:
 //   - cpu.user / cpu.system / cpu.idle / cpu.iowait   (delta %, first run skipped)
+//   - cpu.usage                                       (= 100 - idle%; nome canônico,
+//     o mesmo que os perfis SNMP publicam, pra um monitor cobrir rede + servidor)
 //   - mem.used / mem.available / mem.used_pct          (bytes / %)
 //   - mem.swap_used                                     (bytes)
 //   - disk.used_pct{mount, device}                     (%, physical fstypes only)
@@ -106,10 +108,16 @@ func (c *linuxSystemCheck) Run(ctx context.Context) ([]*collectorv1.Metric, erro
 			total := (t.User + t.System + t.Idle + t.Iowait) -
 				(prev.User + prev.System + prev.Idle + prev.Iowait)
 			if total > 0 {
+				idlePct := (t.Idle - prev.Idle) / total * 100
 				out = append(out, c.metric(now, "cpu.user", (t.User-prev.User)/total*100, nil))
 				out = append(out, c.metric(now, "cpu.system", (t.System-prev.System)/total*100, nil))
-				out = append(out, c.metric(now, "cpu.idle", (t.Idle-prev.Idle)/total*100, nil))
+				out = append(out, c.metric(now, "cpu.idle", idlePct, nil))
 				out = append(out, c.metric(now, "cpu.iowait", (t.Iowait-prev.Iowait)/total*100, nil))
+				// cpu.usage — mesmo nome CANÔNICO que os perfis SNMP publicam (o perfil
+				// de cada fabricante lê seu OID e grava cpu.usage). Emitindo aqui também,
+				// UM único monitor "CPU acima de X%" cobre equipamento de rede e servidor.
+				// É o que o Datadog faz: cada integração publica no namespace canônico.
+				out = append(out, c.metric(now, "cpu.usage", 100-idlePct, nil))
 			}
 		}
 		c.lastCpu = times // always update baseline (even on first call)
