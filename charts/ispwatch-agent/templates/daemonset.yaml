@@ -90,6 +90,10 @@ spec:
             - name: ISPWATCH_LOGS_EXCLUDE_NAMESPACES
               value: {{ join "," . | quote }}
             {{- end }}
+            {{- if eq .Values.logs.multiline false }}
+            - name: ISPWATCH_LOGS_MULTILINE
+              value: "0"
+            {{- end }}
             {{- end }}
             {{- if .Values.ebpfTracing.enabled }}
             - name: ISPWATCH_EBPF_TRACING
