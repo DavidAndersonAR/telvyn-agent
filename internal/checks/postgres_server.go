@@ -90,6 +90,17 @@ func (r *realPgxPool) QueryRow(ctx context.Context, sql string, args ...any) pgx
 }
 func (r *realPgxPool) Close() { r.p.Close() }
 
+// Query (várias linhas) não faz parte da interface pgxPool — postgres.server só
+// precisa de QueryRow. Está aqui pra que este mesmo wrapper satisfaça também o
+// pgxQueryPool do postgres.queries, que varre pg_stat_statements inteira.
+//
+// Sem este método a asserção de tipo lá falha em silêncio e o check nunca roda:
+// aconteceu em 2026-08-01, e o teste não pegou porque injetava um pool falso —
+// cobria a conta do delta, não a construção do pool.
+func (r *realPgxPool) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
+	return r.p.Query(ctx, sql, args...)
+}
+
 // postgresServer é a implementação concreta de Check para "postgres.server".
 type postgresServer struct {
 	id         string

@@ -114,3 +114,13 @@ func TestRowsNegativoViraZeroSemDescartar(t *testing.T) {
 		t.Errorf("calls = %d, esperava 5", q.Calls)
 	}
 }
+
+// O buraco que os testes acima deixaram passar: eles injetam um pool falso, e o
+// que quebrou em produção foi a CONSTRUÇÃO — o wrapper que o factory devolve não
+// tinha Query, então a asserção de tipo falhava e o check nunca rodava.
+//
+// Não abre conexão: só checa que o tipo concreto satisfaz a interface. É uma
+// verificação de compilação disfarçada de teste, e é exatamente o que faltava.
+func TestWrapperRealSatisfazPgxQueryPool(t *testing.T) {
+	var _ pgxQueryPool = (*realPgxPool)(nil)
+}
