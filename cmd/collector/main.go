@@ -580,6 +580,22 @@ func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.Ing
 	runtime := checks.New(ctx, log, checks.Default, out)
 	checks.SetDeviceMetadataPusher(exporter)
 	checks.SetDeviceConfigPusher(exporter) // NCM: check device.config_backup manda a running-config coletada
+	// Estatística por consulta (postgres.queries): canal próprio, não o de spans.
+	// Envio em goroutine porque o sink é chamado de dentro do Run do check — um
+	// POST lento aí seguraria o worker que roda todos os outros checks.
+	checks.SetQueryStatsSink(func(dbServer string, stats []checks.QueryStat) {
+		go func() {
+			c, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+			defer cancel()
+			if err := exporter.PostDbQueryStats(c, map[string]any{
+				"db_server":      dbServer,
+				"window_seconds": 60,
+				"queries":        stats,
+			}); err != nil {
+				log.Warn("db query stats: envio falhou", "db_server", dbServer, "err", err)
+			}
+		}()
+	})
 	runtime.SetWorkerPools(5, 10)
 	runtime.SetJitter(1000)
 	runtime.SetTagger(checks.NewTagger(10000, log)) // era config.DefaultTaggerBudget

@@ -218,6 +218,26 @@ func (e *IngestExporter) PostK8sEvents(ctx context.Context, payload map[string]a
 	return e.PostRaw(ctx, "k8s/events", "application/json", body)
 }
 
+// PostDbQueryStats encaminha a estatística POR CONSULTA lida do próprio banco
+// (pg_stat_statements) pro gateway. Payload
+// {"db_server": "...", "window_seconds": N, "queries": [{...}]}; o backend deriva
+// o tenant do token.
+//
+// Canal PRÓPRIO, não o de spans, de propósito: isto é agregado ("rodou 120 vezes
+// no último minuto, média 3,1 ms"), não evento. A versão anterior disto, na
+// cópia velha do agente, fabricava um span por consulta — descrevia execução que
+// nunca aconteceu e ainda engordava o armazenamento de rastros.
+func (e *IngestExporter) PostDbQueryStats(ctx context.Context, payload map[string]any) error {
+	if len(payload) == 0 {
+		return nil
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	return e.PostRaw(ctx, "db/query-stats", "application/json", body)
+}
+
 // PostHostServices encaminha os serviços descobertos numa máquina (processos que
 // escutam porta, com CPU/mem) pro gateway (noc_host_service — o "o que roda aqui"
 // da lente de Máquina). Payload {"host_id": N, "services": [{...}]}; o backend
