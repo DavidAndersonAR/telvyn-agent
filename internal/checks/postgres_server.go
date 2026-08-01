@@ -112,15 +112,24 @@ type postgresServer struct {
 
 // SQL queries (RESEARCH §Pattern 4 — Pitfall 3 mitigation via COALESCE).
 const (
+	// pid <> pg_backend_pid() exclui a PRÓPRIA sessão do agente.
+	//
+	// Sem isso o observador se conta: esta consulta roda com state='active', então
+	// o piso da métrica era 1 e nunca zero. Medido no homolog em 2026-08-01:
+	// min_over_time(postgres_active_connections[3h]) = 1, com o banco ocioso.
+	// Consequência prática: qualquer painel que dissesse "nenhuma sessão ativa"
+	// jamais dispararia, e "1 executando agora" na tela era o agente.
 	sqlActiveConnections = `SELECT count(*)::BIGINT FROM pg_stat_activity ` +
-		`WHERE datname = current_database() AND state = 'active'`
+		`WHERE datname = current_database() AND state = 'active' ` +
+		`AND pid <> pg_backend_pid()`
 
 	sqlIdleInTransaction = `SELECT count(*)::BIGINT FROM pg_stat_activity ` +
-		`WHERE state = 'idle in transaction' AND datname = current_database()`
+		`WHERE state = 'idle in transaction' AND datname = current_database() ` +
+		`AND pid <> pg_backend_pid()`
 
 	sqlSlowQueries = `SELECT count(*)::BIGINT FROM pg_stat_activity ` +
 		`WHERE state = 'active' AND query_start < NOW() - INTERVAL '1 second' ` +
-		`AND datname = current_database()`
+		`AND datname = current_database() AND pid <> pg_backend_pid()`
 
 	sqlReplicationLagSeconds = `SELECT ` +
 		`COALESCE(EXTRACT(EPOCH FROM (NOW() - pg_last_xact_replay_timestamp())), 0)::FLOAT8`
@@ -131,8 +140,27 @@ const (
 	sqlVacuumStaleTables = `SELECT count(*)::BIGINT FROM pg_stat_user_tables ` +
 		`WHERE last_autovacuum < NOW() - INTERVAL '24 hours' OR last_autovacuum IS NULL`
 
+	// Conexões DESTE banco. Não divida isto por max_connections: o teto é do
+	// cluster inteiro (ver abaixo).
 	sqlTotalConnections = `SELECT count(*)::BIGINT FROM pg_stat_activity ` +
 		`WHERE datname = current_database()`
+
+	// Conexões do CLUSTER INTEIRO — todos os bancos, mais as sessões sem banco
+	// (walsender, autovacuum launcher). É ESTE o numerador que casa com
+	// max_connections.
+	//
+	// Sem ele a tela dividia a contagem de um banco pelo teto de todos, e podia
+	// mostrar "12 de 100, tranquilo" com o cluster em 98/100 recusando conexão.
+	// Quem paga a conta de max_connections é o cluster.
+	sqlClusterConnections = `SELECT count(*)::BIGINT FROM pg_stat_activity`
+
+	// Conexões que o cluster ainda aceita, já descontando as reservadas pra
+	// superusuário (superuser_reserved_connections). É o número que responde
+	// "quanto falta pra recusar", que é a pergunta real.
+	sqlConnectionsRemaining = `SELECT GREATEST(0, ` +
+		`(SELECT setting::BIGINT FROM pg_settings WHERE name = 'max_connections') - ` +
+		`(SELECT setting::BIGINT FROM pg_settings WHERE name = 'superuser_reserved_connections') - ` +
+		`(SELECT count(*) FROM pg_stat_activity))::BIGINT`
 
 	sqlMaxConnections = `SELECT setting::BIGINT FROM pg_settings WHERE name = 'max_connections'`
 
@@ -251,6 +279,15 @@ func (c *postgresServer) Run(ctx context.Context) ([]*collectorv1.Metric, error)
 
 	if v, ok := queryInt64(sqlActiveConnections); ok {
 		out = append(out, c.metric(now, "postgres.active_connections", float64(v)))
+	}
+	// Escopo CLUSTER. Emitidas junto das de banco de propósito: quem lê a tela
+	// precisa das duas na mesma janela pra saber que "poucas aqui" não quer
+	// dizer "folgado lá".
+	if v, ok := queryInt64(sqlClusterConnections); ok {
+		out = append(out, c.metric(now, "postgres.cluster_connections", float64(v)))
+	}
+	if v, ok := queryInt64(sqlConnectionsRemaining); ok {
+		out = append(out, c.metric(now, "postgres.connections_remaining", float64(v)))
 	}
 	if v, ok := queryInt64(sqlIdleInTransaction); ok {
 		out = append(out, c.metric(now, "postgres.idle_in_transaction", float64(v)))

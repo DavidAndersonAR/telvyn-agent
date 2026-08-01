@@ -42,7 +42,7 @@ func (r *stubRow) Scan(dest ...any) error {
 
 // stubPgxPool implementa pgxPool em memória.
 type stubPgxPool struct {
-	pingErr  error
+	pingErr         error
 	rowsBySQLPrefix map[string]*stubRow // chave: prefixo da SQL (primeiros 40 chars)
 	defaultRow      *stubRow
 	queries         []string
@@ -67,12 +67,12 @@ func (p *stubPgxPool) Close() { p.closed = true }
 func newStubPgxPool() *stubPgxPool {
 	return &stubPgxPool{
 		rowsBySQLPrefix: map[string]*stubRow{
-			"state = 'active'":             {vals: []any{int64(5)}},
-			"idle in transaction":          {vals: []any{int64(2)}},
-			"query_start <":                {vals: []any{int64(1)}},
+			"state = 'active'":              {vals: []any{int64(5)}},
+			"idle in transaction":           {vals: []any{int64(2)}},
+			"query_start <":                 {vals: []any{int64(1)}},
 			"pg_last_xact_replay_timestamp": {vals: []any{float64(0.5)}},
-			"pg_wal_lsn_diff":              {vals: []any{int64(1024)}},
-			"last_autovacuum":              {vals: []any{int64(3)}},
+			"pg_wal_lsn_diff":               {vals: []any{int64(1024)}},
+			"last_autovacuum":               {vals: []any{int64(3)}},
 		},
 	}
 }
@@ -162,12 +162,12 @@ func TestPostgresServer_RunEmitsAllMetrics(t *testing.T) {
 	}
 
 	wantNames := map[string]bool{
-		"postgres.active_connections":     false,
-		"postgres.idle_in_transaction":    false,
-		"postgres.slow_queries":           false,
+		"postgres.active_connections":      false,
+		"postgres.idle_in_transaction":     false,
+		"postgres.slow_queries":            false,
 		"postgres.replication_lag_seconds": false,
-		"postgres.wal_lag_bytes":          false,
-		"postgres.vacuum_stale_tables":    false,
+		"postgres.wal_lag_bytes":           false,
+		"postgres.vacuum_stale_tables":     false,
 	}
 	for _, m := range metrics {
 		if _, ok := wantNames[m.MetricName]; ok {
@@ -258,5 +258,45 @@ func TestPostgresServer_IDDefaultsFromHostID(t *testing.T) {
 	}
 	if c.Interval() != 60*time.Second {
 		t.Errorf("expected default Interval=60s; got %v", c.Interval())
+	}
+}
+
+// O OBSERVADOR NÃO PODE SE CONTAR.
+//
+// Sem `pid <> pg_backend_pid()` a própria consulta do agente aparece na
+// pg_stat_activity com state='active' e o piso da métrica vira 1, nunca zero.
+// Medido no homolog em 2026-08-01: min_over_time(active_connections[3h]) = 1
+// com o banco ocioso, e a tela exibia "1 executando agora" que era o agente.
+//
+// Vale para as três contagens que filtram por estado de sessão.
+func TestContagensDeSessaoExcluemAPropriaConexao(t *testing.T) {
+	casos := map[string]string{
+		"active_connections":  sqlActiveConnections,
+		"idle_in_transaction": sqlIdleInTransaction,
+		"slow_queries":        sqlSlowQueries,
+	}
+	for nome, sql := range casos {
+		if !strings.Contains(sql, "pg_backend_pid()") {
+			t.Errorf("%s: nao exclui a propria sessao — o agente vai se contar", nome)
+		}
+	}
+}
+
+// DENOMINADOR CERTO.
+//
+// max_connections é do CLUSTER; total_connections é de UM banco. Dividir um
+// pelo outro produz "12 de 100, tranquilo" com o cluster em 98/100 recusando
+// conexão. Quem casa com o teto é a contagem do cluster.
+func TestContagemDeClusterNaoFiltraPorBanco(t *testing.T) {
+	if strings.Contains(sqlClusterConnections, "current_database") {
+		t.Error("cluster_connections filtra por banco — deixa de ser do cluster e nao casa com max_connections")
+	}
+	if !strings.Contains(sqlTotalConnections, "current_database") {
+		t.Error("total_connections deixou de ser por banco — a tela mostra os dois lado a lado, precisam ser escopos diferentes")
+	}
+	// O que sobra até recusar tem que descontar as reservadas do superusuário,
+	// senão promete conexões que o banco não vai dar a uma aplicação comum.
+	if !strings.Contains(sqlConnectionsRemaining, "superuser_reserved_connections") {
+		t.Error("connections_remaining ignora as reservadas — promete mais folga do que existe")
 	}
 }
