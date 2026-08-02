@@ -428,7 +428,7 @@ func runIngestMode(ingestURL string) {
 	// que o usuário criou no painel, executando cada um no intervalo. O resultado
 	// vai pelo mesmo canal `out` (PostMetrics entrega). Reusa a máquina mTLS.
 	if getenvOr("ISPWATCH_CHECKS_ENABLED", "1") == "1" {
-		startIngestChecks(ctx, log, exporter, token, ingestURL, hostID, out)
+		startIngestChecks(ctx, log, exporter, apmStats, token, ingestURL, hostID, out)
 	} else {
 		log.Debug("checagens agendadas desativadas (set ISPWATCH_CHECKS_ENABLED=1 pra habilitar)")
 	}
@@ -538,40 +538,11 @@ func startSbomScan(ctx context.Context, log *slog.Logger, exporter *otlp.IngestE
 // (Bearer) pra obter collector_id+tenant, monta um checks.Runtime emitindo no
 // mesmo canal `out`, e roda o loop de config-pull com um client que injeta o
 // Bearer token. Reusa toda a máquina de checks/scheduler do modo mTLS.
-func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.IngestExporter, token, ingestURL, hostID string, out chan<- []*collectorv1.Metric) {
+func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.IngestExporter, apmStats *statsfwd.Forwarder, token, ingestURL, hostID string, out chan<- []*collectorv1.Metric) {
 	name := strings.TrimSpace(hostID)
 	if name == "" {
 		name, _ = os.Hostname()
 	}
-	collectorID, tenantID, err := exporter.RegisterCollector(ctx, name, []string{"metrics", "checks"})
-	if err != nil {
-		log.Warn("checks: registro de collector falhou — config-pull desativado", "err", err)
-		return
-	}
-	if collectorID == "" {
-		log.Warn("checks: collector_id vazio do register — config-pull desativado")
-		return
-	}
-
-	// Heartbeat: re-registra o collector a cada 60s pra manter o last_seen fresco.
-	// O backend deriva online/offline de noc_collector.last_seen, e SÓ o
-	// /collector/register o atualiza (config-pull e POST de métricas não tocam).
-	// Sem isso o collector vira "offline" após ~120s mesmo coletando normalmente.
-	go func() {
-		t := time.NewTicker(60 * time.Second)
-		defer t.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-t.C:
-				if _, _, err := exporter.RegisterCollector(ctx, name, []string{"metrics", "checks"}); err != nil {
-					log.Debug("heartbeat: re-registro do collector falhou", "err", err)
-				}
-			}
-		}
-	}()
-
 	// Base raiz do servidor (config-pull fica em /api/collector/v1/config, fora
 	// do /api/ingest/v1).
 	base := strings.TrimRight(strings.TrimSpace(ingestURL), "/")
@@ -604,21 +575,88 @@ func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.Ing
 		updateMarker = getenvOr("ISPWATCH_UPDATE_MARKER_PATH", "/var/lib/ispwatch/update-requested")
 	}
 
-	go func() {
-		if err := configpull.Run(ctx, configpull.Config{
-			Endpoint:         base,
-			CollectorID:      collectorID,
-			TenantID:         tenantID,
-			PollInterval:     time.Duration(pollSecs) * time.Second,
-			HTTPClient:       bearerClient,
-			Logger:           log,
-			UpdateMarkerPath: updateMarker,
-		}, runtime); err != nil {
-			log.Warn("config pull (ingest) encerrou", "err", err)
+	go runCollectorRegistrationLoop(ctx, log, 2*time.Second, 60*time.Second,
+		func(ctx context.Context) (string, string, error) {
+			return exporter.RegisterCollector(ctx, name, []string{"metrics", "checks"})
+		}, func(collectorID, tenantID string) {
+			exporter.SetCollectorID(collectorID)
+			go func() {
+				if err := configpull.Run(ctx, configpull.Config{
+					Endpoint:         base,
+					CollectorID:      collectorID,
+					TenantID:         tenantID,
+					PollInterval:     time.Duration(pollSecs) * time.Second,
+					HTTPClient:       bearerClient,
+					Logger:           log,
+					UpdateMarkerPath: updateMarker,
+					PolicyChanged: func(modules []string) {
+						exporter.SetEnabledModules(modules)
+						apmEnabled := false
+						for _, module := range modules {
+							if module == "APM" {
+								apmEnabled = true
+								break
+							}
+						}
+						apmStats.SetEnabled(apmEnabled)
+					},
+				}, runtime); err != nil {
+					log.Warn("config pull (ingest) encerrou", "err", err)
+				}
+			}()
+			log.Info("checagens agendadas habilitadas (config-pull)",
+				"collector_id", collectorID, "tenant", tenantID, "base", base, "poll_s", pollSecs)
+		})
+}
+
+// runCollectorRegistrationLoop tolera backend indisponível no boot sem bloquear
+// a inicialização do agent. Só libera o config-pull após obter identidade válida;
+// depois mantém o mesmo registro como heartbeat periódico.
+func runCollectorRegistrationLoop(
+	ctx context.Context,
+	log *slog.Logger,
+	initialBackoff, heartbeatInterval time.Duration,
+	register func(context.Context) (string, string, error),
+	onRegistered func(string, string),
+) {
+	backoff := initialBackoff
+	for {
+		collectorID, tenantID, err := register(ctx)
+		if err == nil && collectorID != "" {
+			onRegistered(collectorID, tenantID)
+			break
 		}
-	}()
-	log.Info("checagens agendadas habilitadas (config-pull)",
-		"collector_id", collectorID, "tenant", tenantID, "base", base, "poll_s", pollSecs)
+		if err == nil {
+			err = fmt.Errorf("collector_id vazio")
+		}
+		log.Warn("checks: registro de collector falhou — tentando novamente", "err", err, "retry_in", backoff)
+		t := time.NewTimer(backoff)
+		select {
+		case <-ctx.Done():
+			t.Stop()
+			return
+		case <-t.C:
+		}
+		if backoff < 30*time.Second {
+			backoff *= 2
+			if backoff > 30*time.Second {
+				backoff = 30 * time.Second
+			}
+		}
+	}
+
+	t := time.NewTicker(heartbeatInterval)
+	defer t.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			if _, _, err := register(ctx); err != nil {
+				log.Warn("heartbeat: re-registro do collector falhou", "err", err)
+			}
+		}
+	}
 }
 
 // bearerRoundTripper injeta Authorization: Bearer <token> em cada request —

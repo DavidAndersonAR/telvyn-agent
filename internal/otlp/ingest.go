@@ -50,10 +50,45 @@ type IngestExporter struct {
 	// self-metrics com o collector_id REAL em vez do sintético por token.
 	// atomic: setado depois que goroutines de envio já podem estar rodando.
 	collectorID atomic.Value
+	// Política de coleção entregue pelo backend no config-pull. Antes da primeira
+	// sincronização preserva compatibilidade; depois, sinais opcionais são fail-closed.
+	enabledModules atomic.Value // map[string]bool
 	// Retenção das métricas nativas do host quando o backend está fora
 	// (rollout/rede). Só métricas: spans/logs de app que passam pelo PostRaw
 	// já têm backpressure próprio (o receiver devolve 502 e o SDK reenvia).
 	metricsPending *sendbuf.Queue
+}
+
+// SetEnabledModules aplica imediatamente a política do tenant sem reiniciar o agent.
+func (e *IngestExporter) SetEnabledModules(modules []string) {
+	enabled := make(map[string]bool, len(modules))
+	for _, module := range modules {
+		enabled[strings.ToUpper(strings.TrimSpace(module))] = true
+	}
+	e.enabledModules.Store(enabled)
+}
+
+func (e *IngestExporter) signalAllowed(signal string) bool {
+	modules, ok := e.enabledModules.Load().(map[string]bool)
+	if !ok {
+		return true
+	} // backend anterior ao contrato de entitlement
+	switch signal {
+	case "traces", "apm/stats", "profile":
+		return modules["APM"]
+	case "logs":
+		return modules["LOGS"]
+	case "snmptrap", "device-metadata", "ncm/config":
+		return modules["REDE_SNMP"]
+	case "sbom":
+		return modules["VULNERABILIDADES"]
+	case "k8s/events", "k8s/pod-languages":
+		return modules["KUBERNETES"]
+	case "host/services":
+		return modules["INFRAESTRUTURA"]
+	default:
+		return true
+	}
 }
 
 // NewIngestExporter. base = URL do gateway (com ou sem /api/ingest/v1 — a
@@ -80,6 +115,9 @@ func NewIngestExporter(base, token, hostID, clusterName, version string, log *sl
 // ("traces" | "metrics" | "logs"), preservando o Content-Type original.
 func (e *IngestExporter) PostRaw(ctx context.Context, signal, contentType string, body []byte) error {
 	if len(body) == 0 {
+		return nil
+	}
+	if !e.signalAllowed(signal) {
 		return nil
 	}
 	url := e.base + "/" + signal
@@ -526,7 +564,11 @@ func (e *IngestExporter) RegisterCollector(ctx context.Context, name string, cap
 	if capabilities == nil {
 		capabilities = []string{}
 	}
-	payload := map[string]any{"name": name, "capabilities": capabilities}
+	payload := map[string]any{
+		"name":          name,
+		"agent_version": e.version,
+		"capabilities":  capabilities,
+	}
 	body, _ := json.Marshal(payload)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, e.base+"/collector/register", bytes.NewReader(body))
 	if err != nil {
