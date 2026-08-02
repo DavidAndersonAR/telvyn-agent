@@ -60,6 +60,9 @@ type Config struct {
 	// should_update, o agente escreve este arquivo (na sua ReadWritePath); um
 	// helper systemd ROOT observa e roda o upgrade. Vazio desliga a feature.
 	UpdateMarkerPath string
+	// Recebe a política autoritativa de módulos em todo poll. O callback deve
+	// atualizar gates locais de coleta/ingest sem bloquear o loop.
+	PolicyChanged func([]string)
 }
 
 // Run inicia o loop em foreground (bloqueante). Chamar em goroutine.
@@ -127,7 +130,8 @@ type pullResponse struct {
 	// F2b — atualização remota. O backend seta true UMA vez (serve-once) quando o
 	// operador clica "Atualizar agora". O agente (sem privilégio) só escreve um
 	// marcador; um helper systemd ROOT lê e roda o upgrade. Ausente = false.
-	ShouldUpdate bool `json:"should_update"`
+	ShouldUpdate   bool     `json:"should_update"`
+	EnabledModules []string `json:"enabled_modules"`
 }
 
 // pulledProfile é um perfil SNMP custom entregue pelo config-pull.
@@ -200,6 +204,9 @@ func pullOnce(
 	var r pullResponse
 	if err := json.Unmarshal(body, &r); err != nil {
 		return fmt.Errorf("parse response: %w", err)
+	}
+	if cfg.PolicyChanged != nil && r.EnabledModules != nil {
+		cfg.PolicyChanged(r.EnabledModules)
 	}
 
 	// F2b — atualização remota solicitada. O servidor faz serve-once, então isto

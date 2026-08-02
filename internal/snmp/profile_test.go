@@ -177,6 +177,22 @@ func TestMikrotikProfile_ContainsMikrotikMIB(t *testing.T) {
 	}
 }
 
+func TestMikrotikProfile_ContainsSystemUptime(t *testing.T) {
+	p, err := LoadProfile("mikrotik-router")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, m := range p.Metrics {
+		if m.Symbol != nil && m.Symbol.OID == "1.3.6.1.2.1.1.3.0" {
+			if got := canonMetricName(m.Symbol.OID, m.Symbol.Name); got != "snmp.sys.uptime" {
+				t.Fatalf("sysUpTime canonical name=%q want snmp.sys.uptime", got)
+			}
+			return
+		}
+	}
+	t.Fatal("perfil mikrotik-router nao coleta SNMPv2-MIB sysUpTime")
+}
+
 // Catalogo Datadog importado (Fase 2 da adocao NDM): o conversor traz a
 // biblioteca oficial BSD-3 alem dos nossos hand-curated. Guarda contra
 // regressao que esvazie o import ou quebre as categorias novas.

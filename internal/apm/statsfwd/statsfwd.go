@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"google.golang.org/protobuf/proto"
@@ -33,6 +34,7 @@ type Forwarder struct {
 	agentVersion string
 	log          *slog.Logger
 	pending      *sendbuf.Queue
+	enabled      atomic.Bool
 }
 
 // New cria um Forwarder. baseURL é a raiz do ingest (ex.: https://telvyn.../).
@@ -43,7 +45,7 @@ func New(client *http.Client, baseURL, token, agentVersion string, log *slog.Log
 	if log == nil {
 		log = slog.Default()
 	}
-	return &Forwarder{
+	f := &Forwarder{
 		client:       client,
 		url:          strings.TrimRight(baseURL, "/") + "/api/ingest/v1/apm/stats",
 		token:        token,
@@ -51,13 +53,20 @@ func New(client *http.Client, baseURL, token, agentVersion string, log *slog.Log
 		log:          log.With("component", "apm-stats-forwarder"),
 		pending:      sendbuf.New("apm-stats", maxPendingBytes, log),
 	}
+	f.enabled.Store(true)
+	return f
 }
+
+func (f *Forwarder) SetEnabled(enabled bool) { f.enabled.Store(enabled) }
 
 // Send converte os grupos em ApmStatsPayload e faz POST. No-op se vazio.
 // Falha de rede/5xx NÃO perde o bucket: o corpo fica retido (sendbuf) e é
 // reenviado no próximo tick. 401/429 descartam com aviso claro (retry não
 // conserta token revogado nem franquia estourada).
 func (f *Forwarder) Send(ctx context.Context, groups []concentrator.GroupedStats) error {
+	if !f.enabled.Load() {
+		return nil
+	}
 	if len(groups) == 0 {
 		return nil
 	}
