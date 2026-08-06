@@ -116,7 +116,7 @@ func (c *linuxSystemCheck) Run(ctx context.Context) ([]*collectorv1.Metric, erro
 				// cpu.usage — mesmo nome CANÔNICO que os perfis SNMP publicam (o perfil
 				// de cada fabricante lê seu OID e grava cpu.usage). Emitindo aqui também,
 				// UM único monitor "CPU acima de X%" cobre equipamento de rede e servidor.
-				// É o que o Datadog faz: cada integração publica no namespace canônico.
+				// Cada integração publica no namespace canônico.
 				out = append(out, c.metric(now, "cpu.usage", 100-idlePct, nil))
 			}
 		}
@@ -196,7 +196,7 @@ func (c *linuxSystemCheck) metric(t *timestamppb.Timestamp, name string, val flo
 
 // init auto-registers the linux.system factory in the Default registry.
 // Placing the registration here (rather than in main.go) follows the
-// datadog-agent pattern: each check package registers itself, and the
+// Cada pacote de check registra a si mesmo, e o
 // binary only needs to blank-import the packages it wants.
 func init() {
 	Default.Register("linux.system", newLinuxSystemCheck)

@@ -1,5 +1,5 @@
 // Package sbom — capability de vulnerabilidade de APLICAÇÃO (camada 2/3), no
-// estilo Datadog: o agente embute o Trivy (binário ao lado, só geração de SBOM,
+// o agente embute o Trivy (binário ao lado, só geração de SBOM,
 // SEM banco de CVE), escaneia as IMAGENS dos containers rodando no nó e manda só
 // a LISTA de componentes (CycloneDX achatado) pro gateway. O casamento com o
 // catálogo de advisory roda 100% no backend (POST /api/ingest/v1/sbom).
@@ -276,7 +276,7 @@ type RunningImage struct {
 	Digest    string // sha256:… (do imageID)
 	Namespace string
 	Pod       string
-	Service   string // label tags.datadoghq.com/service, se houver
+	Service   string // label compatível de service tagging, se houver
 }
 
 type imageLister struct {

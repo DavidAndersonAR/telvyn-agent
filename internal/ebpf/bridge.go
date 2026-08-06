@@ -207,7 +207,7 @@ func RunBridge(ctx context.Context, events <-chan Event, sink SpanSink, cfg Brid
 
 // maxL7Latency é o teto de sanidade pra latência de UMA request L7 (HTTP/gRPC/
 // DB-query). Acima disso é quase sempre medição corrompida do kernel (underflow
-// de end-start numa conexão long-lived) e não um request lento real — o Datadog
+// de end-start numa conexão long-lived) e não um request lento real — ferramentas
 // aplica bound parecido nos sinais RED. Streaming/long-poll não são sinal RED e
 // caem aqui de propósito. Ajustável se algum protocolo legítimo estourar.
 const maxL7Latency = 2 * time.Minute

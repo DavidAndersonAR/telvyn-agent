@@ -55,8 +55,8 @@ type NamespacedName struct {
 }
 
 // PodSvcMeta carrega a unified service tagging lida das labels do pod
-// (tags.datadoghq.com/service|version|env) — pra carimbar log/metric com o
-// MESMO service dos traces (igual Datadog). Vazio quando o pod não tem a label.
+// compatíveis de service/version/env — para carimbar log/metric com o
+// mesmo service dos traces. Vazio quando o pod não tem a label.
 type PodSvcMeta struct {
 	Service string
 	Version string
@@ -195,7 +195,7 @@ func (r *PodResolverImpl) ResolveIPMeta(ip string) (namespace, pod, workload, no
 
 // ServiceForPod devolve a unified service tagging (service/version/env) lida das
 // labels do pod — pra carimbar os logs com o MESMO service dos traces (igual
-// Datadog). ok=false quando o pod não tem a label tags.datadoghq.com/service;
+// legadas). ok=false quando o pod não tem uma label de service;
 // nesse caso o chamador cai no nome derivado do workload.
 func (r *PodResolverImpl) ServiceForPod(namespace, pod string) (service, version, env string, ok bool) {
 	r.mu.RLock()
@@ -307,8 +307,8 @@ func (h *httpPodLister) List(ctx context.Context) (PodIndex, error) {
 			Workload:  deriveWorkload(p.Metadata.Name, p.Metadata.OwnerReferences),
 			Node:      p.Spec.NodeName,
 		}
-		// unified service tagging: lê as labels tags.datadoghq.com/* do pod
-		// (convenção Datadog) pra carimbar o log com o mesmo service dos traces.
+		// Service tagging unificado: lê labels compatíveis do pod para carimbar
+		// o log com o mesmo service dos traces.
 		if svc := p.Metadata.Labels["tags.datadoghq.com/service"]; svc != "" {
 			byNsPod[p.Metadata.Namespace+"/"+p.Metadata.Name] = PodSvcMeta{
 				Service: svc,

@@ -28,10 +28,10 @@ func TestLoadProfile_AllParseable(t *testing.T) {
 				t.Fatalf("LoadProfile(%q): Name=%q want %q", name, p.Name, name)
 			}
 			// Todo perfil precisa ser util: OU casa por sysObjectID OU coleta
-			// metrica. Profiles do Datadog trazem duas categorias legitimas que
+			// metrica. Profiles importados trazem duas categorias legitimas que
 			// nao tem os dois: "manual-only" (metrica, sem sysObjectID — operador
 			// escolhe pelo nome, ex. brocade/a10) e "so-identificacao"
-			// (sysObjectID, sem metrica — ex. tripplite/zebra-printer, fiel ao DD).
+			// (sysObjectID, sem métrica — ex. tripplite/zebra-printer).
 			if len(p.SysObjectID) == 0 && len(p.Metrics) == 0 {
 				t.Fatalf("LoadProfile(%q): sem sysobjectid E sem metrics (perfil inutil)", name)
 			}
@@ -93,11 +93,11 @@ func TestMatchSysObjectID_Table(t *testing.T) {
 		descricao  string
 	}{
 		{"1.3.6.1.4.1.8072.3.2.10", "linux-net-snmp", true, "exact match Linux net-snmp"},
-		{"1.3.6.1.4.1.9.1.617", "cisco-catalyst", true, "Catalyst 3560G48TS — perfil Datadog especifico vence o cisco-ios generico"},
-		{"1.3.6.1.4.1.9.1.99999999", "cisco-ios", true, "IOS nao listado pelo Datadog cai no nosso cisco-ios (prefix 9.1.*)"},
+		{"1.3.6.1.4.1.9.1.617", "cisco-catalyst", true, "Catalyst 3560G48TS — perfil específico vence o cisco-ios genérico"},
+		{"1.3.6.1.4.1.9.1.99999999", "cisco-ios", true, "IOS não listado cai no nosso cisco-ios (prefix 9.1.*)"},
 		{"1.3.6.1.4.1.9.12.3.1.3.1234", "cisco-nx-os", true, "Cisco Nexus — NX-OS prefix mais especifico vence sobre IOS"},
 		{"1.3.6.1.4.1.2636.1.1.1.99", "juniper-junos", true, "Juniper MX"},
-		{"1.3.6.1.4.1.14988.1", "mikrotik-router", true, "Mikrotik exact (perfil do Datadog)"},
+		{"1.3.6.1.4.1.14988.1", "mikrotik-router", true, "Mikrotik exact (perfil importado)"},
 		{"1.3.6.1.4.1.14988.1.2.3", "mikrotik-router", true, "Mikrotik subtree"},
 		{".1.3.6.1.4.1.14988.1", "mikrotik-router", true, "leading dot tolerado"},
 		{"1.3.6.1.4.1.99999.1", "", false, "vendor desconhecido — nao casa"},
@@ -126,7 +126,7 @@ func TestMatchSysObjectID_SkipsManualOnlyProfiles(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// generic-device (Datadog) casa 1.3.6.1.4.* (árvore enterprises inteira) mas é
+	// generic-device casa 1.3.6.1.4.* (árvore enterprises inteira) mas é
 	// manual-only (auto_detect:false) — nunca deve ser sugerido pelo auto-match;
 	// o fallback de device desconhecido fica a cargo do generic-snmpv2 (via código).
 	gd, err := LoadProfile("generic-device")
@@ -144,7 +144,7 @@ func TestMatchSysObjectID_SkipsManualOnlyProfiles(t *testing.T) {
 	}
 }
 
-// Perfil mikrotik (mikrotik-router, adotado do Datadog) deve carregar OIDs da
+// Perfil mikrotik-router deve carregar OIDs da
 // MIKROTIK-MIB (.1.3.6.1.4.1.14988.*) — incl. temperatura em .3.6/.3.10.
 func TestMikrotikProfile_ContainsMikrotikMIB(t *testing.T) {
 	p, err := LoadProfile("mikrotik-router")
@@ -193,21 +193,21 @@ func TestMikrotikProfile_ContainsSystemUptime(t *testing.T) {
 	t.Fatal("perfil mikrotik-router nao coleta SNMPv2-MIB sysUpTime")
 }
 
-// Catalogo Datadog importado (Fase 2 da adocao NDM): o conversor traz a
+// Catálogo NDM importado: o conversor traz a
 // biblioteca oficial BSD-3 alem dos nossos hand-curated. Guarda contra
 // regressao que esvazie o import ou quebre as categorias novas.
-func TestCatalog_DatadogLibraryImported(t *testing.T) {
+func TestCatalog_NDMLibraryImported(t *testing.T) {
 	all, err := AllProfiles()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(all) < 150 {
-		t.Fatalf("catalogo tem %d perfis, esperado >=150 (biblioteca Datadog + hand-curated)", len(all))
+		t.Fatalf("catalogo tem %d perfis, esperado >=150 (catálogo NDM + hand-curated)", len(all))
 	}
-	// Perfis Datadog representativos existem e carregam.
+	// Perfis NDM representativos existem e carregam.
 	for _, name := range []string{"cisco-catalyst", "fortinet-fortigate", "apc_ups", "aruba-switch"} {
 		if _, err := LoadProfile(name); err != nil {
-			t.Fatalf("perfil Datadog %q ausente/ilegivel: %v", name, err)
+			t.Fatalf("perfil NDM %q ausente/ilegivel: %v", name, err)
 		}
 	}
 	// Manual-only: tem metrica de interface mas nenhum sysObjectID (nunca auto-matcha).

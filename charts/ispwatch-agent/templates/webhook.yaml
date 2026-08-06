@@ -1,6 +1,6 @@
 {{- if .Values.webhook.enabled }}
 {{- /*
-  Mutating Webhook stack (auto-injeção do -javaagent, estilo Datadog admission
+  Mutating Webhook stack (auto-injeção do -javaagent por admission controller
   controller):
    - Issuer selfSigned + Certificate (cert-manager) → Secret webhook-tls; o
      cainjector preenche o caBundle do MutatingWebhookConfiguration via a

@@ -6,7 +6,7 @@ ISPWatch Agent installed as DaemonSet in namespace {{ .Release.Namespace }}.
 2. Check agent logs (ingest mode + register):
    kubectl -n {{ .Release.Namespace }} logs -l app.kubernetes.io/name={{ include "ispwatch-agent.name" . }} --tail=50
 
-3. Certless (Datadog-style): each pod ships telemetry over HTTP/OTLP with the
+3. Certless: each pod ships telemetry over HTTP/OTLP with the
    Bearer ingest token — no enrollment, no mTLS, no per-node cert.
 
 4. Os nodes aparecem no /aplicações UI ~30s depois com badge "Kubernetes".

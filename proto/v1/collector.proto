@@ -121,7 +121,7 @@ message CheckConfig {
   map<string, string> params = 4;
 
   // tags k=v applied to EVERY metric emitted by this check (idiomatic
-  // datadog tagger pattern). Phase 4 template engine populates these
+  // resource tagger pattern). Phase 4 template engine populates these
   // with role=postgres, app=nginx, env=prod, etc.
   map<string, string> static_tags = 5;
 

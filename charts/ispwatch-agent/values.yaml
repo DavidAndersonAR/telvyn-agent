@@ -1,4 +1,4 @@
-# ── Autenticação (certless, Datadog-style) ─────────────────────────────
+# ── Autenticação certless por token Bearer ─────────────────────────────
 # O agent manda OTLP+Bearer pro gateway /api/ingest/v1 — sem cert, sem
 # enrollment, sem mTLS. É o ÚNICO modo: ingest.url + ingest.token são
 # obrigatórios.
@@ -14,7 +14,7 @@ ingest:
 clusterName: "default"
 
 image:
-  repository: ghcr.io/davidandersonar/telvyn-agent
+  repository: ghcr.io/telvynmonitoring/telvyn-agent
   # Vazio = usa o appVersion do chart (setado pelo CI = a tag publicada).
   tag: ""
   pullPolicy: IfNotPresent
@@ -58,7 +58,7 @@ priorityClassName: ""
 
 podAnnotations: {}
 
-# Coleta de logs (toggle, estilo Datadog). Quando habilitado, o agent taila
+# Coleta de logs opcional. Quando habilitado, o agent taila
 # /var/log/pods (formato CRI — containerd/k3s/CRI-O) e encaminha cada linha
 # como OTLP JSON + Bearer pro gateway /api/ingest/v1/logs. namespace/pod/
 # container são derivados do path. Arquivo novo começa do EOF (só logs novos).
@@ -159,7 +159,7 @@ clusterAgent:
       cpu: 250m
       memory: 192Mi
 
-# Scanner de vulnerabilidade de APLICAÇÃO (camada 2/3, toggle estilo Datadog).
+# Scanner opcional de vulnerabilidade de APLICAÇÃO (camada 2/3).
 # Quando habilitado, o agent roda o Trivy embarcado pra GERAR o SBOM (lista de
 # bibliotecas) de cada imagem rodando no nó e manda só a lista pro gateway
 # (/api/ingest/v1/sbom). O casamento com o catálogo de advisory roda no backend.

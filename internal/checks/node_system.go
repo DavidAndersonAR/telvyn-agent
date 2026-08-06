@@ -3,7 +3,7 @@
 //
 // Por quê: no modo k8s o agente só coleta o kubelet (que dá USO — nanocores,
 // working_set — mas não capacidade), então a tela Servidores mostrava CPU/mem
-// em cores/bytes em vez de %. O Datadog resolve isso lendo o /proc do nó. Aqui
+// em cores/bytes em vez de %. Resolvemos isso lendo o /proc do nó. Aqui
 // lemos /host/proc (já montado pelo DaemonSet) e emitimos as três métricas que o
 // endpoint /machines usa pra %: cpu.idle, mem.used_pct, load.5 — mais cpu.usage
 // (= 100 - idle%), o nome canônico compartilhado com os perfis SNMP, pra um único

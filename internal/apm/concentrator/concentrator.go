@@ -1,6 +1,6 @@
 // Package concentrator agrega spans em APM stats por bucket de tempo, com
 // DDSketch de latência — a peça-núcleo do trace-agent (espelha o concentrator
-// do Datadog).
+// com agregação DDSketch).
 //
 // Garantia-chave: hits/errors e os sketches são contados ANTES de qualquer
 // sampling. Por isso as estatísticas (p50/p95/p99, throughput, error-rate) são
@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	// BucketDuration é a janela de agregação (igual ao Datadog).
+	// BucketDuration é a janela de agregação.
 	BucketDuration = 10 * time.Second
 	// relativeAccuracy do DDSketch — PRECISA bater com a outra ponta (backend)
 	// pro merge ser válido. 1%.
@@ -208,7 +208,7 @@ func resourceOf(s *collectorv1.Span) string {
 	return s.Name
 }
 
-// spanSource lê o carimbo de origem do span (estilo Datadog APM vs USM). O sink
+// spanSource lê o carimbo de origem do span (APM instrumentado vs eBPF). O sink
 // do eBPF marca "telvyn.source"="ebpf"; spans OTLP instrumentados não têm o
 // atributo → "otlp". Vira coluna no backend e badge no catálogo.
 func spanSource(s *collectorv1.Span) string {

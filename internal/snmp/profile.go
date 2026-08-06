@@ -4,7 +4,7 @@
 // e expoe API consumida pelo check snmp.generic: LoadProfile(name),
 // AllProfiles(), MatchSysObjectID(profiles, sysOid).
 //
-// Shape YAML — Datadog-style declarativo (RESEARCH.md Pattern 1):
+// Shape YAML declarativo (RESEARCH.md Pattern 1):
 //
 //	sysobjectid:
 //	  - <prefix>
@@ -64,12 +64,12 @@ type Profile struct {
 	// das keys + static_tags. Co-existe com Metrics; ambos rodam em Collect.
 	DiscoveryRules []ProfileDiscoveryRule `yaml:"discovery_rules,omitempty"`
 
-	// Metadata é o bloco "metadata:" (estilo Datadog NDM) — identidade do
+	// Metadata é o bloco "metadata:" do perfil NDM — identidade do
 	// device (vendor/model/serial/version...) emitida pro noc_device.
 	Metadata *ProfileMetadata `yaml:"metadata,omitempty"`
 }
 
-// ProfileMetadata é o bloco "metadata:" do profile (estilo Datadog NDM).
+// ProfileMetadata é o bloco "metadata:" do profile NDM.
 type ProfileMetadata struct {
 	Device map[string]ProfileMetaField `yaml:"device"`
 }
@@ -333,7 +333,7 @@ func AllProfiles() ([]*Profile, error) {
 // comeca com base+".") e em caso de empate o base mais longo vence.
 //
 // Aceita base com ou sem leading dot e com sufixo opcional ".*" (estilo
-// Datadog) — ambos sao normalizados antes do match.
+// importados) — ambos sao normalizados antes do match.
 func MatchSysObjectID(profiles []*Profile, sysOid string) (*Profile, bool) {
 	target := strings.TrimPrefix(strings.TrimSpace(sysOid), ".")
 	if target == "" {
@@ -476,7 +476,7 @@ func (p *Profile) Collect(ctx context.Context, c *Client, hostID string, staticT
 // CollectDeviceMetadata resolve a identidade do device (vendor/model/serial/OS…):
 //  1. BASE derivada de OIDs padrão (sysDescr, sysObjectID, ENTITY-MIB) — vale pra
 //     QUALQUER device, mesmo sem bloco metadata no profile (a maioria dos 174
-//     profiles Datadog só declara `type:`, sem identidade).
+//     alguns profiles só declaram `type:`, sem identidade).
 //  2. OVERLAY do bloco metadata do profile, que é AUTORITATIVO (sobrepõe o
 //     derivado): valor estático direto, ou GET do OID → string.
 //
@@ -512,8 +512,8 @@ func (p *Profile) CollectDeviceMetadata(ctx context.Context, c *Client) map[stri
 // OIDs padrão de identidade (SNMPv2-MIB + ENTITY-MIB) — respondidos por
 // praticamente qualquer device SNMP, independentemente de profile de vendor.
 const (
-	oidSysDescr    = "1.3.6.1.2.1.1.1.0"        // sysDescr
-	oidSysObjectID = "1.3.6.1.2.1.1.2.0"        // sysObjectID
+	oidSysDescr    = "1.3.6.1.2.1.1.1.0"         // sysDescr
+	oidSysObjectID = "1.3.6.1.2.1.1.2.0"         // sysObjectID
 	oidEntModel    = "1.3.6.1.2.1.47.1.1.1.1.13" // entPhysicalModelName
 	oidEntSerial   = "1.3.6.1.2.1.47.1.1.1.1.11" // entPhysicalSerialNum
 	oidEntSoftware = "1.3.6.1.2.1.47.1.1.1.1.10" // entPhysicalSoftwareRev
@@ -762,7 +762,7 @@ func applyScale(v, scale float64) float64 {
 
 // getScalar faz Get de um OID escalar. Tenta o OID como está; se não vier valor
 // e o OID não terminar em ".0", tenta o instance ".0". Isso porque os perfis do
-// Datadog escrevem escalares SEM o ".0" (ex. mtxrHlCpuTemperature = .3.6), mas o
+// Alguns catálogos escrevem escalares SEM o ".0" (ex. mtxrHlCpuTemperature = .3.6), mas o
 // SNMP exige o ".0" no GET de escalar — nossos perfis hand-curated já põem o ".0".
 // canonMetricName usa o OID do PERFIL (sem .0), então o mapa canônico continua batendo.
 func getScalar(ctx context.Context, c *Client, oid string) (float64, bool) {
@@ -963,7 +963,7 @@ func newMetric(ts *timestamppb.Timestamp, hostID, name string, val float64, tags
 //     community.<vendor>.net_if_* (backend NÃO lia) — a normalização conserta.
 //   - HOST-RESOURCES / UCD / SNMPv2 (CPU/memória/uptime): DeviceMetricsTab e o
 //     MonitorDrawer leem snmp.hr.processor_load, snmp.hr.storage_used,
-//     snmp.mem.avail_kb, snmp.sys.uptime. Os ~167 perfis do Datadog andam nesses
+//     snmp.mem.avail_kb, snmp.sys.uptime. Os perfis importados usam esses
 //     mesmos OIDs padrão mas batizam como hrProcessorLoad/cpu.usage/memory.free —
 //     normalizar faz CPU/memória/uptime acenderem em todo fabricante.
 //
@@ -1008,7 +1008,7 @@ var oidCanonical = map[string]string{
 	"1.3.6.1.2.1.1.3.0": "snmp.sys.uptime", // sysUpTime (centésimos de s)
 
 	// --- MIKROTIK-MIB (temperatura, °C) ---
-	// O profile do Datadog (mikrotik-router) lê os OIDs CERTOS de temperatura
+	// O profile mikrotik-router lê os OIDs corretos de temperatura
 	// (mtxrHlCpuTemperature .3.6 e mtxrHlTemperature .3.10) mas os batiza com o
 	// nome da MIB. Canonizar pra mikrotik.health.temp_* faz o DeviceMetricsTab
 	// (filtro mikrotik_health_temp.*) mostrar no widget de Temperatura.

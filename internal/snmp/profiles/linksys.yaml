@@ -1,8 +1,8 @@
 # Telvyn SNMP profile — linksys
-# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).
-# Fonte: snmp/datadog_checks/snmp/data/default_profiles/linksys.yaml
+# Perfil derivado de catálogo NDM open source (BSD-3-Clause).
+# Origem, copyright e licença: THIRD_PARTY_NOTICES.md.
 # `extends` resolvido em build; recursos nao suportados pelo agente descartados.
-# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.
+# NAO editar a mao — regenerar via tools/convert-snmp-profiles/convert.py.
 
 sysobjectid:
 - 1.3.6.1.4.1.3955.*

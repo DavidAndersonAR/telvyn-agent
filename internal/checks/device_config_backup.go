@@ -1,4 +1,4 @@
-// device_config_backup.go — Check "device.config_backup" (NCM, estilo Datadog).
+// device_config_backup.go — Check "device.config_backup" para NCM.
 //
 // Coleta a running-config de um device de rede por SSH e manda o texto cru pro
 // backend, que sanitiza → versiona por hash em noc_device_config. v1 é SÓ
@@ -11,14 +11,15 @@
 // canal autenticado). O check nunca vê o segredo cifrado nem o loga.
 //
 // Params aceitos (cfg.Params):
-//   host_id      bigint do noc_host (string) — obrigatório (identifica o device)
-//   target       IP/host SSH do device       — obrigatório
-//   vendor       mikrotik|cisco|fortinet|…   — obrigatório (escolhe o comando)
-//   ssh_user     usuário SSH                 — obrigatório (injetado do cofre)
-//   ssh_secret   senha OU chave privada PEM  — obrigatório (injetado do cofre)
-//   secret_kind  password|private_key        — default password
-//   ssh_port     porta SSH                   — default 22
-//   timeout_seconds  timeout do comando      — default 60
+//
+//	host_id      bigint do noc_host (string) — obrigatório (identifica o device)
+//	target       IP/host SSH do device       — obrigatório
+//	vendor       mikrotik|cisco|fortinet|…   — obrigatório (escolhe o comando)
+//	ssh_user     usuário SSH                 — obrigatório (injetado do cofre)
+//	ssh_secret   senha OU chave privada PEM  — obrigatório (injetado do cofre)
+//	secret_kind  password|private_key        — default password
+//	ssh_port     porta SSH                   — default 22
+//	timeout_seconds  timeout do comando      — default 60
 package checks
 
 import (

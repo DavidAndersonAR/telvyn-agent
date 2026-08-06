@@ -2,7 +2,7 @@
 //
 // Enumera os processos que ESCUTAM porta TCP (via /proc + gopsutil), com CPU e
 // memória de cada um, e reporta pelo ingest certless (POST /host/services →
-// noc_host_service). É o "processes / service discovery" do Datadog aplicado ao
+// noc_host_service). Implementa descoberta de processos e serviços aplicada ao
 // host Linux/Docker: a lente de Máquina passa a mostrar "o que roda aqui".
 //
 // CPU é DELTA: reusamos o *process.Process entre ticks (cache por pid) e
@@ -27,7 +27,7 @@ import (
 
 const hostServicesInterval = 60 * time.Second
 
-// hostServicesEnabled — toggle (estilo Datadog). Ligado por padrão no install
+// hostServicesEnabled — toggle de descoberta. Ligado por padrão no install
 // Linux (é a substância da lente); desliga com ISPWATCH_HOST_SERVICES=0.
 func hostServicesEnabled() bool {
 	v := strings.ToLower(strings.TrimSpace(os.Getenv("ISPWATCH_HOST_SERVICES")))

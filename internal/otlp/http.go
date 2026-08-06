@@ -103,7 +103,7 @@ type HTTPReceiver struct {
 	// resolver, quando setado, resolve o IP de origem da conexão OTLP em
 	// (namespace, pod) via o índice do kubelet — pra carimbar spans de apps
 	// auto-instrumentadas que NÃO anunciam k8s.namespace.name/k8s.pod.name
-	// (origin-detection estilo Datadog / k8sattributes do OTel). A app que já
+	// (detecção de origem com k8sattributes do OTel). A app que já
 	// manda esses atributos tem prioridade; só preenchemos o que falta.
 	resolver PodIPResolver
 

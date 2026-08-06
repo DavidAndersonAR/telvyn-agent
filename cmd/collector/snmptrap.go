@@ -3,7 +3,7 @@
 // listener parseia o trap (v1/v2c via gosnmp.TrapListener) e encaminha pro backend
 // (/api/ingest/v1/snmptrap); o backend mapeia source_ip→host e classifica o OID.
 //
-// Gateado por ISPWATCH_SNMP_TRAPS_ENABLED=1 (estilo Datadog: 1 agente, cada
+// Gateado por ISPWATCH_SNMP_TRAPS_ENABLED=1 (um agente, cada
 // capability liga/desliga). Bind em :162 exige root (o DaemonSet já roda privileged).
 
 package main

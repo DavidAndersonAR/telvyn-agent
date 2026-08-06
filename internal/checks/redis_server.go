@@ -253,7 +253,7 @@ func (r *redisServer) metric(t *timestamppb.Timestamp, name string, val float64,
 	}
 }
 
-// init auto-registra o factory em Default. Pattern datadog-agent — cada
+// init auto-registra o factory em Default. Cada
 // package de check se auto-anuncia; o binário só faz blank-import.
 func init() {
 	Default.Register("redis.server", newRedisServerCheck)
