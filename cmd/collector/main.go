@@ -215,7 +215,7 @@ func runIngestMode(ingestURL string) {
 	// APLICAÇÃO segue identificada pelo serviço (uuid), nunca pela máquina.
 	if strings.EqualFold(getenvOr("ISPWATCH_AGENT_KIND", ""), "docker") {
 		collectorID := ""
-		if cid, _, err := exporter.RegisterCollector(ctx, hostID, []string{"metrics", "checks"}); err != nil {
+		if cid, _, err := exporter.RegisterCollector(ctx, hostID, []string{"metrics", "checks"}, "docker"); err != nil {
 			log.Warn("docker: registro de collector falhou — sigo sem vínculo máquina↔collector", "err", err)
 		} else {
 			collectorID = cid
@@ -238,7 +238,7 @@ func runIngestMode(ingestURL string) {
 	// (uuid), nunca pela máquina.
 	if strings.EqualFold(getenvOr("ISPWATCH_AGENT_KIND", ""), "linux") {
 		collectorID := ""
-		if cid, _, err := exporter.RegisterCollector(ctx, hostID, []string{"metrics", "checks"}); err != nil {
+		if cid, _, err := exporter.RegisterCollector(ctx, hostID, []string{"metrics", "checks"}, "linux"); err != nil {
 			log.Warn("linux: registro de collector falhou — sigo sem vínculo máquina↔collector", "err", err)
 		} else {
 			collectorID = cid
@@ -577,7 +577,7 @@ func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.Ing
 
 	go runCollectorRegistrationLoop(ctx, log, 2*time.Second, 60*time.Second,
 		func(ctx context.Context) (string, string, error) {
-			return exporter.RegisterCollector(ctx, name, collectorCapabilities())
+			return exporter.RegisterCollector(ctx, name, collectorCapabilities(), collectorInstallMode())
 		}, func(collectorID, tenantID string) {
 			exporter.SetCollectorID(collectorID)
 			go func() {
@@ -631,6 +631,22 @@ func collectorCapabilities() []string {
 		}
 	}
 	return caps
+}
+
+func collectorInstallMode() string {
+	if mode := strings.ToLower(strings.TrimSpace(getenvOr("ISPWATCH_INSTALL_MODE", ""))); mode == "docker" || mode == "linux" || mode == "k8s" {
+		return mode
+	}
+	switch strings.ToLower(strings.TrimSpace(getenvOr("ISPWATCH_AGENT_KIND", ""))) {
+	case "docker":
+		return "docker"
+	case "linux":
+		return "linux"
+	case "k8s.node", "k8s.cluster":
+		return "k8s"
+	default:
+		return ""
+	}
 }
 
 func envEnabled(name string) bool {

@@ -27,3 +27,11 @@ func TestCollectorCapabilitiesForNonSnmpAgent(t *testing.T) {
 		t.Fatalf("collectorCapabilities() = %v, want %v", got, want)
 	}
 }
+
+func TestCollectorInstallModeUsesExplicitRuntime(t *testing.T) {
+	t.Setenv("ISPWATCH_AGENT_KIND", "snmp")
+	t.Setenv("ISPWATCH_INSTALL_MODE", "docker")
+	if got := collectorInstallMode(); got != "docker" {
+		t.Fatalf("collectorInstallMode() = %q, want docker", got)
+	}
+}

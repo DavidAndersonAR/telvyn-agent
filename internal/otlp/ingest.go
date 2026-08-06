@@ -560,7 +560,7 @@ func (e *IngestExporter) registerHost(ctx context.Context, hostname, installMode
 // (POST /collector/register, Bearer) → upsert em noc_collector por (tenant,
 // name). Devolve o collector_id (UUID) + tenant, que o agente usa no
 // config-pull (Bearer) pra puxar as checagens agendadas que o usuário criou.
-func (e *IngestExporter) RegisterCollector(ctx context.Context, name string, capabilities []string) (string, string, error) {
+func (e *IngestExporter) RegisterCollector(ctx context.Context, name string, capabilities []string, installMode string) (string, string, error) {
 	if capabilities == nil {
 		capabilities = []string{}
 	}
@@ -568,6 +568,7 @@ func (e *IngestExporter) RegisterCollector(ctx context.Context, name string, cap
 		"name":          name,
 		"agent_version": e.version,
 		"capabilities":  capabilities,
+		"install_mode":  installMode,
 	}
 	body, _ := json.Marshal(payload)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, e.base+"/collector/register", bytes.NewReader(body))
