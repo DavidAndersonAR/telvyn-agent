@@ -577,7 +577,7 @@ func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.Ing
 
 	go runCollectorRegistrationLoop(ctx, log, 2*time.Second, 60*time.Second,
 		func(ctx context.Context) (string, string, error) {
-			return exporter.RegisterCollector(ctx, name, []string{"metrics", "checks"})
+			return exporter.RegisterCollector(ctx, name, collectorCapabilities())
 		}, func(collectorID, tenantID string) {
 			exporter.SetCollectorID(collectorID)
 			go func() {
@@ -607,6 +607,39 @@ func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.Ing
 			log.Info("checagens agendadas habilitadas (config-pull)",
 				"collector_id", collectorID, "tenant", tenantID, "base", base, "poll_s", pollSecs)
 		})
+}
+
+// collectorCapabilities anuncia o que esta instalacao realmente pode executar.
+// metrics/checks formam o contrato base; protocolos de rede só entram quando o
+// operador os ativou no comando gerado pelo portal.
+func collectorCapabilities() []string {
+	caps := []string{"metrics", "checks"}
+	if !strings.EqualFold(getenvOr("ISPWATCH_AGENT_KIND", ""), "snmp") {
+		return caps
+	}
+	for _, item := range []struct {
+		env string
+		cap string
+	}{
+		{"ISPWATCH_SNMP", "snmp"},
+		{"ISPWATCH_ICMP", "icmp"},
+		{"ISPWATCH_LLDP", "lldp"},
+		{"ISPWATCH_SSH", "ssh"},
+	} {
+		if envEnabled(item.env) {
+			caps = append(caps, item.cap)
+		}
+	}
+	return caps
+}
+
+func envEnabled(name string) bool {
+	switch strings.ToLower(strings.TrimSpace(getenvOr(name, "0"))) {
+	case "1", "true", "yes", "on":
+		return true
+	default:
+		return false
+	}
 }
 
 // runCollectorRegistrationLoop tolera backend indisponível no boot sem bloquear
