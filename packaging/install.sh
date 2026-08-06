@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # Telvyn / IspWatch Agent — script canônico de instalação Linux (systemd).
-# Inspirado em DataDog/agent-linux-install-script (Apache-2.0).
-# Atribuição: ver LICENSE-NOTICE.md neste diretório.
+# Atribuições de terceiros: ../THIRD_PARTY_NOTICES.md.
 #
-# Modelo CERTLESS/INGEST (Datadog-style): o agent autentica no gateway
+# Modelo CERTLESS/INGEST: o agent autentica no gateway
 # /api/ingest/v1 com Bearer token (iwI_) sobre HTTPS — sem enrollment, sem
 # mTLS, sem cert por máquina. O antigo caminho mTLS ("Plan 09") foi removido.
 #
@@ -85,7 +84,7 @@ on_exit() {
 trap 'on_error $LINENO' ERR
 trap on_exit EXIT
 
-# === Detecção de distro (cascade DD-style) =============================
+# === Detecção de distro em cascata =====================================
 detect_distro() {
     if command -v lsb_release >/dev/null 2>&1; then
         lsb_release -si | tr '[:upper:]' '[:lower:]'
@@ -198,7 +197,7 @@ install -m 0644 "$EXTRACTED_DIR/ispwatch-agent.service" "$UNIT_PATH"
 
 # === F2b: helper de atualização remota (privilegiado) ==================
 # O agente roda SEM privilégio (User=ispwatch) e não pode trocar o próprio
-# binário nem se reiniciar. Igual ao Datadog (que delega ao package manager),
+# binário nem se reiniciar. A atualização é delegada ao gerenciador de pacotes;
 # quem APLICA o upgrade é um componente ROOT à parte — este helper. Fluxo:
 #   config-pull manda should_update → agente escreve /var/lib/ispwatch/update-requested
 #   → o .path (root) observa → dispara o .service (root) → roda o upgrade oficial.
@@ -257,7 +256,7 @@ systemctl enable --now ispwatch-agent-update.path
 
 # === Upgrade: binário+unit trocados → reinicia e sai ===================
 # Preserva o agent.env (token/config/toggles) — não passa pela reescrita abaixo.
-# Espelha o que o Datadog faz: trocar o binário nunca mexe na config do operador.
+# Trocar o binário nunca altera a configuração do operador.
 if [[ "$ISPWATCH_UPGRADE" == "true" ]]; then
     rm -rf "$WORK_DIR"
     systemctl daemon-reload

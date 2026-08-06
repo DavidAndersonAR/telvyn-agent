@@ -31,7 +31,7 @@ func TestCanonMetricName_IfMib(t *testing.T) {
 	}
 }
 
-// Normalização CPU/memória/uptime: os perfis do Datadog andam nos OIDs padrão
+// Normalização CPU/memória/uptime: os perfis importados usam OIDs padrão
 // (HOST-RESOURCES/UCD/SNMPv2) mas batizam como hrProcessorLoad/cpu.usage/memory.free.
 // O DeviceMetricsTab e o MonitorDrawer leem snmp.hr.processor_load / snmp.hr.storage_used
 // / snmp.mem.avail_kb / snmp.sys.uptime — normalizar por OID faz acender em todo fabricante.
@@ -39,7 +39,7 @@ func TestCanonMetricName_CpuMemUptime(t *testing.T) {
 	cases := []struct {
 		oid, in, want string
 	}{
-		// CPU (HOST-RESOURCES hrProcessorLoad) — Datadog batiza cpu.usage/hrProcessorLoad
+		// CPU (HOST-RESOURCES hrProcessorLoad) — catálogos usam cpu.usage/hrProcessorLoad
 		{"1.3.6.1.2.1.25.3.3.1.2", "cpu.usage", "snmp.hr.processor_load"},
 		{"1.3.6.1.2.1.25.3.3.1.2", "hrProcessorLoad", "snmp.hr.processor_load"},
 		// Armazenamento (HOST-RESOURCES hrStorage)
@@ -51,7 +51,7 @@ func TestCanonMetricName_CpuMemUptime(t *testing.T) {
 		// Uptime (SNMPv2 sysUpTime), tolera leading dot
 		{"1.3.6.1.2.1.1.3.0", "sysUpTimeInstance", "snmp.sys.uptime"},
 		{".1.3.6.1.2.1.1.3.0", "uptime", "snmp.sys.uptime"},
-		// Temperatura MikroTik (perfil do Datadog batiza com nome da MIB; canonizamos
+		// Temperatura MikroTik (o perfil usa nome da MIB; canonizamos
 		// pra mikrotik.health.temp_* pra cair no widget de Temperatura). O OID é o do
 		// PERFIL (sem .0) — getScalar tenta .0 na coleta, mas canonMetricName usa o do perfil.
 		{"1.3.6.1.4.1.14988.1.1.3.6", "mtxrHlCpuTemperature", "mikrotik.health.temp_cpu"},

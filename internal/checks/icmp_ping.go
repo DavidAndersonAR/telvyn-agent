@@ -224,7 +224,7 @@ func parseIntParam(params map[string]string, key string, def int) int {
 	return v
 }
 
-// init auto-registra o factory em Default. Segue o pattern do datadog-agent
+// init auto-registra o factory em Default. Cada integração é autocontida
 // (cada package de check registra a si mesmo).
 func init() {
 	Default.Register("icmp.ping", newIcmpPingCheck)

@@ -1,7 +1,7 @@
 // Package obfuscate normaliza atributos sensíveis de spans ANTES da agregação
 // e do envio: tira valores literais de SQL, remove query string de URLs e
 // redige um conjunto básico de atributos com PII. Roda no hot path (Push),
-// in-place, espelhando o obfuscator do trace-agent do Datadog (versão enxuta).
+// in-place antes do envio ao backend.
 package obfuscate
 
 import (
@@ -11,7 +11,7 @@ import (
 	collectorv1 "github.com/ispwatch/collector/proto/v1"
 )
 
-// Literais de string SQL ('...', com '' escapado) e números viram '?'.
+// Literais de string SQL ('...', com ” escapado) e números viram '?'.
 var (
 	sqlStringLiteral = regexp.MustCompile(`'(?:[^']|'')*'`)
 	sqlNumberLiteral = regexp.MustCompile(`\b\d+(?:\.\d+)?\b`)

@@ -34,7 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   build time via `-ldflags="-X main.Version=${GITHUB_REF_NAME}"`.
 - Reproducible release pipeline: `make release-ci` (CI) and `make release-local`
   (ops) produce identical tarballs `ispwatch-agent-<version>-linux-<arch>.tar.gz`
-  with binary + `ispwatch-agent.service` + `LICENSE-NOTICE.md`, plus `.sha256`
+  with binary + `ispwatch-agent.service` + `LICENSE` +
+  `THIRD_PARTY_NOTICES.md`, plus `.sha256`
   sidecar.
 - GitHub Actions workflow `.github/workflows/release.yml` — tag-triggered
   (`v*`) multi-arch build (`linux/amd64`, `linux/arm64`) publishing the tarball

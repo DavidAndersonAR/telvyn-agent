@@ -137,7 +137,7 @@ type pullResponse struct {
 // pulledProfile é um perfil SNMP custom entregue pelo config-pull.
 type pulledProfile struct {
 	Name    string `json:"name"`    // slug (profile_id)
-	Yaml    string `json:"yaml"`    // YAML cru, formato Datadog
+	Yaml    string `json:"yaml"`    // YAML cru do check remoto
 	Version int64  `json:"version"` // versão do perfil (pra log)
 }
 

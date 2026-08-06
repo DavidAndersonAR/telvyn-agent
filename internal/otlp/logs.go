@@ -69,7 +69,7 @@ type LogsExporter struct {
 	httpClient  *http.Client
 	log         *slog.Logger
 
-	// ingest != nil ⇒ modo certless (Datadog-style): em vez do POST mTLS pro
+	// ingest != nil ⇒ modo certless: em vez do POST mTLS pro
 	// /api/collector/v1/logs, cada batch sai como OTLP JSON + Bearer pro
 	// gateway /api/ingest/v1/logs. Toda a maquinaria de buffer/flush/overflow
 	// é reusada — só o transporte do sendBatch muda.
@@ -201,8 +201,8 @@ func (e *LogsExporter) flush(ctx context.Context) {
 // mandando ExportLogsServiceRequest), trocar pra OTLP proto sem mudar a
 // rota: este é só o canal interno agent→backend.
 type logBatchWire struct {
-	CollectorID string         `json:"collector_id"`
-	Hostname    string         `json:"hostname"`
+	CollectorID string          `json:"collector_id"`
+	Hostname    string          `json:"hostname"`
 	Records     []logRecordWire `json:"records"`
 }
 

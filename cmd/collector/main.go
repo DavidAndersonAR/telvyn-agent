@@ -84,7 +84,7 @@ func main() {
 		return
 	}
 
-	// Modo ingest certless (Datadog-style): manda telemetria OTLP pro gateway
+	// Modo ingest certless: manda telemetria OTLP pro gateway
 	// /api/ingest/v1 com Bearer token, sem enrollment/mTLS/cert por agent. É o
 	// ÚNICO modo de operação — exige ISPWATCH_INGEST_URL (+ ISPWATCH_INGEST_TOKEN).
 	ingestURL := strings.TrimSpace(os.Getenv("ISPWATCH_INGEST_URL"))
@@ -95,7 +95,7 @@ func main() {
 	runIngestMode(ingestURL)
 }
 
-// runIngestMode roda o agent no modelo "Datadog" (API key): recebe OTLP de
+// runIngestMode roda o agent no modelo certless por token: recebe OTLP de
 // apps locais e emite as métricas do próprio host, encaminhando tudo pro
 // gateway /api/ingest/v1 com Bearer token — sem enrollment, sem mTLS, sem
 // cert por agent. É o caminho simples; o modo gRPC mTLS (main) segue intacto.
@@ -114,7 +114,7 @@ func (s ebpfStatsSink) Push(spans []*collectorv1.Span) {
 		obfuscate.Apply(sp)
 		// Carimba a origem ANTES do Add: o concentrator copia isso pro stat
 		// (source=ebpf), o backend grava a coluna e o catálogo mostra o badge
-		// "eBPF / sem instrumentação". Estilo Datadog USM. Posto depois do
+		// "eBPF / sem instrumentação". Posto depois do
 		// obfuscate pra não ser higienizado fora.
 		if sp.Attributes == nil {
 			sp.Attributes = map[string]string{}
@@ -192,7 +192,7 @@ func runIngestMode(ingestURL string) {
 
 			// CPU/mem/load do NÓ via /host/proc → cpu%/mem% na tela Servidores.
 			// O kubelet só dá uso (cores/bytes); o /proc do host dá a % real,
-			// igual o Datadog. Reporta sob o host_id do nó (não é __self__).
+			// Reporta sob o host_id do nó (não é __self__).
 			checks.StartNodeSystem(ctx, log, out, nodeHostID, "/host/proc", 30*time.Second)
 
 			// Vulnerabilidade de aplicação (camada 2/3, toggle): Trivy gera o SBOM
@@ -316,7 +316,7 @@ func runIngestMode(ingestURL string) {
 	})
 
 	// Item 1 — carimbo de pod/namespace por IP de origem (origin-detection
-	// estilo Datadog / k8sattributes do OTel): spans de apps auto-instrumentadas
+	// junto com k8sattributes do OTel): spans de apps auto-instrumentadas
 	// que NÃO anunciam k8s.namespace.name/k8s.pod.name passam a cair no pod certo.
 	// Independe do eBPF (vale com tracing eBPF desligado). Só em nós k8s, onde o
 	// kubelet local lista os pods e seus IPs; em bare-metal não há o que resolver.
@@ -332,7 +332,7 @@ func runIngestMode(ingestURL string) {
 			rec.SetPodResolver(resolver)
 			log.Info("otlp: carimbo de pod/namespace por IP de origem ativo (kubelet)")
 
-			// Detecção de linguagem por processo (estilo Datadog): olha /proc,
+			// Detecção de linguagem por processo: olha /proc,
 			// mapeia pid→pod pelo mesmo resolver e reporta a linguagem por pod
 			// pro gateway. O backend usa pra mostrar o botão de auto-injeção
 			// (Java) em apps caixa-preta que ainda não emitem telemetria.
@@ -357,7 +357,7 @@ func runIngestMode(ingestURL string) {
 		}
 	}
 
-	// Trace-agent (Datadog-style): resume os spans NA BORDA. O corpo cru segue
+	// Trace-agent: resume os spans NA BORDA. O corpo cru segue
 	// sendo repassado normalmente; em paralelo, cada span é higienizado e
 	// contado num DDSketch por bucket de 10s, e o resumo (hits/errors/latência
 	// exatos) vai pro /api/ingest/v1/apm/stats. Não-destrutivo: nada de span se
@@ -370,7 +370,7 @@ func runIngestMode(ingestURL string) {
 			apmConc.Add(s)
 		}
 	})
-	// Sampler (igual ao Datadog): guarda todo erro + todo trace lento (>2s) +
+	// Sampler: guarda todo erro + todo trace lento (>2s) +
 	// uma amostra de 10% dos normais; o resto NÃO é encaminhado em detalhe. As
 	// stats acima já contam 100%, então os números seguem exatos.
 	apmSampler := sampler.New(0.10, 2*time.Second)
@@ -408,7 +408,7 @@ func runIngestMode(ingestURL string) {
 		go startEbpfTracer(ctx, log, ebpfStatsSink{conc: apmConc}, out, hostID)
 	}
 
-	// Coleta de logs (toggle, estilo Datadog): taila /var/log/pods (CRI) e
+	// Coleta opcional de logs: taila /var/log/pods (CRI) e
 	// encaminha cada linha como OTLP JSON + Bearer pro gateway /api/ingest/v1/logs.
 	if getenvOr("ISPWATCH_LOGS_ENABLED", "0") == "1" {
 		startIngestPodLogs(ctx, log, exporter, hostID)
@@ -433,7 +433,7 @@ func runIngestMode(ingestURL string) {
 		log.Debug("checagens agendadas desativadas (set ISPWATCH_CHECKS_ENABLED=1 pra habilitar)")
 	}
 
-	// Receiver OTLP/HTTP: bind NÃO-FATAL (estilo Datadog). Se a porta está
+	// Receiver OTLP/HTTP: bind NÃO-FATAL. Se a porta está
 	// ocupada (outro processo no host), o agente loga e SEGUE — métricas, logs,
 	// checks e o node-system continuam. Um receptor opcional não derruba o
 	// processo. Desliga de propósito com ISPWATCH_OTLP_HTTP_DISABLE=1; muda de
@@ -471,8 +471,8 @@ func startIngestPodLogs(ctx context.Context, log *slog.Logger, exporter *otlp.In
 	cursorPath := getenvOr("ISPWATCH_LOGS_CURSOR_PATH", "/var/lib/ispwatch-collector/log_cursors.json")
 	tailer := logs.NewCRILogsTailer(logsExp, cursorPath, hostID, exclude, log)
 
-	// Unified service tagging (igual Datadog): o service do log vem da label
-	// tags.datadoghq.com/service do pod (lida do kubelet /pods), pra bater com o
+	// Service tagging unificado: o service do log vem das labels do pod
+	// (lidas do kubelet /pods), para coincidir com o
 	// service dos traces. Sem resolver/label, o tailer usa o nome do workload.
 	kubeletURL := getenvOr("ISPWATCH_KUBELET_URL", "https://localhost:10250")
 	tokenFile := getenvOr("ISPWATCH_KUBELET_TOKEN_FILE", "/var/run/secrets/kubernetes.io/serviceaccount/token")
@@ -483,7 +483,7 @@ func startIngestPodLogs(ctx context.Context, log *slog.Logger, exporter *otlp.In
 	} else {
 		go resolver.Run(ctx)
 		tailer.SetServiceResolver(resolver)
-		log.Info("logs: unified service tagging ativo (label tags.datadoghq.com/service)")
+		log.Info("logs: service tagging unificado ativo")
 	}
 
 	go logsExp.Run(ctx)

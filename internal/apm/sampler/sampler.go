@@ -1,5 +1,5 @@
 // Package sampler decide quais traces guardar em DETALHE (spans crus), igual ao
-// trace-agent do Datadog: mantém tudo que é erro, tudo que é lento, e uma
+// mantém tudo que é erro, tudo que é lento e uma
 // AMOSTRA determinística dos normais — descarta o resto.
 //
 // Importante: as ESTATÍSTICAS (concentrator) são contadas ANTES do sampler, com

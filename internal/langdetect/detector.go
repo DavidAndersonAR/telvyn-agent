@@ -1,5 +1,5 @@
 // Package langdetect detecta a LINGUAGEM de cada pod do nó pelo processo que
-// está rodando (estilo Datadog process language detection) e reporta por
+// está rodando por inspeção de processos e reporta por
 // (namespace, pod) pro gateway. O backend usa isso pra decidir o que é
 // instrumentável (ex: Java → mostra o botão de auto-injeção do webhook),
 // mesmo num app caixa-preta que ainda não emite telemetria.

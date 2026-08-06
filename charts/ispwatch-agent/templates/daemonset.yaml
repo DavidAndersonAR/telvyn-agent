@@ -63,7 +63,7 @@ spec:
                   fieldPath: metadata.namespace
             - name: ISPWATCH_CLUSTER
               value: {{ .Values.clusterName | quote }}
-            # Modo ingest certless (Datadog-style): manda OTLP+Bearer pro
+            # Modo ingest certless: manda OTLP com token Bearer pro
             # gateway /api/ingest/v1. Sem enrollment, sem mTLS, sem cert.
             - name: ISPWATCH_INGEST_URL
               value: {{ required "values.ingest.url é obrigatório (modo certless)" .Values.ingest.url | quote }}

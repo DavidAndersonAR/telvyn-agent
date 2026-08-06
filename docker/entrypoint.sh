@@ -28,7 +28,7 @@ for a in "$@"; do
   fi
 done
 
-# Modo ingest certless (Datadog-style): manda OTLP+Bearer pro gateway. O binário
+# Modo ingest certless: manda OTLP com token Bearer pro gateway. O binário
 # detecta ISPWATCH_INGEST_URL e roda esse modo (e aborta se estiver ausente).
 : "${ISPWATCH_INGEST_URL:?Missing ISPWATCH_INGEST_URL (certless ingest mode)}"
 echo "entrypoint: ingest mode (certless OTLP -> gateway)" >&2

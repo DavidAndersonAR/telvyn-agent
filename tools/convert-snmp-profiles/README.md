@@ -1,11 +1,11 @@
-# convert-datadog-profiles
+# convert-snmp-profiles
 
 Gera o catálogo de SNMP profiles do agente (`internal/snmp/profiles/*.yaml`) a partir
-da biblioteca oficial open-source do Datadog (NDM), convertida para o **nosso formato**.
+de um catálogo NDM open source, convertido para o formato do Telvyn Agent.
 
 ## Por que existe
 
-Os profiles do Datadog **não são drop-in** no nosso agente:
+Os profiles de origem **não são drop-in** no nosso agente:
 
 - usam **herança** (`extends: [_base.yaml, _generic-if.yaml, ...]`) — um device típico
   (ex. `cisco-catalyst`) tem **zero** métrica inline; tudo vem dos arquivos-base. Nosso
@@ -23,7 +23,7 @@ interface (tráfego/status) acendem sozinhos em qualquer fabricante.
 ```bash
 # do diretório deste README:
 python3 -m venv .venv && ./.venv/bin/pip install pyyaml
-./.venv/bin/python convert.py datadog-source ../../internal/snmp/profiles
+./.venv/bin/python convert.py upstream-source ../../internal/snmp/profiles
 ```
 
 O conversor:
@@ -31,15 +31,14 @@ O conversor:
 - normaliza IF-MIB (rótulo `interface_name`/`interface_alias` in-subtree);
 - descarta o que o agente não usa (conta no relatório final);
 - aplica a **política de conflito**: os prefixos em `DEFAULT_OWN` pertencem aos nossos
-  profiles hand-curated e são removidos dos do Datadog (o profile do DD é descartado se
+  profiles hand-curated e são removidos do catálogo importado (o profile é descartado se
   ficar sem sysObjectID) — a nossa curadoria vence o empate exato, deterministicamente.
 
 ## Fonte
 
-`datadog-source/` é uma cópia vendorizada de
-`DataDog/integrations-core` @ `6e9d2c5fd681d34d7f862e5fbb396792e653e771`,
-path `snmp/datadog_checks/snmp/data/default_profiles/` (239 arquivos = 65 base + 174
-device). Licença **BSD-3-Clause** — ver `datadog-source/LICENSE` e `NOTICE.md`.
+`upstream-source/` contém a cópia vendorizada usada para gerar o catálogo (239 arquivos:
+65 bases e 174 devices). Origem, revisão, copyright e licença BSD-3-Clause estão
+documentados em `../../THIRD_PARTY_NOTICES.md`.
 
 ## Categorias geradas
 
@@ -47,7 +46,7 @@ device). Licença **BSD-3-Clause** — ver `datadog-source/LICENSE` e `NOTICE.md
 - **manual-only**: métrica sem sysObjectID (ex. `brocade`, `a10`) — o operador escolhe
   pelo nome; nunca auto-matcha.
 - **só-identificação**: sysObjectID sem métrica (ex. `tripplite`, `zebra-printer`) —
-  reconhece o aparelho, fiel ao Datadog (que também só identifica esses).
+  reconhece o aparelho sem iniciar coleta automática.
 
 Nossos 8 hand-curated (`cisco-ios`, `cisco-nx-os`, `juniper-junos`, `mikrotik-routeros`,
 `mikrotik-ccr1036`, `linux-net-snmp`, `fiberhome-an5516`, `generic-snmpv2`) **não** são

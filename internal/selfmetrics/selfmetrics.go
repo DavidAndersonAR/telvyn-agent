@@ -8,9 +8,9 @@
 //
 // Identification: every metric emitted here carries tag {@code __self__=true}.
 // The Quarkus VmRemoteWriter intercepts that tag and:
-//   1) prefixes __name__ with `agent_host_metric_`
-//   2) replaces host_id label with collector_id
-//   3) strips __self__ from the label set
+//  1. prefixes __name__ with `agent_host_metric_`
+//  2. replaces host_id label with collector_id
+//  3. strips __self__ from the label set
 //
 // This gives operators a way to monitor the collector itself (CPU pressure,
 // memory leaks, swap thrashing) without mixing those series into the host
@@ -41,7 +41,7 @@ import (
 const SelfTag = "__self__"
 
 // DefaultInterval is the cadence used when caller passes 0. 30s mirrors the
-// Datadog Agent default for `datadog.agent.running` family.
+// Intervalo padrão das métricas internas de saúde do agent.
 const DefaultInterval = 30 * time.Second
 
 // Start launches a goroutine that, every `interval`, runs a linux.system

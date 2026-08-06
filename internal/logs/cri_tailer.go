@@ -4,10 +4,14 @@
 // grava no host e deriva namespace/pod/container direto do path.
 //
 // Layout CRI:
-//   /var/log/pods/<namespace>_<pod>_<uid>/<container>/<N>.log
+//
+//	/var/log/pods/<namespace>_<pod>_<uid>/<container>/<N>.log
+//
 // onde <N> é o restart count (0.log, 1.log, ...). Tailamos sempre o N mais
 // alto (instância ativa). Cada linha do arquivo:
-//   <rfc3339nano> <stdout|stderr> <F|P> <mensagem>
+//
+//	<rfc3339nano> <stdout|stderr> <F|P> <mensagem>
+//
 // F = linha completa, P = parcial (kubelet quebra linhas > ~16KB). Linhas P
 // são acumuladas até o próximo F.
 //
@@ -17,7 +21,7 @@
 //     dá Push no LogsExporter (modo ingest → OTLP JSON + Bearer).
 //   - Cursor (offset+inode) persistido pra sobreviver restart sem re-ler tudo.
 //
-// Arquivo NOVO (sem cursor) começa do EOF — só logs novos, igual o Datadog
+// Arquivo NOVO (sem cursor) começa do EOF — somente logs novos
 // agent. Cursor existente resume de onde parou.
 //
 // Ativado via ISPWATCH_LOGS_ENABLED=1 no modo ingest.
@@ -64,7 +68,7 @@ const (
 )
 
 // PodServiceResolver resolve o service "oficial" de um pod pelas labels (unified
-// service tagging, igual Datadog). Implementado pelo ebpf.PodResolverImpl. Sem
+// service tagging unificado). Implementado pelo ebpf.PodResolverImpl. Sem
 // resolver ou sem label, o tailer cai no nome derivado do workload.
 type PodServiceResolver interface {
 	ServiceForPod(namespace, pod string) (service, version, env string, ok bool)
@@ -216,7 +220,7 @@ func (t *CRILogsTailer) discover() {
 // runReader taila um arquivo de log de container até `done` fechar.
 func (t *CRILogsTailer) runReader(path string, meta criFileInfo, done chan struct{}) {
 	// service do log: prioriza a label do pod (unified service tagging — mesmo
-	// service dos traces, igual Datadog); fallback pro nome derivado do workload.
+	// service dos traces); fallback pro nome derivado do workload.
 	// Re-resolvido a cada poll: o resolver popula async (kubelet /pods a cada 30s),
 	// então um reader que começou ANTES do 1º refresh corrige o service sozinho
 	// assim que a label aparece — sem ficar preso no fallback nem reiniciar.
@@ -533,9 +537,11 @@ func inodeOf(fi os.FileInfo) uint64 {
 }
 
 // deriveK8sServiceName tenta extrair o nome do "dono" a partir do nome do pod:
-//   backend-8b9fdc855-7vpm2 → backend   (Deployment: <name>-<rs>-<pod>)
-//   postgres-0              → postgres  (StatefulSet: <name>-<ordinal>)
-//   telvyn-agent-xk2p9      → telvyn-agent (DaemonSet/RS: 1 sufixo)
+//
+//	backend-8b9fdc855-7vpm2 → backend   (Deployment: <name>-<rs>-<pod>)
+//	postgres-0              → postgres  (StatefulSet: <name>-<ordinal>)
+//	telvyn-agent-xk2p9      → telvyn-agent (DaemonSet/RS: 1 sufixo)
+//
 // Heurística — service.name é secundário (a view de logs de pod filtra por
 // namespace+pod); serve só pra agrupar logs por serviço na UI.
 func deriveK8sServiceName(pod string) string {

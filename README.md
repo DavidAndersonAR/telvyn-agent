@@ -2,7 +2,7 @@
 
 Agente de monitoramento do [Telvyn](https://telvyn.com) — coleta métricas,
 logs e traces L7 (eBPF) do host/cluster e envia via HTTP/OTLP com um ingest
-token (certless, estilo Datadog) pro servidor Telvyn. Um agent por host.
+token Bearer (certless) para o servidor Telvyn. Um agent por host.
 
 ## Kubernetes (DaemonSet)
 

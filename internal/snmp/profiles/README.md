@@ -16,7 +16,7 @@ internal/snmp/profiles/
 ├── linux-net-snmp.yaml
 ├── mikrotik-ccr1036.yaml
 ├── mikrotik-routeros.yaml
-├── cisco-catalyst.yaml       ← ~167 derivados do Datadog (GERADOS — não editar à mão)
+├── cisco-catalyst.yaml       ← ~167 derivados de catálogo NDM (GERADOS)
 ├── fortinet-fortigate.yaml
 ├── aruba-switch.yaml
 ├── ... (~250 no total)
@@ -24,25 +24,24 @@ internal/snmp/profiles/
 └── README.md                 ← este arquivo
 ```
 
-**Por que arquivo e não banco?** Profiles são *configuração de produto*
-(igual aos profiles do Datadog), não dado de tenant. Vão
+**Por que arquivo e não banco?** Profiles são *configuração de produto*,
+não dados de tenant. Vão
 junto com o release do collector, versionam via git, e o operador final
 só **seleciona** o profile pela UI/API — não edita OID.
 
 ---
 
-## ⚠️ A maioria do catálogo é GERADA (biblioteca Datadog)
+## ⚠️ A maioria do catálogo é GERADA
 
-A maior parte destes YAMLs é **derivada da biblioteca oficial de NDM profiles do
-Datadog** (BSD-3), convertida em build-time por
-[`tools/convert-datadog-profiles/`](../../../tools/convert-datadog-profiles/). Esses
-arquivos têm o cabeçalho `# Convertido da biblioteca oficial do Datadog` — **não edite à
-mão** (a próxima regeneração sobrescreve). Para atualizar a biblioteca, mexa na fonte
-vendorizada e rode o conversor (ver o README de lá).
+A maior parte destes YAMLs é derivada de um catálogo NDM open source sob BSD-3-Clause,
+convertido em build-time por
+[`tools/convert-snmp-profiles/`](../../../tools/convert-snmp-profiles/). Esses arquivos
+são gerados — **não edite à mão** (a próxima regeneração sobrescreve). Origem,
+copyright e licença estão em [`THIRD_PARTY_NOTICES.md`](../../../THIRD_PARTY_NOTICES.md).
 
 Os **8 hand-curated** acima são obra própria, mantidos à mão, e o conversor os respeita
 (política de conflito: eles são donos do seu prefixo de sysObjectID). Para adicionar um
-vendor **à mão** (fora da biblioteca Datadog), siga o passo-a-passo abaixo e use um nome
+vendor **à mão** (fora do catálogo importado), siga o passo-a-passo abaixo e use um nome
 que não colida com os gerados.
 
 ---
@@ -168,7 +167,7 @@ correspondente.
 ## Onde puxar OIDs prontos
 
 1. **MIB browser do vendor** — sempre o mais correto (Cisco MIB Locator, MikroTik wiki, Juniper Knowledge Base).
-2. **Datadog SNMP profiles** — `github.com/DataDog/integrations-core/tree/master/snmp/datadog_checks/snmp/data/default_profiles` (mesma estrutura YAML, fonte de muita coisa que está aqui).
+2. **Catálogo NDM importado** — consulte origem e licença em `THIRD_PARTY_NOTICES.md`.
 3. **Observium / LibreNMS** — `mibs/<vendor>/` (texto MIB tradicional, precisa converter).
 4. **Test rápido**: `snmpwalk -v2c -c public <host> <oid>` antes de adicionar.
 

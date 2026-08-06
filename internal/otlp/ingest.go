@@ -1,4 +1,4 @@
-// ingest.go — modo "Datadog-style": manda telemetria pro gateway OTLP do
+// ingest.go — modo certless: manda telemetria pro gateway OTLP do
 // Telvyn (/api/ingest/v1) autenticando com um Bearer token reusável (iwI_),
 // sobre HTTP simples. SEM mTLS, sem cert por agent, sem enrollment.
 //
@@ -8,7 +8,7 @@
 //   - PostMetrics: converte as métricas nativas do host (CPU/mem/disco/rede
 //     dos self-checks) pra OTLP metrics e manda pro /metrics.
 //
-// É o equivalente exato do modelo do Datadog agent: API key + HTTPS, o
+// Usa token Bearer + HTTPS; o
 // servidor identifica o tenant pelo token.
 
 package otlp
@@ -394,7 +394,7 @@ func (e *IngestExporter) PostLogs(ctx context.Context, records []LogRecord) erro
 }
 
 // PostDeviceMetadata envia a identidade do device (metadata.device) pro gateway,
-// que faz upsert no noc_device. Fiel ao Datadog (metadata.device).
+// que faz upsert no noc_device usando metadata.device.
 func (e *IngestExporter) PostDeviceMetadata(ctx context.Context, hostID string, device map[string]string) error {
 	if len(device) == 0 {
 		return nil

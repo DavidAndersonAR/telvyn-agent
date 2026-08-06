@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-Conversor: profiles SNMP do Datadog (integrations-core) -> formato Telvyn/ISPWatch.
+Conversor: catálogo de profiles SNMP NDM -> formato Telvyn.
 
 - Resolve `extends` recursivamente (guarda de ciclo + dedup de bloco de metric).
 - Reescreve chaves MAIUSCULAS (OID/MIB) -> minusculas do nosso agente.
 - IF-MIB: normaliza rótulo de interface (interface_name/interface_alias in-subtree),
   igual aos nossos profiles hand-curated (resolve o problema de tag cross-table).
 - Politica de conflito: os prefixos em --own-oids pertencem aos nossos profiles
-  hand-curated; sao removidos dos profiles do Datadog (e o profile do DD e' descartado
+  hand-curated; sao removidos dos profiles importados (e o profile e' descartado
   se ficar sem sysObjectID) -> nossa curadoria vence o empate exato, deterministico.
 - Descarta (com contagem) o que o agente Go nao modela: metric_type, mapping,
   index-tags, constant_value_one, tag por tabela cruzada nao-IF.
-- Emite YAML no nosso estilo, com cabecalho de atribuicao (BSD-3 Datadog).
+- Emite YAML no formato Telvyn, com referência ao aviso jurídico consolidado.
 
 Uso:
   convert.py <dd_default_profiles_dir> <out_dir> [--only n1,n2] [--verbose]
@@ -25,12 +25,12 @@ DEFAULT_OWN = [
     "1.3.6.1.4.1.9.12.3.1.3",     # cisco-nx-os
     "1.3.6.1.4.1.2636.1.1.1",     # juniper-junos
     # mikrotik-routeros/ccr1036 (nossos) REMOVIDOS: os OIDs de saúde estavam errados
-    # (temp lia power/corrente/freq). Adotamos o mikrotik-router do Datadog (OIDs certos).
+    # (temp lia power/corrente/freq). O catálogo importado fornece os OIDs corretos.
     "1.3.6.1.4.1.8072.3.2.10",    # linux-net-snmp
     "1.3.6.1.4.1.5875",           # fiberhome-an5516
 ]
 
-# Profiles do DD com sysObjectID amplo demais (catch-all): mantemos no catalogo
+# Profiles importados com sysObjectID amplo demais (catch-all): mantemos no catalogo
 # mas como manual-only (auto_detect:false), pra nao roubar o auto-match. O nosso
 # generic-snmpv2 continua sendo o fallback automatico (via codigo do agente).
 FORCE_MANUAL = {"generic-device"}   # 1.3.6.1.4.* = arvore enterprises inteira
@@ -67,7 +67,7 @@ def resolve(profiles_dir, name, seen):
         out["metrics"] += sub["metrics"]; out["metric_tags"] += sub["metric_tags"]
         deep_merge(out["metadata"], sub["metadata"]); out["device"].update(sub["device"])
         # NAO herdamos `sysobjectid` via extends — DE PROPOSITO. Isto espelha o
-        # Datadog: `extends` compoe metrics/tags/metadata; o auto-match casa cada
+        # `extends` compoe metrics/tags/metadata; o auto-match casa cada
         # profile pelo SEU proprio sysObjectID. Ex.: checkpoint-firewall so faz
         # `extends: checkpoint.yaml`; o device (2620.1.*) e coberto pelo profile
         # `checkpoint` (que tem o sysObjectID), e checkpoint-firewall fica manual-only.
@@ -148,7 +148,7 @@ def conv_metric(m):
         if not toid or not syms: DROP["empty_metric"] += 1; return None
         out = OD([("mib", mib),
                   ("table", OD([("oid", toid), ("name", tname)])), ("symbols", syms)])
-        canon = if_tags(toid)  # IF-MIB: rótulo canônico (ignora tags cross-table do DD)
+        canon = if_tags(toid)  # IF-MIB: rótulo canônico (ignora tags cross-table)
         if canon is not None:
             out["metric_tags"] = canon
         else:
@@ -233,10 +233,10 @@ class Dumper(yaml.SafeDumper): pass
 Dumper.add_representer(OD, lambda d, data: d.represent_dict(data.items()))
 
 HEADER = ("# Telvyn SNMP profile — {name}\n"
-          "# Convertido da biblioteca oficial do Datadog (integrations-core, BSD-3-Clause).\n"
-          "# Fonte: snmp/datadog_checks/snmp/data/default_profiles/{name}.yaml\n"
+          "# Perfil derivado de catálogo NDM open source (BSD-3-Clause).\n"
+          "# Origem, copyright e licença: THIRD_PARTY_NOTICES.md.\n"
           "# `extends` resolvido em build; recursos nao suportados pelo agente descartados.\n"
-          "# NAO editar a mao — regenerar via tools/convert-datadog-profiles/convert.py.\n\n")
+          "# NAO editar a mao — regenerar via tools/convert-snmp-profiles/convert.py.\n\n")
 
 def emit(prof, name):
     body = yaml.dump(prof, Dumper=Dumper, default_flow_style=False,
@@ -268,12 +268,12 @@ def main():
             print(f"  {d:34s} [{s['cat']:6s}] metrics={s['metrics']:3d} sysoids={s['sysoids']:4d} strip={s['stripped']}")
     gerados = len(cats["auto"]) + len(cats["manual"]) + len(cats["so_id"])
     print(f"\n== RESULTADO ==")
-    print(f"devices no DD: {len(devices)}  gerados: {gerados}")
+    print(f"devices na fonte: {len(devices)}  gerados: {gerados}")
     print(f"  auto-match (id+metrica): {len(cats['auto'])}")
     print(f"  manual-only (metrica s/ id): {len(cats['manual'])}  -> {', '.join(cats['manual'])}")
     print(f"  so-identificacao (id s/ metrica): {len(cats['so_id'])}  -> {', '.join(cats['so_id'])}")
     print(f"  excluidos(conflito c/ nossa curadoria): {len(excl['conflito'])}  -> {', '.join(excl['conflito'])}")
-    print(f"  excluidos(vazio, fiel ao DD): {len(excl['vazio'])}  -> {', '.join(excl['vazio'])}")
+    print(f"  excluidos(vazio na fonte): {len(excl['vazio'])}  -> {', '.join(excl['vazio'])}")
     print(f"features descartadas (esperado): {dict(DROP)}")
 
 if __name__ == "__main__":
