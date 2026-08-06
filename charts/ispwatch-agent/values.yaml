@@ -14,7 +14,7 @@ ingest:
 clusterName: "default"
 
 image:
-  repository: ghcr.io/davidandersonar/telvyn-agent
+  repository: ghcr.io/telvynmonitoring/telvyn-agent
   # Vazio = usa o appVersion do chart (setado pelo CI = a tag publicada).
   tag: ""
   pullPolicy: IfNotPresent

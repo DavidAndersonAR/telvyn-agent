@@ -14,7 +14,7 @@ Instala um pod por nó. O comando exato (com seu token e a URL do seu portal)
 # Autenticação certless: só a URL do portal + o ingest token (iwI_..., gerado
 # no painel em Monitores → Kubernetes). Sem cert, sem enrollment.
 helm install telvyn-agent \
-  oci://ghcr.io/davidandersonar/charts/ispwatch-agent \
+  oci://ghcr.io/telvynmonitoring/charts/ispwatch-agent \
   --namespace telvyn --create-namespace \
   --set ingest.url='https://<SEU_PORTAL>' \
   --set ingest.token='<SEU_INGEST_TOKEN>' \
@@ -45,7 +45,7 @@ docker run -d --name telvyn-agent --restart unless-stopped \
   -e ISPWATCH_INGEST_TOKEN='<SEU_INGEST_TOKEN>' \
   -e ISPWATCH_AGENT_KIND=docker \
   -e ISPWATCH_NODE_NAME="$(hostname)" \
-  ghcr.io/davidandersonar/telvyn-agent:latest
+  ghcr.io/telvynmonitoring/telvyn-agent:latest
 ```
 
 Aponte as apps para `OTEL_EXPORTER_OTLP_ENDPOINT=http://<host>:4318`
@@ -56,7 +56,7 @@ métricas do próprio container.
 ## Linux (Docker / systemd)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/DavidAndersonAR/telvyn-agent/main/packaging/install.sh \
+curl -fsSL https://raw.githubusercontent.com/TelvynMonitoring/telvyn-agent/main/packaging/install.sh \
   | ISPWATCH_INGEST_URL='https://<SEU_PORTAL>' ISPWATCH_INGEST_TOKEN='<SEU_INGEST_TOKEN>' sudo -E bash
 ```
 
@@ -64,9 +64,9 @@ curl -fsSL https://raw.githubusercontent.com/DavidAndersonAR/telvyn-agent/main/p
 
 | Artefato | Local |
 |----------|-------|
-| Imagem   | `ghcr.io/davidandersonar/telvyn-agent:<versão>` (multi-arch amd64/arm64) |
-| Chart    | `oci://ghcr.io/davidandersonar/charts/ispwatch-agent` |
-| Install  | `https://raw.githubusercontent.com/DavidAndersonAR/telvyn-agent/main/packaging/install.sh` |
+| Imagem   | `ghcr.io/telvynmonitoring/telvyn-agent:<versão>` (multi-arch amd64/arm64) |
+| Chart    | `oci://ghcr.io/telvynmonitoring/charts/ispwatch-agent` |
+| Install  | `https://raw.githubusercontent.com/TelvynMonitoring/telvyn-agent/main/packaging/install.sh` |
 
 Publicados pelo workflow [`publish.yml`](.github/workflows/publish.yml) a cada tag `v*`.
 

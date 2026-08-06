@@ -31,7 +31,7 @@ ISPWATCH_AGENT_KIND="${ISPWATCH_AGENT_KIND:-linux}"
 # config e toggles do operador). Não exige INGEST_URL/TOKEN (já estão no env file).
 # Comando pronto: curl -fsSL <URL> | ISPWATCH_UPGRADE=true sudo -E bash
 ISPWATCH_UPGRADE="${ISPWATCH_UPGRADE:-false}"
-GITHUB_REPO="${ISPWATCH_GITHUB_REPO:-DavidAndersonAR/telvyn-agent}"
+GITHUB_REPO="${ISPWATCH_GITHUB_REPO:-TelvynMonitoring/telvyn-agent}"
 # ISPWATCH_DOWNLOAD_BASE permite redirecionar para mirror/dev local sem
 # editar o script (usado pelos smoke tests e por VMs de dev).
 ISPWATCH_DOWNLOAD_BASE="${ISPWATCH_DOWNLOAD_BASE:-https://github.com/${GITHUB_REPO}/releases/download}"
