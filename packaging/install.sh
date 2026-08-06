@@ -290,6 +290,7 @@ umask 077
     echo "ISPWATCH_INGEST_URL=${ISPWATCH_INGEST_URL}"
     echo "ISPWATCH_INGEST_TOKEN=${ISPWATCH_INGEST_TOKEN}"
     echo "ISPWATCH_AGENT_KIND=${ISPWATCH_AGENT_KIND}"
+    echo "ISPWATCH_INSTALL_MODE=linux"
     echo "ISPWATCH_NODE_NAME=${HOSTNAME_VALUE}"
     # Cursor dos logs (se ligados) fica sob o dir gravável do serviço; o default
     # do binário (/var/lib/ispwatch-collector) cai fora do ReadWritePaths da unit.

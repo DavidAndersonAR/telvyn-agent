@@ -26,10 +26,13 @@ func TestRegisterCollectorReportsBinaryVersion(t *testing.T) {
 
 	exporter := NewIngestExporter(server.URL, "iwI_test", "host", "cluster", "v0.4.4",
 		slog.New(slog.NewTextHandler(io.Discard, nil)))
-	if _, _, err := exporter.RegisterCollector(context.Background(), "poller", []string{"metrics"}); err != nil {
+	if _, _, err := exporter.RegisterCollector(context.Background(), "poller", []string{"metrics"}, "docker"); err != nil {
 		t.Fatalf("RegisterCollector: %v", err)
 	}
 	if got := payload["agent_version"]; got != "v0.4.4" {
 		t.Fatalf("agent_version = %v, want v0.4.4", got)
+	}
+	if got := payload["install_mode"]; got != "docker" {
+		t.Fatalf("install_mode = %v, want docker", got)
 	}
 }
