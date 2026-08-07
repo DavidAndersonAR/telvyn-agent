@@ -86,6 +86,17 @@ RUN apk add --no-cache --virtual .trivy-build wget tar \
 COPY --from=build /out/collector /usr/local/bin/collector
 COPY --chmod=755 docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 
+# O check icmp.ping abre socket ICMP cru (pinger.SetPrivileged(true)) e exige
+# CAP_NET_RAW EFETIVO. Como a imagem roda com usuário não-root, a capability
+# concedida pelo runtime (`--cap-add NET_RAW` / `capabilities.add`) entra só no
+# bounding set e NÃO chega ao processo — medido: CapPrm/CapEff = 0. Marcar o
+# binário faz o kernel entregá-la no exec. Sem isso o check falha em loop com
+# "listen ip4:icmp: socket: operation not permitted". No systemd o equivalente
+# já existe (AmbientCapabilities no unit) — isto alinha o Docker/k8s.
+RUN apk add --no-cache --virtual .cap-build libcap \
+ && setcap cap_net_raw+eip /usr/local/bin/collector \
+ && apk del .cap-build
+
 USER ispwatch:ispwatch
 
 # install-collector.sh mounts certs read-only at this path.

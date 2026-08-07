@@ -91,6 +91,12 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
+              # O binário do agent é marcado com CAP_NET_RAW (necessário pro
+              # check icmp.ping do DaemonSet). O kernel RECUSA o exec de um
+              # binário marcado quando a capability não está disponível — sem
+              # esta linha o pod não sobe ("exec: operation not permitted").
+              # O cluster-agent não abre socket cru; isto é só pra executar.
+              add: ["NET_RAW"]
           env:
             # Certless (mesmo gateway do DaemonSet): OTLP+Bearer, sem mTLS.
             - name: ISPWATCH_INGEST_URL
