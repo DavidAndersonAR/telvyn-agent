@@ -554,6 +554,18 @@ func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.Ing
 	runtime.SetWorkerPools(5, 10)
 	runtime.SetJitter(1000)
 	runtime.SetTagger(checks.NewTagger(10000, log)) // era config.DefaultTaggerBudget
+	// Motivo da falha vai pro backend, não só pro log daqui: sem isto a tela do
+	// equipamento mostra "warning" e o operador precisa de SSH nesta máquina.
+	// Só dispara na MUDANÇA de estado, então é barato.
+	runtime.SetStatusReporter(func(checkID string, ok bool, message string) {
+		go func() {
+			postCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+			defer cancel()
+			if err := exporter.PostCheckStatus(postCtx, checkID, ok, message); err != nil {
+				log.Debug("check status não reportado", "check_id", checkID, "err", err)
+			}
+		}()
+	})
 
 	pollSecs := 15
 	if v := strings.TrimSpace(getenvOr("ISPWATCH_CHECKS_POLL_SECONDS", "")); v != "" {

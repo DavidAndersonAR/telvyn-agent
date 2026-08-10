@@ -73,7 +73,19 @@ type Runtime struct {
 	// via SetTagger durante o startup do main; nil em testes legados — emit
 	// faz defensive nil-check para preservar comportamento Phase 2.
 	tagger *Tagger
+
+	// statusReporter leva o MOTIVO da falha pro backend. Até então o motivo
+	// morria no log local: a tela do equipamento mostrava "warning" e quem
+	// quisesse saber por quê precisava de SSH na máquina do cliente. nil =
+	// ninguém reporta (testes, modo mTLS legado).
+	statusReporter StatusReporter
 }
+
+// StatusReporter recebe o estado de um check quando ele MUDA (passou a falhar,
+// voltou a funcionar, ou a mensagem de erro mudou). Não é chamado a cada tick:
+// um agente com 50 checks quebrados viraria 50 POSTs por minuto sem novidade
+// nenhuma — "desde quando" o backend calcula sozinho.
+type StatusReporter func(checkID string, ok bool, message string)
 
 // runningCheck guarda o estado de uma check rodando: cancel pra parar e wg
 // pra esperar conclusão graciosa.
@@ -373,6 +385,19 @@ func (r *Runtime) runCheckCore(ctx context.Context, c Check) {
 		}
 	}
 
+	// Estado do último reporte deste check. Fica na closure porque cada check
+	// tem sua própria goroutine — sem lock nem mapa compartilhado.
+	var reportadoOK *bool
+	var reportadaMsg string
+	reportar := func(ok bool, msg string) {
+		if reportadoOK != nil && *reportadoOK == ok && reportadaMsg == msg {
+			return // nada mudou: não repete
+		}
+		v := ok
+		reportadoOK, reportadaMsg = &v, msg
+		r.reportStatus(c.ID(), ok, msg)
+	}
+
 	runOnce := func() {
 		if consecutiveErrors.Load() >= circuitBreakThreshold {
 			clog.Debug("circuit-break active, skipping tick")
@@ -399,15 +424,18 @@ func (r *Runtime) runCheckCore(ctx context.Context, c Check) {
 			n := consecutiveErrors.Add(1)
 			clog.Warn("check run error", "err", err, "consecutive", n, "run_timeout", runTimeout.String())
 			r.emitCheckError(c)
+			reportar(false, err.Error())
 			return
 		}
 		if runErr == context.DeadlineExceeded {
 			n := consecutiveErrors.Add(1)
 			clog.Warn("check run exceeded timeout", "consecutive", n, "run_timeout", runTimeout.String())
 			r.emitCheckError(c)
+			reportar(false, "sem resposta em "+runTimeout.String())
 			return
 		}
 		consecutiveErrors.Store(0)
+		reportar(true, "")
 		if len(metrics) > 0 {
 			r.emit(metrics)
 		}
@@ -448,6 +476,24 @@ func (r *Runtime) runTimeout(interval time.Duration) time.Duration {
 		return maxTimeout
 	}
 	return timeout
+}
+
+// SetStatusReporter instala quem leva o motivo da falha pro backend. Idempotente;
+// nil reverte pra ninguém. Setar no startup, antes de Reload/ApplyDelta.
+func (r *Runtime) SetStatusReporter(f StatusReporter) {
+	r.mu.Lock()
+	r.statusReporter = f
+	r.mu.Unlock()
+}
+
+func (r *Runtime) reportStatus(checkID string, ok bool, message string) {
+	r.mu.Lock()
+	f := r.statusReporter
+	r.mu.Unlock()
+	if f == nil {
+		return
+	}
+	f(checkID, ok, message)
 }
 
 func (r *Runtime) emitCheckError(c Check) {

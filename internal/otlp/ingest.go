@@ -393,6 +393,29 @@ func (e *IngestExporter) PostLogs(ctx context.Context, records []LogRecord) erro
 	return e.PostRaw(ctx, "logs", "application/json", body)
 }
 
+// PostCheckStatus envia POR QUE um check falhou (ou que voltou a funcionar).
+//
+// Antes disto o motivo só existia no log desta máquina: o agente publicava um
+// contador ispwatch.check.errors{check_id} e a tela do equipamento mostrava
+// "warning" sem dizer nada. Agora o backend grava a mensagem em
+// noc_hostcheck.last_error e a página do equipamento explica sozinha.
+//
+// Chamado só na MUDANÇA de estado (ver checks.StatusReporter), não a cada tick.
+func (e *IngestExporter) PostCheckStatus(ctx context.Context, checkID string, ok bool, message string) error {
+	if strings.TrimSpace(checkID) == "" {
+		return nil
+	}
+	status := map[string]any{"check_id": checkID, "ok": ok}
+	if !ok && message != "" {
+		status["message"] = message
+	}
+	body, err := json.Marshal(map[string]any{"statuses": []any{status}})
+	if err != nil {
+		return err
+	}
+	return e.PostRaw(ctx, "check-status", "application/json", body)
+}
+
 // PostDeviceMetadata envia a identidade do device (metadata.device) pro gateway,
 // que faz upsert no noc_device usando metadata.device.
 func (e *IngestExporter) PostDeviceMetadata(ctx context.Context, hostID string, device map[string]string) error {
