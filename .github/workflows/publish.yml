@@ -35,9 +35,31 @@ jobs:
           if ! printf '%s' "$v" | grep -Eq '^[0-9A-Za-z._-]+$'; then
             echo "::error::versão '$v' inválida"; exit 1
           fi
+          # Tag de SÉRIE, no modelo do Datadog (`agent:7`): uma tag móvel que
+          # anda dentro da faixa compatível, pra quem quer correção sem pular
+          # de major sem querer. Em 0.x quem marca compatibilidade é o MINOR
+          # (0.4.8 → série "0.4"), não o major.
+          # `latest` continua saindo, mas é a que leva pra qualquer coisa
+          # publicada — não é a que a gente recomenda em instalação.
+          series=""
+          if printf '%s' "$v" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            major="${v%%.*}"; rest="${v#*.}"; minor="${rest%%.*}"
+            if [ "$major" = "0" ]; then series="0.$minor"; else series="$major"; fi
+          fi
+          # A lista de tags sai pronta daqui em vez de montada em expressão do
+          # Actions: sem série, a expressão deixaria uma linha vazia no input.
+          img="ghcr.io/$owner/telvyn-agent"
+          {
+            echo "tags<<EOF_TAGS"
+            echo "$img:$v"
+            [ -n "$series" ] && echo "$img:$series"
+            echo "$img:latest"
+            echo "EOF_TAGS"
+          } >> "$GITHUB_OUTPUT"
           echo "owner=$owner"     >> "$GITHUB_OUTPUT"
           echo "version=$v"       >> "$GITHUB_OUTPUT"
-          echo "Owner=$owner version=$v"
+          echo "series=$series"   >> "$GITHUB_OUTPUT"
+          echo "Owner=$owner version=$v series=${series:-<nenhuma>}"
 
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
@@ -56,9 +78,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: |
-            ghcr.io/${{ steps.vars.outputs.owner }}/telvyn-agent:${{ steps.vars.outputs.version }}
-            ghcr.io/${{ steps.vars.outputs.owner }}/telvyn-agent:latest
+          tags: ${{ steps.vars.outputs.tags }}
           build-args: |
             VERSION=${{ steps.vars.outputs.version }}
           provenance: false
