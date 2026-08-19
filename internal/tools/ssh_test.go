@@ -193,6 +193,36 @@ func TestSSHExec_ExitCode(t *testing.T) {
 	}
 }
 
+func TestSSHExec_TestConnectionDoesNotExecuteCommand(t *testing.T) {
+	keyPEM, pubKey := genClientKeyPEM(t)
+	executed := make(chan struct{}, 1)
+	addr, teardown := startTestSSHServer(t, pubKey,
+		func(string) (string, string, int) {
+			executed <- struct{}{}
+			return "", "", 0
+		})
+	defer teardown()
+
+	host, port, _ := net.SplitHostPort(addr)
+	res, err := SSHExec{}.TestConnection(context.Background(), map[string]any{
+		"host":        host,
+		"port":        toFloat(port),
+		"user":        "tester",
+		"private_key": string(keyPEM),
+	})
+	if err != nil {
+		t.Fatalf("TestConnection: %v", err)
+	}
+	if res["success"] != true {
+		t.Fatalf("expected successful connection, got %#v", res)
+	}
+	select {
+	case <-executed:
+		t.Fatal("credential test executed a remote command")
+	default:
+	}
+}
+
 func TestSSHExec_MissingArgs(t *testing.T) {
 	_, err := SSHExec{}.Execute(context.Background(), map[string]any{"host": "x"})
 	if err == nil {

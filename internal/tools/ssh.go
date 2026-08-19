@@ -6,7 +6,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -38,70 +40,51 @@ const (
 // where key distribution is impractical.
 type SSHExec struct{}
 
+var unsafeSSHCommand = regexp.MustCompile(`[;&|><` + "`" + `]|\$\(|\r|\n`)
+
+// ValidateReadOnlySSHCommand aplica a fronteira de segurança no agent. O backend
+// não consegue transformar um comando mutável em permitido: o bloqueio final é local.
+func ValidateReadOnlySSHCommand(vendor, command string) error {
+	v := strings.ToLower(strings.TrimSpace(vendor))
+	c := strings.TrimSpace(command)
+	if c == "" {
+		return fmt.Errorf("empty command")
+	}
+	if unsafeSSHCommand.MatchString(c) {
+		return fmt.Errorf("shell operators and multiple commands are not allowed")
+	}
+	lower := strings.ToLower(c)
+	allowed := false
+	switch v {
+	case "cisco", "ios", "ios-xe", "nx-os", "arista", "eos", "juniper", "junos", "aruba":
+		allowed = strings.HasPrefix(lower, "show ") || lower == "show"
+	case "fortinet", "fortigate":
+		allowed = strings.HasPrefix(lower, "show ") || lower == "show" || strings.HasPrefix(lower, "get ")
+	case "huawei", "h3c", "comware":
+		allowed = strings.HasPrefix(lower, "display ") || lower == "display"
+	case "mikrotik", "routeros":
+		// RouterOS lê estado com "... print". A barra inicial é opcional no terminal.
+		allowed = strings.HasSuffix(lower, " print") || lower == "print" || strings.HasSuffix(lower, "/print")
+	default:
+		return fmt.Errorf("unsupported vendor %q for read-only SSH", vendor)
+	}
+	if !allowed {
+		return fmt.Errorf("command is not in the read-only allowlist for %s", vendor)
+	}
+	return nil
+}
+
 func (SSHExec) Name() string { return "ssh.exec" }
 
 func (SSHExec) Execute(ctx context.Context, args map[string]any) (map[string]any, error) {
-	host, err := requireString(args, "host")
-	if err != nil {
-		return nil, err
-	}
-	user, err := requireString(args, "user")
-	if err != nil {
-		return nil, err
-	}
 	command, err := requireString(args, "command")
 	if err != nil {
 		return nil, err
 	}
-	port := optInt(args, "port", sshDefaultPort)
 	timeoutSec := optInt(args, "timeout", 30)
-
-	authMethods, err := buildAuthMethods(args)
+	client, capturedHostKey, err := dialSSH(ctx, args)
 	if err != nil {
 		return nil, err
-	}
-
-	// Host key verification (TOFU). If the server sent a pinned known_host line,
-	// VERIFY against it (FixedHostKey). Otherwise CAPTURE the presented key and
-	// report it back (capturedHostKey) so the server can pin it on first use —
-	// no more blindly accepting any key (closes the MITM window on NCM backups).
-	var capturedHostKey string
-	hostKeyCallback := ssh.HostKeyCallback(func(_ string, _ net.Addr, key ssh.PublicKey) error {
-		capturedHostKey = host + " " + key.Type() + " " + base64.StdEncoding.EncodeToString(key.Marshal())
-		return nil
-	})
-	if khLine, ok := args["known_host"].(string); ok && khLine != "" {
-		_, _, pubKey, _, _, err := ssh.ParseKnownHosts([]byte(khLine))
-		if err != nil {
-			return nil, fmt.Errorf("parse known_host: %w", err)
-		}
-		hostKeyCallback = ssh.FixedHostKey(pubKey)
-	}
-
-	cfg := &ssh.ClientConfig{
-		User:            user,
-		Auth:            authMethods,
-		HostKeyCallback: hostKeyCallback,
-		Timeout:         sshDialTimeout,
-	}
-
-	addr := net.JoinHostPort(host, strconv.Itoa(port))
-
-	// Dial honors ctx cancellation by closing in a watchdog goroutine.
-	dialErrCh := make(chan error, 1)
-	var client *ssh.Client
-	go func() {
-		var derr error
-		client, derr = ssh.Dial("tcp", addr, cfg)
-		dialErrCh <- derr
-	}()
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	case derr := <-dialErrCh:
-		if derr != nil {
-			return nil, fmt.Errorf("ssh dial %s: %w", addr, derr)
-		}
 	}
 	defer client.Close()
 
@@ -154,6 +137,79 @@ func (SSHExec) Execute(ctx context.Context, args map[string]any) (map[string]any
 		"error":       exitErrMsg,
 		"host_key":    capturedHostKey, // TOFU: known_hosts line observada (vazio se veio known_host p/ verificar)
 	}, nil
+}
+
+// TestConnection autentica e abre um canal de sessão SSH sem executar comando.
+func (SSHExec) TestConnection(ctx context.Context, args map[string]any) (map[string]any, error) {
+	start := time.Now()
+	client, _, err := dialSSH(ctx, args)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+	session, err := client.NewSession()
+	if err != nil {
+		return nil, fmt.Errorf("new session: %w", err)
+	}
+	_ = session.Close()
+	return map[string]any{
+		"success":     true,
+		"duration_ms": float64(time.Since(start).Milliseconds()),
+		"error":       "",
+	}, nil
+}
+
+func dialSSH(ctx context.Context, args map[string]any) (*ssh.Client, string, error) {
+	host, err := requireString(args, "host")
+	if err != nil {
+		return nil, "", err
+	}
+	user, err := requireString(args, "user")
+	if err != nil {
+		return nil, "", err
+	}
+	port := optInt(args, "port", sshDefaultPort)
+	authMethods, err := buildAuthMethods(args)
+	if err != nil {
+		return nil, "", err
+	}
+
+	var capturedHostKey string
+	hostKeyCallback := ssh.HostKeyCallback(func(_ string, _ net.Addr, key ssh.PublicKey) error {
+		capturedHostKey = host + " " + key.Type() + " " + base64.StdEncoding.EncodeToString(key.Marshal())
+		return nil
+	})
+	if khLine, ok := args["known_host"].(string); ok && khLine != "" {
+		_, _, pubKey, _, _, err := ssh.ParseKnownHosts([]byte(khLine))
+		if err != nil {
+			return nil, "", fmt.Errorf("parse known_host: %w", err)
+		}
+		hostKeyCallback = ssh.FixedHostKey(pubKey)
+	}
+
+	cfg := &ssh.ClientConfig{
+		User:            user,
+		Auth:            authMethods,
+		HostKeyCallback: hostKeyCallback,
+		Timeout:         sshDialTimeout,
+	}
+	addr := net.JoinHostPort(host, strconv.Itoa(port))
+	dialErrCh := make(chan error, 1)
+	var client *ssh.Client
+	go func() {
+		var dialErr error
+		client, dialErr = ssh.Dial("tcp", addr, cfg)
+		dialErrCh <- dialErr
+	}()
+	select {
+	case <-ctx.Done():
+		return nil, "", ctx.Err()
+	case dialErr := <-dialErrCh:
+		if dialErr != nil {
+			return nil, "", fmt.Errorf("ssh dial %s: %w", addr, dialErr)
+		}
+	}
+	return client, capturedHostKey, nil
 }
 
 // cappedBuffer is a bytes.Buffer that drops writes past `cap` and flips

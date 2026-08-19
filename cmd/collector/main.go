@@ -24,6 +24,7 @@ import (
 	"github.com/ispwatch/collector/internal/configpull"
 	"github.com/ispwatch/collector/internal/ebpf"
 	"github.com/ispwatch/collector/internal/ebpf/common"
+	"github.com/ispwatch/collector/internal/jobpull"
 	"github.com/ispwatch/collector/internal/langdetect"
 	"github.com/ispwatch/collector/internal/logs"
 	"github.com/ispwatch/collector/internal/otlp"
@@ -592,6 +593,16 @@ func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.Ing
 			return exporter.RegisterCollector(ctx, name, collectorCapabilities(), collectorInstallMode())
 		}, func(collectorID, tenantID string) {
 			exporter.SetCollectorID(collectorID)
+			if envEnabled("ISPWATCH_SSH") {
+				go func() {
+					if err := jobpull.Run(ctx, jobpull.Config{
+						Endpoint: base, CollectorID: collectorID, TenantID: tenantID,
+						PollInterval: 5 * time.Second, HTTPClient: bearerClient, Logger: log,
+					}); err != nil {
+						log.Warn("device job pull encerrou", "err", err)
+					}
+				}()
+			}
 			go func() {
 				if err := configpull.Run(ctx, configpull.Config{
 					Endpoint:         base,
@@ -640,6 +651,9 @@ func collectorCapabilities() []string {
 	} {
 		if envEnabled(item.env) {
 			caps = append(caps, item.cap)
+			if item.env == "ISPWATCH_SSH" {
+				caps = append(caps, "ssh_readonly_v1")
+			}
 		}
 	}
 	return caps
