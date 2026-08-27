@@ -124,6 +124,51 @@ func (s ebpfStatsSink) Push(spans []*collectorv1.Span) {
 	}
 }
 
+// advertisedCollectorCapabilities publica ao backend as capacidades reais que
+// este processo pode executar via config-pull. O valor genérico "checks" não
+// substitui as capacidades de rede: o backend usa snmp/icmp/lldp/ssh para não
+// entregar um check a um agent que não alcança ou não suporta aquele protocolo.
+// No modo snmp, SNMP e ICMP ficam ligados por padrão para preservar o contrato
+// do instalador; os demais protocolos só entram quando explicitamente ligados.
+func advertisedCollectorCapabilities() []string {
+	caps := []string{"metrics"}
+	if getenvOr("ISPWATCH_CHECKS_ENABLED", "1") == "0" {
+		return caps
+	}
+	caps = append(caps, "checks")
+	if !strings.EqualFold(strings.TrimSpace(os.Getenv("ISPWATCH_AGENT_KIND")), "snmp") {
+		return caps
+	}
+	for _, item := range []struct {
+		capability string
+		env        string
+		defaultOn  bool
+	}{
+		{"snmp", "ISPWATCH_SNMP", true},
+		{"icmp", "ISPWATCH_ICMP", true},
+		{"lldp", "ISPWATCH_LLDP", false},
+		{"ssh", "ISPWATCH_SSH", false},
+	} {
+		if envFlag(item.env, item.defaultOn) {
+			caps = append(caps, item.capability)
+		}
+	}
+	return caps
+}
+
+func envFlag(name string, defaultOn bool) bool {
+	raw, ok := os.LookupEnv(name)
+	if !ok {
+		return defaultOn
+	}
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "1", "true", "yes", "on":
+		return true
+	default:
+		return false
+	}
+}
+
 func runIngestMode(ingestURL string) {
 	log := newLogger(getenvOr("COLLECTOR_LOG_LEVEL", "info"))
 	token := strings.TrimSpace(os.Getenv("ISPWATCH_INGEST_TOKEN"))
@@ -215,7 +260,7 @@ func runIngestMode(ingestURL string) {
 	// APLICAÇÃO segue identificada pelo serviço (uuid), nunca pela máquina.
 	if strings.EqualFold(getenvOr("ISPWATCH_AGENT_KIND", ""), "docker") {
 		collectorID := ""
-		if cid, _, err := exporter.RegisterCollector(ctx, hostID, []string{"metrics", "checks"}); err != nil {
+		if cid, _, err := exporter.RegisterCollector(ctx, hostID, advertisedCollectorCapabilities()); err != nil {
 			log.Warn("docker: registro de collector falhou — sigo sem vínculo máquina↔collector", "err", err)
 		} else {
 			collectorID = cid
@@ -238,7 +283,7 @@ func runIngestMode(ingestURL string) {
 	// (uuid), nunca pela máquina.
 	if strings.EqualFold(getenvOr("ISPWATCH_AGENT_KIND", ""), "linux") {
 		collectorID := ""
-		if cid, _, err := exporter.RegisterCollector(ctx, hostID, []string{"metrics", "checks"}); err != nil {
+		if cid, _, err := exporter.RegisterCollector(ctx, hostID, advertisedCollectorCapabilities()); err != nil {
 			log.Warn("linux: registro de collector falhou — sigo sem vínculo máquina↔collector", "err", err)
 		} else {
 			collectorID = cid
@@ -577,7 +622,7 @@ func startIngestChecks(ctx context.Context, log *slog.Logger, exporter *otlp.Ing
 
 	go runCollectorRegistrationLoop(ctx, log, 2*time.Second, 60*time.Second,
 		func(ctx context.Context) (string, string, error) {
-			return exporter.RegisterCollector(ctx, name, []string{"metrics", "checks"})
+			return exporter.RegisterCollector(ctx, name, advertisedCollectorCapabilities())
 		}, func(collectorID, tenantID string) {
 			exporter.SetCollectorID(collectorID)
 			go func() {

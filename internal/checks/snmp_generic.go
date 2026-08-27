@@ -205,6 +205,10 @@ func (c *snmpGenericCheck) Run(ctx context.Context) ([]*collectorv1.Metric, erro
 	}
 
 	metrics, err := runner.Collect(ctx, profile, c.hostID, c.staticTags)
+	// Identidade é independente da coleta de métricas: um profile pode falhar
+	// em uma métrica específica enquanto os OIDs padrão de inventário respondem.
+	// O erro da coleta continua sendo propagado abaixo.
+	c.maybeEmitDeviceMetadata(ctx, runner, profile)
 	if err != nil {
 		return nil, err
 	}
@@ -220,17 +224,13 @@ func (c *snmpGenericCheck) Run(ctx context.Context) ([]*collectorv1.Metric, erro
 		metrics = filtered
 	}
 
-	// Side-channel: emite a identidade do device (metadata.device) pro gateway,
-	// no máximo a cada 15min. Fail-soft — nunca afeta a coleta de métricas.
-	c.maybeEmitDeviceMetadata(ctx, runner, profile)
-
 	return metrics, nil
 }
 
 // maybeEmitDeviceMetadata coleta e emite metadata.device no máximo a cada 15min
 // (e na primeira execução). Fail-soft: nunca afeta a coleta de métricas.
 func (c *snmpGenericCheck) maybeEmitDeviceMetadata(ctx context.Context, runner snmpGenericRunner, profile *snmp.Profile) {
-	if deviceMetaPusher == nil || profile == nil || profile.Metadata == nil {
+	if deviceMetaPusher == nil || profile == nil {
 		return
 	}
 	c.mu.Lock()
