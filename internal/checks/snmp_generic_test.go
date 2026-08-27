@@ -297,3 +297,32 @@ func TestSnmpGeneric_EmitsMetadataWithoutProfileMetadataBlock(t *testing.T) {
 		t.Errorf("metadata=%v, expected standard identity fields", pusher.device)
 	}
 }
+
+func TestSnmpGeneric_EmitsMetadataWhenMetricCollectionFails(t *testing.T) {
+	previousPusher := deviceMetaPusher
+	t.Cleanup(func() { deviceMetaPusher = previousPusher })
+
+	pusher := &stubDeviceMetadataPusher{}
+	SetDeviceMetadataPusher(pusher)
+	runner := &stubRunner{
+		metadata: map[string]string{"vendor": "fiberhome"},
+		collect: func(context.Context, *snmp.Profile, string, map[string]string) ([]*collectorv1.Metric, error) {
+			return nil, errors.New("profile metric collection failed")
+		},
+	}
+	check, err := newSnmpGenericCheckWithFactory(baseCfg(map[string]string{
+		"target":    "127.0.0.1:1161",
+		"profile":   "mikrotik-router",
+		"version":   "v2c",
+		"community": "public",
+	}), newStubSnmpClientFactory(runner, nil))
+	if err != nil {
+		t.Fatalf("factory: %v", err)
+	}
+	if _, err := check.Run(context.Background()); err == nil {
+		t.Fatal("metric collection error deveria ser propagado")
+	}
+	if pusher.calls != 1 || pusher.device["vendor"] != "fiberhome" {
+		t.Errorf("metadata calls=%d device=%v, expected identity despite metric error", pusher.calls, pusher.device)
+	}
+}
