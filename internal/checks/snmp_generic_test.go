@@ -19,6 +19,7 @@ type stubRunner struct {
 	sysOID   string
 	sysErr   error
 	collect  func(ctx context.Context, profile *snmp.Profile, hostID string, staticTags map[string]string) ([]*collectorv1.Metric, error)
+	metadata map[string]string
 	closed   bool
 	getCalls int
 }
@@ -48,7 +49,7 @@ func (s *stubRunner) Collect(ctx context.Context, profile *snmp.Profile, hostID 
 }
 
 func (s *stubRunner) CollectDeviceMetadata(ctx context.Context, profile *snmp.Profile) map[string]string {
-	return map[string]string{}
+	return s.metadata
 }
 
 func (s *stubRunner) Close() error { s.closed = true; return nil }
@@ -60,6 +61,19 @@ func newStubSnmpClientFactory(r *stubRunner, err error) snmpClientFactory {
 		}
 		return r, nil
 	}
+}
+
+type stubDeviceMetadataPusher struct {
+	hostID string
+	device map[string]string
+	calls  int
+}
+
+func (s *stubDeviceMetadataPusher) PostDeviceMetadata(_ context.Context, hostID string, device map[string]string) error {
+	s.hostID = hostID
+	s.device = device
+	s.calls++
+	return nil
 }
 
 func baseCfg(params map[string]string) *collectorv1.CheckConfig {
@@ -247,5 +261,39 @@ func TestSnmpGeneric_V3Params(t *testing.T) {
 	}
 	if check == nil {
 		t.Fatal("nil check")
+	}
+}
+
+func TestSnmpGeneric_EmitsMetadataWithoutProfileMetadataBlock(t *testing.T) {
+	previousPusher := deviceMetaPusher
+	t.Cleanup(func() { deviceMetaPusher = previousPusher })
+
+	pusher := &stubDeviceMetadataPusher{}
+	SetDeviceMetadataPusher(pusher)
+	runner := &stubRunner{metadata: map[string]string{
+		"vendor":        "mikrotik",
+		"os_name":       "RouterOS",
+		"sys_object_id": "1.3.6.1.4.1.14988.1",
+	}}
+	check, err := newSnmpGenericCheckWithFactory(baseCfg(map[string]string{
+		"target":    "127.0.0.1:1161",
+		"profile":   "mikrotik-router",
+		"version":   "v2c",
+		"community": "public",
+	}), newStubSnmpClientFactory(runner, nil))
+	if err != nil {
+		t.Fatalf("factory: %v", err)
+	}
+	if _, err := check.Run(context.Background()); err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if pusher.calls != 1 {
+		t.Fatalf("metadata calls=%d want 1", pusher.calls)
+	}
+	if pusher.hostID != "host-abc" {
+		t.Errorf("metadata hostID=%q want host-abc", pusher.hostID)
+	}
+	if pusher.device["vendor"] != "mikrotik" || pusher.device["sys_object_id"] == "" {
+		t.Errorf("metadata=%v, expected standard identity fields", pusher.device)
 	}
 }

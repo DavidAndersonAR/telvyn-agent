@@ -230,7 +230,7 @@ func (c *snmpGenericCheck) Run(ctx context.Context) ([]*collectorv1.Metric, erro
 // maybeEmitDeviceMetadata coleta e emite metadata.device no máximo a cada 15min
 // (e na primeira execução). Fail-soft: nunca afeta a coleta de métricas.
 func (c *snmpGenericCheck) maybeEmitDeviceMetadata(ctx context.Context, runner snmpGenericRunner, profile *snmp.Profile) {
-	if deviceMetaPusher == nil || profile == nil || profile.Metadata == nil {
+	if deviceMetaPusher == nil || profile == nil {
 		return
 	}
 	c.mu.Lock()
