@@ -82,7 +82,7 @@ func (e *IngestExporter) signalAllowed(signal string) bool {
 		return modules["REDE_SNMP"]
 	case "sbom":
 		return modules["VULNERABILIDADES"]
-	case "k8s/events", "k8s/pod-languages":
+	case "k8s/events", "k8s/pod-languages", "k8s/resources":
 		return modules["KUBERNETES"]
 	case "host/services":
 		return modules["INFRAESTRUTURA"]
@@ -254,6 +254,20 @@ func (e *IngestExporter) PostK8sEvents(ctx context.Context, payload map[string]a
 		return err
 	}
 	return e.PostRaw(ctx, "k8s/events", "application/json", body)
+}
+
+// PostK8sInventory encaminha o snapshot de identidade/estado dos recursos do
+// cluster para o catálogo do Telvyn. O backend deriva o tenant do token e
+// aplica a substituição lógica por sync_sequence.
+func (e *IngestExporter) PostK8sInventory(ctx context.Context, payload map[string]any) error {
+	if len(payload) == 0 {
+		return nil
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	return e.PostRaw(ctx, "k8s/resources", "application/json", body)
 }
 
 // PostHostServices encaminha os serviços descobertos numa máquina (processos que

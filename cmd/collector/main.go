@@ -341,6 +341,7 @@ func runIngestMode(ingestURL string) {
 				IncludeNormal: getenvOr("ISPWATCH_CLUSTER_EVENTS_INCLUDE_NORMAL", "0") == "1",
 				EventLimit:    eventLimit,
 				KubeState:     getenvOr("ISPWATCH_CLUSTER_KUBESTATE", "1") != "0",
+				Inventory:     getenvOr("ISPWATCH_CLUSTER_INVENTORY", "1") != "0",
 			}
 			if ca, err := clusteragent.New(caCfg, exporter, log); err != nil {
 				log.Error("k8s.cluster: cluster-agent init falhou", "err", err)

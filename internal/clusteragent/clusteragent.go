@@ -1,6 +1,6 @@
 // Package clusteragent implementa o modo ISPWATCH_AGENT_KIND=k8s.cluster: uma
 // réplica que fala com o API server do Kubernetes (in-cluster), faz LIST dos
-// Events do cluster inteiro e os empurra pelo ingest certless (noc_k8s_event).
+// recursos e Events do cluster inteiro e os empurra pelo ingest certless.
 //
 // É o "Cluster Agent" do plano — a peça que o node-agent (DaemonSet, só vê o
 // kubelet local) não consegue entregar: visão cross-node dos eventos do cluster
@@ -9,7 +9,7 @@
 //   - D1: raw-HTTP contra https://kubernetes.default.svc (zero client-go), o
 //     mesmo padrão SA-token/TLS do kubelet lister (internal/ebpf/podresolver.go).
 //   - D2: pod→workload via k8smeta.WorkloadOf (strip-de-hash, O(1), sem lookup).
-//   - Transporte: IngestExporter.PostK8sEvents (OTLP+Bearer iwI_), nada de gRPC.
+//   - Transporte: IngestExporter.PostK8sEvents/PostK8sInventory (JSON+Bearer), nada de gRPC.
 //
 // v1 = LIST periódico (não watch): o backend deduplica por evento lógico e
 // agrega o count nativo do k8s, então re-enviar o mesmo evento a cada ciclo é
@@ -34,9 +34,10 @@ import (
 )
 
 // Ingest é o subset do IngestExporter usado aqui (facilita fake em teste):
-// eventos (timeline) + métricas kube-state (pods por fase, réplicas de deployment).
+// inventário, eventos (timeline) e métricas kube-state.
 type Ingest interface {
 	PostK8sEvents(ctx context.Context, payload map[string]any) error
+	PostK8sInventory(ctx context.Context, payload map[string]any) error
 	PostMetrics(ctx context.Context, metrics []*collectorv1.Metric) error
 }
 
@@ -51,20 +52,23 @@ type Config struct {
 	IncludeNormal bool          // manda também eventos type=Normal (default só Warning)
 	EventLimit    int           // ?limit= do LIST (default 1000)
 	KubeState     bool          // emite métricas kube-state (pods por fase + deployments)
+	Inventory     bool          // envia snapshot de identidade/estado dos recursos
 }
 
-// Agent faz o loop de coleta+push do cluster (eventos + kube-state).
+// Agent faz o loop de coleta+push do cluster (inventário + eventos + kube-state).
 type Agent struct {
 	cfg       Config
 	tokenFile string
 	client    *http.Client
 	ingest    Ingest
 	log       *slog.Logger
+	sequence  uint64
 }
 
 const (
-	defaultInterval   = 30 * time.Second
-	defaultEventLimit = 1000
+	defaultInterval       = 30 * time.Second
+	defaultEventLimit     = 1000
+	maxInventoryResources = 10_000
 )
 
 // New monta o cliente TLS contra o API server. Erro só em CA ilegível.
@@ -126,11 +130,166 @@ func (a *Agent) Run(ctx context.Context) {
 	}
 }
 
-// collect roda um ciclo: eventos (timeline) + kube-state (métricas de estado).
+// collect roda um ciclo: inventário + eventos (timeline) + kube-state.
 func (a *Agent) collect(ctx context.Context) {
+	if a.cfg.Inventory {
+		a.pushInventory(ctx)
+	}
 	a.pushEvents(ctx)
 	if a.cfg.KubeState {
 		a.pushKubeState(ctx)
+	}
+}
+
+// pushInventory envia um snapshot completo de identidade/estado. O snapshot
+// é separado das métricas porque nomes, namespaces e owners precisam continuar
+// visíveis mesmo quando um pod está sem amostras de CPU/memória.
+func (a *Agent) pushInventory(ctx context.Context) {
+	a.sequence++
+	resources, err := a.collectInventory(ctx)
+	if err != nil {
+		a.log.Warn("k8s inventory LIST falhou", "err", err)
+		return
+	}
+	payload := map[string]any{
+		"cluster":       a.cfg.Cluster,
+		"snapshot":      true,
+		"sync_sequence": a.sequence,
+		"resources":     resources,
+	}
+	if err := a.ingest.PostK8sInventory(ctx, payload); err != nil {
+		a.log.Warn("push de inventário falhou", "err", err, "count", len(resources))
+		return
+	}
+	a.log.Info("inventário Kubernetes enviado", "resources", len(resources), "sequence", a.sequence)
+}
+
+type inventorySource struct {
+	path string
+	kind string
+}
+
+var inventorySources = []inventorySource{
+	// O ClusterRole existente já concede somente leitura de Pods. Isso basta
+	// para o catálogo da tela e evita aumentar o blast radius do agent.
+	{path: "/api/v1/pods", kind: "Pod"},
+}
+
+type inventoryList struct {
+	Items    []json.RawMessage `json:"items"`
+	Metadata struct {
+		Continue string `json:"continue"`
+	} `json:"metadata"`
+}
+
+type inventoryOwner struct {
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+}
+
+type inventoryObject struct {
+	Metadata struct {
+		Namespace       string            `json:"namespace"`
+		Name            string            `json:"name"`
+		UID             string            `json:"uid"`
+		ResourceVersion string            `json:"resourceVersion"`
+		Labels          map[string]string `json:"labels"`
+		OwnerReferences []inventoryOwner  `json:"ownerReferences"`
+	} `json:"metadata"`
+	Spec struct {
+		NodeName string `json:"nodeName"`
+	} `json:"spec"`
+	Status struct {
+		Phase      string           `json:"phase"`
+		Conditions []map[string]any `json:"conditions"`
+	} `json:"status"`
+}
+
+func (a *Agent) collectInventory(ctx context.Context) ([]map[string]any, error) {
+	resources := make([]map[string]any, 0, 256)
+	for _, source := range inventorySources {
+		err := a.apiGetPaged(ctx, source.path, func(body []byte) (string, error) {
+			var list inventoryList
+			if err := json.Unmarshal(body, &list); err != nil {
+				return "", fmt.Errorf("decode %s: %w", source.kind, err)
+			}
+			for _, raw := range list.Items {
+				resource, err := inventoryResource(source.kind, raw)
+				if err != nil {
+					return "", err
+				}
+				resources = append(resources, resource)
+				if len(resources) > maxInventoryResources {
+					return "", fmt.Errorf("inventário excede %d recursos", maxInventoryResources)
+				}
+			}
+			return list.Metadata.Continue, nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return resources, nil
+}
+
+func inventoryResource(kind string, raw []byte) (map[string]any, error) {
+	var obj inventoryObject
+	if err := json.Unmarshal(raw, &obj); err != nil {
+		return nil, fmt.Errorf("decode %s resource: %w", kind, err)
+	}
+	if obj.Metadata.UID == "" || obj.Metadata.Name == "" {
+		return nil, fmt.Errorf("%s resource without metadata.uid/name", kind)
+	}
+	labels := obj.Metadata.Labels
+	if labels == nil {
+		labels = map[string]string{}
+	}
+	conditions := obj.Status.Conditions
+	if conditions == nil {
+		conditions = []map[string]any{}
+	}
+	resource := map[string]any{
+		"kind":             kind,
+		"uid":              obj.Metadata.UID,
+		"namespace":        obj.Metadata.Namespace,
+		"name":             obj.Metadata.Name,
+		"node_name":        obj.Spec.NodeName,
+		"phase":            obj.Status.Phase,
+		"status":           obj.Status.Phase,
+		"labels":           labels,
+		"conditions":       conditions,
+		"resource_version": obj.Metadata.ResourceVersion,
+	}
+	if kind == "Pod" {
+		if owner := podWorkload(obj.Metadata.OwnerReferences); owner != nil {
+			resource["workload_kind"] = owner.Kind
+			resource["workload_name"] = owner.Name
+		}
+	} else if isWorkloadKind(kind) {
+		resource["workload_kind"] = kind
+		resource["workload_name"] = obj.Metadata.Name
+	}
+	return resource, nil
+}
+
+func podWorkload(owners []inventoryOwner) *inventoryOwner {
+	for _, owner := range owners {
+		switch owner.Kind {
+		case "ReplicaSet":
+			return &inventoryOwner{Kind: "Deployment", Name: k8smeta.WorkloadOf(owner.Name + "-00000")}
+		case "Deployment", "StatefulSet", "DaemonSet", "Job", "CronJob":
+			return &owner
+		}
+	}
+	return nil
+}
+
+func isWorkloadKind(kind string) bool {
+	switch kind {
+	case "Deployment", "StatefulSet", "DaemonSet", "Job", "CronJob":
+		return true
+	default:
+		return false
 	}
 }
 
