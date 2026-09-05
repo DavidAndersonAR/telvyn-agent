@@ -77,6 +77,7 @@ type CRILogsTailer struct {
 	hostname    string
 	excludeNS   map[string]bool
 	svcResolver PodServiceResolver
+	multiline   bool // junta mensagem de várias linhas (ver multiline.go)
 	log         *slog.Logger
 
 	mu      sync.Mutex
@@ -111,6 +112,7 @@ func NewCRILogsTailer(exporter *otlp.LogsExporter, cursorPath, hostname string, 
 		cursors:   NewCursorStore(cursorPath, log),
 		hostname:  hostname,
 		excludeNS: ex,
+		multiline: os.Getenv("ISPWATCH_LOGS_MULTILINE") != "0",
 		log:       log.With("component", "cri-logs-tailer"),
 		readers:   make(map[string]*criReaderHandle),
 	}
@@ -241,6 +243,18 @@ func (t *CRILogsTailer) runReader(path string, meta criFileInfo, done chan struc
 
 	var partial strings.Builder
 
+	// Agregador PRÓPRIO deste reader (uma goroutine por arquivo): sem
+	// compartilhamento, sem trava. Desligado -> emite direto, como antes.
+	var agg *multilineAggregator
+	if t.multiline {
+		agg = newMultilineAggregator(t.exporter.Push)
+	}
+	defer func() {
+		if agg != nil {
+			agg.FlushAll()
+		}
+	}()
+
 	readOnce := func() {
 		resolveSvc() // re-resolve: corrige o service quando a label do pod aparece
 		fi, err := os.Stat(path)
@@ -253,6 +267,9 @@ func (t *CRILogsTailer) runReader(path string, meta criFileInfo, done chan struc
 			// Rotacionou (novo inode) ou truncou — recomeça do zero.
 			offset, inode = 0, curInode
 			partial.Reset()
+			if agg != nil {
+				agg.FlushAll() // não cola o fim do arquivo velho no começo do novo
+			}
 		}
 		if size <= offset {
 			return
@@ -276,7 +293,7 @@ func (t *CRILogsTailer) runReader(path string, meta criFileInfo, done chan struc
 			if len(line) > 0 && err == nil {
 				// Linha completa (terminou em \n).
 				consumed += int64(len(line))
-				t.handleLine(strings.TrimRight(string(line), "\r\n"), meta, svc, &partial)
+				t.handleLine(strings.TrimRight(string(line), "\r\n"), meta, svc, &partial, path, agg)
 			}
 			if err != nil {
 				// EOF: o que sobrou (sem \n) é uma linha sendo escrita — não
@@ -297,12 +314,20 @@ func (t *CRILogsTailer) runReader(path string, meta criFileInfo, done chan struc
 			return
 		case <-ticker.C:
 			readOnce()
+			// Fora do readOnce de propósito: ele volta cedo quando o arquivo
+			// não cresceu, e aí a última mensagem nunca fecharia.
+			if agg != nil {
+				agg.Tick(time.Now())
+			}
 		}
 	}
 }
 
-// handleLine parseia uma linha CRI e, quando completa (F), dá Push no exporter.
-func (t *CRILogsTailer) handleLine(line string, meta criFileInfo, svc string, partial *strings.Builder) {
+// handleLine parseia uma linha CRI e, quando completa (F), entrega o registro.
+// Com o agregador ligado, a linha pode ficar retida pra ser colada na mensagem
+// que a abriu (ver multiline.go); sem ele, vai direto pro exporter.
+func (t *CRILogsTailer) handleLine(line string, meta criFileInfo, svc string, partial *strings.Builder,
+	key string, agg *multilineAggregator) {
 	if line == "" {
 		return
 	}
@@ -346,10 +371,15 @@ func (t *CRILogsTailer) handleLine(line string, meta criFileInfo, svc string, pa
 		if n, txt, ok := levelToSeverity(firstField(fields, "level", "severity", "severity_text", "levelname", "lvl")); ok {
 			sevNum, sevText = n, txt
 		}
+	} else if n, txt, ok := plainTextSeverity(full); ok {
+		// Texto puro: o nível está escrito no prefixo da linha. Sem isto a
+		// severidade seria só o stream — e quem escreve tudo em stderr (o
+		// Postgres, por exemplo) ficava com rotina e falha marcadas igual.
+		sevNum, sevText = n, txt
 	}
 
 	t.linesTotal.Add(1)
-	t.exporter.Push(otlp.LogRecord{
+	rec := otlp.LogRecord{
 		TimestampUnixNano: parseCRITime(tsStr),
 		ServiceName:       svc,
 		Hostname:          t.hostname,
@@ -365,7 +395,12 @@ func (t *CRILogsTailer) handleLine(line string, meta criFileInfo, svc string, pa
 			"stream":             stream,
 			"source":             "k8s",
 		},
-	})
+	}
+	if agg != nil {
+		agg.Add(key, rec, time.Now())
+		return
+	}
+	t.exporter.Push(rec)
 }
 
 // jsonLogFields tenta interpretar a linha como JSON de log estruturado e

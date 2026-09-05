@@ -59,6 +59,7 @@ type DockerLogsTailer struct {
 
 	rateLimitBytes int64
 	entryCh        chan LogEntry
+	multiline      bool // junta mensagem de várias linhas (ver multiline.go)
 
 	mu      sync.Mutex
 	readers map[string]*readerHandle // container_id → handle
@@ -113,6 +114,7 @@ func NewDockerLogsTailer(
 		log:            log.With("component", "docker-logs-tailer"),
 		rateLimitBytes: rateLimit,
 		entryCh:        make(chan LogEntry, entryChannelSize),
+		multiline:      os.Getenv("ISPWATCH_LOGS_MULTILINE") != "0",
 		readers:        make(map[string]*readerHandle),
 	}, nil
 }
@@ -161,18 +163,49 @@ func (t *DockerLogsTailer) Stats() DockerLogsStats {
 }
 
 // bridge drena o channel de entries e converte pro exporter OTLP.
+//
+// O agregador de multilinha vive AQUI (uma goroutine só, sem trava) e é chaveado
+// por container: o channel é compartilhado, então as linhas de containers
+// diferentes chegam intercaladas e não podem colar umas nas outras.
 func (t *DockerLogsTailer) bridge(ctx context.Context) {
+	var agg *multilineAggregator
+	if t.multiline {
+		agg = newMultilineAggregator(t.exporter.Push)
+	}
+	// Fecha mensagem parada: sem isto, a última de um container quieto dormiria
+	// no buffer. No CRI quem faz esse papel é o poll do reader.
+	tick := time.NewTicker(criPollInterval)
+	defer tick.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
+			if agg != nil {
+				agg.FlushAll()
+			}
 			return
+		case <-tick.C:
+			if agg != nil {
+				agg.Tick(time.Now())
+			}
 		case entry, ok := <-t.entryCh:
 			if !ok {
+				if agg != nil {
+					agg.FlushAll()
+				}
 				return
 			}
 			t.linesTotal.Add(1)
 
 			sevNum, sevText := streamToSeverity(entry.Stream)
+			// Só texto puro. Este tailer não interpreta JSON, e varrer o corpo
+			// de um log estruturado pegaria a palavra "ERROR" de dentro da
+			// mensagem como se fosse o nível.
+			if !isJSONLine(entry.Body) {
+				if n, txt, ok := plainTextSeverity(entry.Body); ok {
+					sevNum, sevText = n, txt
+				}
+			}
 
 			attrs := map[string]string{
 				"container_id":   entry.Meta.ContainerID,
@@ -183,7 +216,7 @@ func (t *DockerLogsTailer) bridge(ctx context.Context) {
 				"source":         "docker",
 			}
 
-			t.exporter.Push(otlp.LogRecord{
+			rec := otlp.LogRecord{
 				TimestampUnixNano: entry.TimestampUnixNano,
 				ServiceName:       entry.Meta.ServiceName,
 				Hostname:          t.hostname,
@@ -191,7 +224,12 @@ func (t *DockerLogsTailer) bridge(ctx context.Context) {
 				SeverityText:      sevText,
 				Body:              entry.Body,
 				Attributes:        attrs,
-			})
+			}
+			if agg != nil {
+				agg.Add(entry.Meta.ContainerID, rec, time.Now())
+				continue
+			}
+			t.exporter.Push(rec)
 		}
 	}
 }

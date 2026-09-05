@@ -69,6 +69,13 @@ logs:
   enabled: false
   # Namespaces extras a ignorar (além do namespace do próprio agent).
   excludeNamespaces: []
+  # Junta mensagem escrita em várias linhas num registro só (consulta do
+  # Postgres, stack trace de Java). Sem isto cada linha física vira um registro
+  # e a mensagem aparece picotada e de trás pra frente na tela.
+  # Só agrega DEPOIS de reconhecer uma linha que começa com data — formato não
+  # reconhecido continua saindo linha a linha. Desligue se algum log seu casar
+  # errado; o comportamento antigo volta inteiro.
+  multiline: true
 
 # eBPF L7 tracing (Phase 2). Quando habilitado, o agent carrega
 # programas BPF que escutam tcp_sendmsg/recvmsg + uprobes TLS, decodifica
